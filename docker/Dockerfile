@@ -1,5 +1,5 @@
 # Set the base image to Ubuntu
-FROM ubuntu:latest
+FROM debian:latest
 
 # File Author / Maintainer
 MAINTAINER Matthieu Foll <follm@iarc.fr>
