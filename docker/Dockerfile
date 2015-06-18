@@ -15,7 +15,8 @@ RUN apt-get install -y \
 	git \
 	zlib1g-dev \
 	python \
-	libncurses5-dev
+	libncurses5-dev \
+	bzip2
 
 # Install bedtools 
 RUN git clone https://github.com/arq5x/bedtools2.git && \
