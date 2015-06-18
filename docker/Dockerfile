@@ -17,7 +17,7 @@ RUN git clone https://github.com/arq5x/bedtools2.git && cd bedtools2 &&  make &&
 RUN wget https://github.com/samtools/samtools/releases/download/1.2/samtools-1.2.tar.bz2 && tar -jxvf samtools-1.2.tar.bz2 && cd samtools-1.2 && make && make install && cd .. && rm -rf samtools-1.2 samtools-1.2.tar.bz2
 
 # Install pileup2base 
-RUN wget -P /usr/local/bin/ https://github.com/mfoll/pileup2base/raw/patch-1/pileup2baseindel.pl && chmod +x /usr/local/bin/pileup2baseindel.pl
+RUN wget -P /usr/local/bin/ https://github.com/mfoll/pileup2base/raw/follm/master/pileup2baseindel.pl && chmod +x /usr/local/bin/pileup2baseindel.pl
 
 # Install R and package qvalue from bioconductor 
 RUN apt-get install -y r-base && Rscript -e 'source("http://bioconductor.org/biocLite.R");biocLite("qvalue")'
