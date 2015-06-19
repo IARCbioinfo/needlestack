@@ -1,5 +1,5 @@
 # Set the base image to Ubuntu
-FROM ubuntu:latest
+FROM debian:latest
 
 # File Author / Maintainer
 MAINTAINER Matthieu Foll <follm@iarc.fr>
@@ -17,8 +17,8 @@ RUN apt-get install --no-install-recommends -y \
 	python \
 	libncurses5-dev \
 	ca-certificates \
-	dialog 
-	
+	dialog \
+	bzip2
 
 # Install bedtools 
 RUN git clone https://github.com/arq5x/bedtools2.git && \
