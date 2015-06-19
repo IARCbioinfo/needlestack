@@ -18,7 +18,8 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
 	libncurses5-dev \
 	ca-certificates \
 	dialog \
-	bzip2
+	bzip2 \
+	apt-utils
 
 # Install bedtools 
 RUN git clone https://github.com/arq5x/bedtools2.git && \
