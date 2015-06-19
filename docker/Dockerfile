@@ -8,7 +8,7 @@ MAINTAINER Matthieu Foll <follm@iarc.fr>
 RUN apt-get update -y
 
 # Install dependences
-RUN apt-get install --no-install-recommends -y \
+RUN DEBIAN_FRONTEND=noninteractive apt-get install apt-get install --no-install-recommends -y \
 	g++ \
 	make \
 	wget \
@@ -55,5 +55,5 @@ RUN wget -P /usr/local/bin/ https://github.com/mfoll/pileup2base/raw/follm/maste
 	chmod +x /usr/local/bin/pileup2baseindel.pl
 
 # Install R and package qvalue from bioconductor 
-RUN apt-get install --no-install-recommends -y r-base && \
+RUN DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y r-base && \
 	Rscript -e 'source("http://bioconductor.org/biocLite.R");biocLite("qvalue")'
