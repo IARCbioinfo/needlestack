@@ -8,7 +8,7 @@ MAINTAINER Matthieu Foll <follm@iarc.fr>
 RUN apt-get update -y
 
 # Install dependences
-RUN DEBIAN_FRONTEND=noninteractive apt-get install apt-get install --no-install-recommends -y \
+RUN DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
 	g++ \
 	make \
 	wget \
