@@ -11,14 +11,12 @@ RUN apt-get update -y
 RUN DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
 	g++ \
 	make \
-	wget \
 	git \
 	zlib1g-dev \
 	python \
 	libncurses5-dev \
 	ca-certificates \
 	dialog \
-	bzip2 \
 	apt-utils
 
 # Install bedtools 
@@ -52,8 +50,9 @@ RUN git clone git://github.com/samtools/htslib.git && \
 	rm -rf htslib samtools
 
 # Install pileup2base 
-RUN wget -P /usr/local/bin/ https://github.com/mfoll/pileup2base/raw/follm/master/pileup2baseindel.pl && \
-	chmod +x /usr/local/bin/pileup2baseindel.pl
+#RUN wget -P /usr/local/bin/ https://github.com/mfoll/pileup2base/raw/follm/master/pileup2baseindel.pl && \
+ADD https://github.com/mfoll/pileup2base/raw/follm/master/pileup2baseindel.pl /usr/local/bin/
+RUN chmod +x /usr/local/bin/pileup2baseindel.pl
 
 # Install R and package qvalue from bioconductor 
 RUN DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y r-base && \
