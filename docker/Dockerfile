@@ -62,8 +62,8 @@ RUN apt-get update -y && \
 	rm -rf htslib samtools && \
 
 	# Install R and package qvalue from bioconductor 
-	DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y r-base && \
-	Rscript -e 'source("http://bioconductor.org/biocLite.R");biocLite("qvalue")' && \
+	DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y r-base # && \
+#	Rscript -e 'source("http://bioconductor.org/biocLite.R");biocLite("qvalue")' && \
 
 	# Remove unnecessary dependences
 	DEBIAN_FRONTEND=noninteractive apt-get remove -y \
