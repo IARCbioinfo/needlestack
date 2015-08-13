@@ -38,6 +38,14 @@ RUN apt-get update -y && \
 	make install && \
 	cd .. && \
 	rm -rf bedtools2 && \
+	
+	# Install vcflib 
+	git clone --recursive git://github.com/ekg/vcflib.git && \
+	cd vcflib &&  \
+	make && \
+	cp bin/vcfoverlay /usr/local/bin/ && \
+	cd .. && \
+	rm -rf vcflib && \
 
 # Install samtools specific version manually
 #RUN wget https://github.com/samtools/samtools/releases/download/1.2/samtools-1.2.tar.bz2 && \
