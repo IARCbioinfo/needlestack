@@ -7,6 +7,8 @@ MAINTAINER Matthieu Foll <follm@iarc.fr>
 # Install pileup2base 
 #RUN wget -P /usr/local/bin/ https://github.com/mfoll/pileup2base/raw/follm/master/pileup2baseindel.pl && \
 ADD https://github.com/mfoll/pileup2base/raw/follm/master/pileup2baseindel.pl /usr/local/bin/
+ADD https://github.com/mfoll/robust-regression-caller/raw/master/bin/bed_large_cut.r /usr/local/bin/
+ADD https://github.com/mfoll/robust-regression-caller/raw/master/bin/pileup_nbrr_caller_vcf.r /usr/local/bin/
 
 RUN apt-get update -y && \
 	# Add R new version repos and update the repository sources list
