@@ -32,6 +32,9 @@ RUN apt-get update -y && \
 
 	# Make pileup2base executable
 	chmod +x /usr/local/bin/pileup2baseindel.pl && \
+	# Make R scripts executable
+	chmod +x /usr/local/bin/bed_large_cut.r && \
+	chmod +x /usr/local/bin/pileup_nbrr_caller_vcf.r && \
 
 	# Install bedtools 
 	git clone https://github.com/arq5x/bedtools2.git && \
