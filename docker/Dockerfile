@@ -81,7 +81,6 @@ RUN apt-get update -y && \
 	zlib1g-dev \
 	python \
 	libncurses5-dev \
-	ca-certificates \
 	dialog \
 	apt-utils \
 	software-properties-common && \
