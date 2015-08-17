@@ -16,6 +16,7 @@ Vagrant.configure(2) do |config|
 		DEBIAN_FRONTEND=noninteractive apt-get update -y
 		DEBIAN_FRONTEND=noninteractive apt-get install -y default-jre
 		wget -qO- get.nextflow.io | bash
+		chmod 777 nextflow
 		ln -s /home/vagrant/nextflow /usr/local/bin/
 		curl -sSL https://get.docker.com/ | sh
 		usermod -aG docker vagrant
