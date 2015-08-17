@@ -25,6 +25,8 @@ params.all_sites = "FALSE"
 params.do_plots = "TRUE"
 
 bed = file( params.bed )
+fasta_ref = file( params.fasta_ref )
+fasta_ref_fai = file( params.fasta_ref+'bai' )
 
 bam = Channel.fromPath( params.bam_folder+'/*.bam' ).toList()   
 bai = Channel.fromPath( params.bam_folder+'/*.bam.bai' ).toList()
@@ -57,6 +59,8 @@ process samtools_mpileup {
      file split_bed
 	file bam
 	file bai  
+	file fasta_ref
+	file fasta_ref_fai
      
      output:
      set val(region_tag), file("${region_tag}.pileup") into pileup
@@ -65,7 +69,7 @@ process samtools_mpileup {
  	region_tag = split_bed.baseName
 	'''
 	while read bed_line; do
-		samtools mpileup --fasta-ref !{params.fasta_ref} --region $bed_line --ignore-RG --min-BQ !{params.base_qual} --min-MQ !{params.map_qual} --max-idepth 1000000 --max-depth !{params.max_DP} !{bam} | sed 's/		/	*	*/g' >> !{region_tag}.pileup
+		samtools mpileup --fasta-ref !{fasta_ref} --region $bed_line --ignore-RG --min-BQ !{params.base_qual} --min-MQ !{params.map_qual} --max-idepth 1000000 --max-depth !{params.max_DP} !{bam} | sed 's/		/	*	*/g' >> !{region_tag}.pileup
 	done < !{split_bed}
 	'''
 }
@@ -116,6 +120,8 @@ process R_regression {
         
      input:
      set val(region_tag), file(table_file), file('names.txt') from table
+     file fasta_ref
+     file fasta_ref_fai
      
      output:
      file "${region_tag}.vcf" into vcf
@@ -123,7 +129,7 @@ process R_regression {
         
  	shell:
  	'''
-	pileup_nbrr_caller_vcf.r !{region_tag}.vcf !{params.fasta_ref} !{params.min_qval} !{params.min_dp} !{params.min_ao} !{params.sor_snv} !{params.sor_indel} !{params.all_sites} !{params.do_plots}
+	pileup_nbrr_caller_vcf.r !{region_tag}.vcf !{fasta_ref} !{params.min_qval} !{params.min_dp} !{params.min_ao} !{params.sor_snv} !{params.sor_indel} !{params.all_sites} !{params.do_plots}
 	'''
 }
 
