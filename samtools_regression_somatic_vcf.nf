@@ -92,8 +92,8 @@ process mpileup2table {
         
  	shell:
  	'''
- 	nb_pos=\$(wc -l < !{region_tag}.pileup)
-	if [ \$nb_pos -gt 0 ]; then 
+ 	nb_pos=$(wc -l < !{region_tag}.pileup)
+	if [ $nb_pos -gt 0 ]; then 
 		# split and convert pileup file
 		pileup2baseindel.pl -i !{region_tag}.pileup
 		# rename the output (the converter call files sample{i}.txt)
