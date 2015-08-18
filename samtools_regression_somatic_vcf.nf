@@ -26,7 +26,7 @@ params.do_plots = "TRUE"
 
 bed = file( params.bed )
 fasta_ref = file( params.fasta_ref )
-fasta_ref_fai = file( params.fasta_ref+'bai' )
+fasta_ref_fai = file( params.fasta_ref+'.fai' )
 
 bam = Channel.fromPath( params.bam_folder+'/*.bam' ).toList()   
 bai = Channel.fromPath( params.bam_folder+'/*.bam.bai' ).toList()
