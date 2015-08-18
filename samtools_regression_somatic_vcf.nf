@@ -77,6 +77,8 @@ process samtools_mpileup {
 // split mpileup file and convert to table 
 process mpileup2table {
      
+     errorStrategy 'ignore'
+     
      storeDir { params.bam_folder+'/PILEUP/'+region_tag }   
         
      tag { region_tag }   
@@ -90,22 +92,25 @@ process mpileup2table {
         
  	shell:
  	'''
- 	# split and convert pileup file
-	pileup2baseindel.pl -i !{region_tag}.pileup
-	# rename the output (the converter call files sample{i}.txt)
-	i=1
-	for cur_bam in !{bam} 
-	do 
-		if [ "!{params.sample_names}" == "FILE" ]; then
-  			# use bam file name as sample name
-			SM=${cur_bam%.*}
-		else
-			# extract sample name from bam file read group info field
-			SM=$(samtools view -H $cur_bam | grep @RG | head -1 | sed "s/.*SM:\\([^\\t]*\\).*/\\1/")
-		fi
-		printf "sample$i\\t$SM\\n" >> names.txt
-		i=$((i+1)) 
-	done
+ 	nb_pos=\$(wc -l < !{region_tag}.pileup)
+	if [ \$nb_pos -gt 0 ]; then 
+		# split and convert pileup file
+		pileup2baseindel.pl -i !{region_tag}.pileup
+		# rename the output (the converter call files sample{i}.txt)
+		i=1
+		for cur_bam in !{bam} 
+		do 
+			if [ "!{params.sample_names}" == "FILE" ]; then
+				# use bam file name as sample name
+				SM=${cur_bam%.*}
+			else
+				# extract sample name from bam file read group info field
+				SM=$(samtools view -H $cur_bam | grep @RG | head -1 | sed "s/.*SM:\\([^\\t]*\\).*/\\1/")
+			fi
+			printf "sample$i\\t$SM\\n" >> names.txt
+			i=$((i+1)) 
+		done
+	fi
 	'''
 }
 
