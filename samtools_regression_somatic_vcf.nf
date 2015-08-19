@@ -27,6 +27,7 @@ params.do_plots = "TRUE"
 bed = file( params.bed )
 fasta_ref = file( params.fasta_ref )
 fasta_ref_fai = file( params.fasta_ref+'.fai' )
+fasta_ref_gzi = file( params.fasta_ref+'.gzi' )
 
 bam = Channel.fromPath( params.bam_folder+'/*.bam' ).toList()   
 bai = Channel.fromPath( params.bam_folder+'/*.bam.bai' ).toList()
@@ -61,6 +62,7 @@ process samtools_mpileup {
 	file bai  
 	file fasta_ref
 	file fasta_ref_fai
+	file fasta_ref_gzi
      
      output:
      set val(region_tag), file("${region_tag}.pileup") into pileup
@@ -127,6 +129,7 @@ process R_regression {
      set val(region_tag), file(table_file), file('names.txt') from table
      file fasta_ref
      file fasta_ref_fai
+	file fasta_ref_gzi
      
      output:
      file "${region_tag}.vcf" into vcf
