@@ -150,6 +150,11 @@ process collect_vcf_result {
 	file 'all_variants.vcf' into big_vcf
 
 	'''
-	vcfoverlay *.vcf > all_variants.vcf
+	nb_vcf=$(ls -l *.vcf | wc -l)
+	if [ $nb_vcf -gt 1 ]; then
+		vcfoverlay *.vcf > all_variants.vcf
+	else 
+		cp *.vcf all_variants.vcf
+	fi
 	'''
 }
