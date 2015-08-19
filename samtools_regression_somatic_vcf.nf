@@ -154,7 +154,7 @@ process collect_vcf_result {
 	if [ $nb_vcf -gt 1 ]; then
 		vcfoverlay *.vcf > all_variants.vcf
 	else 
-		cp *.vcf all_variants.vcf
+		cp .vcf all_variants.vcf
 	fi
 	'''
 }
