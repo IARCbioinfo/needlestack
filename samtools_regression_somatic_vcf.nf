@@ -150,7 +150,7 @@ process collect_vcf_result {
 	file 'all_variants.vcf' into big_vcf
 
 	'''
-	nb_vcf=$(ls -l *.vcf | wc -l)
+	nb_vcf=$(find . -maxdepth 1 -name *vcf | wc -l)
 	if [ $nb_vcf -gt 1 ]; then
 		vcfoverlay *.vcf > all_variants.vcf
 	else 
