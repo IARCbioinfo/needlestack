@@ -5,7 +5,6 @@ machine:
     - wget -qO- get.nextflow.io | bash ; chmod 755 nextflow ; sudo ln -s ~/nextflow /usr/local/bin/
 test:
   override:
-    - case $CIRCLE_NODE_INDEX in 
-        0) cd data_test; nextflow run mfoll/robust-regression-caller --bed TP53_all.bed --nsplit 4 --fasta_ref 17.fasta.gz --bam_folder BAM/ --min_dp 50 ;; 
+    - case $CIRCLE_NODE_INDEX in 0) cd data_test; nextflow run mfoll/robust-regression-caller --bed TP53_all.bed --nsplit 4 --fasta_ref 17.fasta.gz --bam_folder BAM/ --min_dp 50 ;; 
         1) cd data_test; nextflow run mfoll/robust-regression-caller --bed TP53_exon2_11.bed --nsplit 4 --fasta_ref 17.fasta.gz --bam_folder BAM/ --min_dp 50 ;; esac: parallel: true
  
