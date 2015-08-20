@@ -1,3 +1,7 @@
+general:
+  branches:
+    ignore:
+      - dev
 machine:
   services:
     - docker
