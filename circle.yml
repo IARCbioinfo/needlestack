@@ -7,11 +7,21 @@ test:
   override:
     - |
       cd data_test
-      nextflow run mfoll/robust-regression-caller --bed TP53_all.bed --nsplit 4 --fasta_ref 17.fasta.gz --bam_folder BAM/ --min_dp 50 
+      nextflow run mfoll/robust-regression-caller -with-docker mfoll/robust-regression-caller --bed TP53_all.bed --nsplit 4 --fasta_ref 17.fasta.gz --bam_folder BAM/ --min_dp 50 
       cp BAM/all_variants.vcf results/test1.vcf 
       rm -rf work/ .nextflow.* BAM/all_variants.vcf BAM/VCF/ BAM/PILEUP/ BAM/BED_REGIONS/ 
     - |
       cd data_test 
-      nextflow run mfoll/robust-regression-caller --bed TP53_exon2_11.bed --nsplit 4 --fasta_ref 17.fasta.gz --bam_folder BAM/ --min_dp 50 
+      nextflow run mfoll/robust-regression-caller -with-docker mfoll/robust-regression-caller --bed TP53_exon2_11.bed --nsplit 4 --fasta_ref 17.fasta.gz --bam_folder BAM/ --min_dp 50 
       cp BAM/all_variants.vcf results/test2.vcf 
+      rm -rf work/ .nextflow.* BAM/all_variants.vcf BAM/VCF/ BAM/PILEUP/ BAM/BED_REGIONS/ 
+    - |
+      cd data_test
+      nextflow run mfoll/robust-regression-caller -r dev -with-docker mfoll/robust-regression-caller:dev --bed TP53_all.bed --nsplit 4 --fasta_ref 17.fasta.gz --bam_folder BAM/ --min_dp 50 
+      cp BAM/all_variants.vcf results/test1_dev.vcf 
+      rm -rf work/ .nextflow.* BAM/all_variants.vcf BAM/VCF/ BAM/PILEUP/ BAM/BED_REGIONS/ 
+    - |
+      cd data_test 
+      nextflow run mfoll/robust-regression-caller -r dev -with-docker mfoll/robust-regression-caller:dev --bed TP53_exon2_11.bed --nsplit 4 --fasta_ref 17.fasta.gz --bam_folder BAM/ --min_dp 50 
+      cp BAM/all_variants.vcf results/test2_dev.vcf 
       rm -rf work/ .nextflow.* BAM/all_variants.vcf BAM/VCF/ BAM/PILEUP/ BAM/BED_REGIONS/ 
