@@ -107,7 +107,7 @@ process mpileup2table {
 				SM=${cur_bam%.*}
 			else
 				# extract sample name from bam file read group info field
-				SM=$(samtools view -H $cur_bam | grep @RG | head -1 | sed "s/.*SM:\\([^\\t]*\\).*/\\1/")
+				SM=$(samtools view -H $cur_bam | grep @RG | head -1 | sed "s/.*SM:\\([^\\t]*\\).*/\\1/" | tr -d "[:blank:]")
 			fi
 			printf "sample$i\\t$SM\\n" >> names.txt
 			i=$((i+1)) 
