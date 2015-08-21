@@ -5,7 +5,7 @@ FROM debian:latest
 MAINTAINER Matthieu Foll <follm@iarc.fr>
 
 # Install pileup2base 
-ADD https://github.com/mfoll/pileup2base/raw/follm/master/pileup2baseindel.pl /usr/local/bin/
+ADD https://github.com/mfoll/robust-regression-caller/raw/master/bin/pileup2baseindel.pl /usr/local/bin/
 ADD https://github.com/mfoll/robust-regression-caller/raw/master/bin/bed_large_cut.r /usr/local/bin/
 ADD https://github.com/mfoll/robust-regression-caller/raw/master/bin/pileup_nbrr_caller_vcf.r /usr/local/bin/
 
