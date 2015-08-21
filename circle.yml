@@ -40,16 +40,13 @@ test:
       cp BAM/all_variants.vcf results/test2_stable.vcf 
       rm -rf work/ .nextflow.* BAM/all_variants.vcf BAM/VCF/ BAM/PILEUP/ BAM/BED_REGIONS/ 
 deployment:
-  master:
+  git:
     branch: master
     commands:
-      - git config --global user.email "follm@iarc.fr"
-      - git config --global user.name "mfoll"
+      - git config --global user.email "circle_ci@nomail.com"
+      - git config --global user.name "Circle CI"
+      - git checkout dev
       - git add .
       - git status
       - git commit --allow-empty -m "Added results from successful CircleCI tests build $CIRCLE_BUILD_NUM"
-      - git push origin master
-      - git checkout dev
-      - git merge -m "Added results from successful CircleCI tests build $CIRCLE_BUILD_NUM" master
-      - git commit --allow-empty -m "Added results from successful CircleCI tests build $CIRCLE_BUILD_NUM" dev
       - git push origin dev
