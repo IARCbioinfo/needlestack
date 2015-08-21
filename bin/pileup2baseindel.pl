@@ -5,6 +5,7 @@
 #Creat Time: Fri 03 Aug 2012 10:34:54 PM CDT  
 #Vanderbilt Center for Quantitative Sciences
 #############################################
+#Modified from https://github.com/riverlee/pileup2base (see https://github.com/mfoll/pileup2base)
 use strict;
 use warnings;
 use File::Basename;
