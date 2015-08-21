@@ -39,3 +39,13 @@ test:
       nextflow run mfoll/robust-regression-caller -r master -with-docker mfoll/robust-regression-caller:stable --bed TP53_exon2_11.bed --nsplit 4 --fasta_ref 17.fasta.gz --bam_folder BAM/ --min_dp 50 
       cp BAM/all_variants.vcf results/test2_stable.vcf 
       rm -rf work/ .nextflow.* BAM/all_variants.vcf BAM/VCF/ BAM/PILEUP/ BAM/BED_REGIONS/ 
+deployment:
+  master:
+    branch: master
+    commands:
+      - git config --global user.email "follm@iarc.fr"
+      - git config --global user.name "mfoll"
+      - git add .
+      - git status
+      - git commit -m "Added results from successful CircleCI tests build $CIRCLE_BUILD_NUM"
+      - git push origin master
