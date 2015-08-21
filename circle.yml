@@ -50,6 +50,6 @@ deployment:
       - git commit --allow-empty -m "Added results from successful CircleCI tests build $CIRCLE_BUILD_NUM"
       - git push origin master
       - git checkout dev
-      - git merge master
-      - git commit --allow-empty -m "Added results from successful CircleCI tests build $CIRCLE_BUILD_NUM"
+      - git merge -m "Added results from successful CircleCI tests build $CIRCLE_BUILD_NUM" master
+      - git commit --allow-empty
       - git push origin dev
