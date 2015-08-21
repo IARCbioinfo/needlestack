@@ -11,7 +11,7 @@
 // - pileup2baseindel.pl (+ perl)
 // - vcfoverlay from vcflib
 
-params.min_dp = 100
+params.min_dp = 50
 params.min_ao = 5
 params.nsplit = 1
 params.min_qval = 50
@@ -104,10 +104,12 @@ process mpileup2table {
 		do 
 			if [ "!{params.sample_names}" == "FILE" ]; then
 				# use bam file name as sample name
-				SM=${cur_bam%.*}
+				bam_file_name="${cur_bam%.*}"
+				# remove whitespaces from name
+				SM="$(echo -e "${bam_file_name}" | tr -d '[[:space:]]')"
 			else
 				# extract sample name from bam file read group info field
-				SM=$(samtools view -H $cur_bam | grep @RG | head -1 | sed "s/.*SM:\\([^\\t]*\\).*/\\1/" | tr -d "[:blank:]")
+				SM=$(samtools view -H $cur_bam | grep @RG | head -1 | sed "s/.*SM:\\([^\\t]*\\).*/\\1/" | tr -d '[:space:]')
 			fi
 			printf "sample$i\\t$SM\\n" >> names.txt
 			i=$((i+1)) 
