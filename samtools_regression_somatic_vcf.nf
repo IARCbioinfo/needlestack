@@ -11,7 +11,7 @@
 // - pileup2baseindel.pl (+ perl)
 // - vcfoverlay from vcflib
 
-params.min_dp = 100
+params.min_dp = 50
 params.min_ao = 5
 params.nsplit = 1
 params.min_qval = 50
