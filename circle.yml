@@ -29,7 +29,7 @@ test:
       rm -rf work/ .nextflow.* BAM/all_variants.vcf BAM/VCF/ BAM/PILEUP/ BAM/BED_REGIONS/ 
 deployment:
   git:
-    branch: /*/
+    branch: [master, dev]
     commands:
       - cd ~/NGS_data_test
       - git config --global user.email "circle_ci@nomail.com"
