@@ -32,9 +32,9 @@ deployment:
     branch: [master, dev]
     commands:
       - cd ~/NGS_data_test
-      - git config --global user.email "circle_ci@nomail.com"
-      - git config --global user.name "Circle CI"
+      - git config --global user.email "follm@iarc.fr"
+      - git config --global user.name "Circle CI_$CIRCLE_PROJECT_REPONAME_$CIRCLE_BRANCH"
       - git add .
       - git status
-      - git commit --allow-empty -m "Added results from successful $CIRCLE_PROJECT_REPONAME:$CIRCLE_BRANCH CircleCI tests build $CIRCLE_BUILD_NUM"
+      - git commit --allow-empty -m "Results from $CIRCLE_PROJECT_REPONAME:$CIRCLE_BRANCH CircleCI tests build $CIRCLE_BUILD_NUM"
       - git push origin master
