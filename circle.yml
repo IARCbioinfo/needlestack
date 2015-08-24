@@ -31,7 +31,6 @@ deployment:
   git:
     branch: [master, dev]
     commands:
-      - cd ~/NGS_data_test ; git remote show origin
       - cd ~/NGS_data_test ; git config --global user.email "follm@iarc.fr"
       - cd ~/NGS_data_test ; git config --global user.name "Circle CI_$CIRCLE_PROJECT_REPONAME_$CIRCLE_BRANCH"
       - cd ~/NGS_data_test ; git add .
