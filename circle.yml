@@ -3,7 +3,7 @@ machine:
     - docker
   post:
     - wget -qO- get.nextflow.io | bash ; chmod 755 nextflow ; sudo ln -s ~/nextflow /usr/local/bin/
-    - git clone https://github.com/mfoll/NGS_data_test.git
+    - git clone --depth=1 https://github.com/mfoll/NGS_data_test.git
     - mkdir -p ~/NGS_data_test/1000G_CEU_TP53/results/$CIRCLE_BRANCH
 test:
   override:
