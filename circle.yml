@@ -31,10 +31,10 @@ deployment:
   git:
     branch: [master, dev]
     commands:
-      - cd ~/NGS_data_test ; pwd ; git remote show origin
-      - git config --global user.email "follm@iarc.fr"
-      - git config --global user.name "Circle CI_$CIRCLE_PROJECT_REPONAME_$CIRCLE_BRANCH"
-      - pwd ; git remote show origin ; git add .
-      - pwd ; git remote show origin ; git status
-      - git commit --allow-empty -m "Results from $CIRCLE_PROJECT_REPONAME:$CIRCLE_BRANCH CircleCI tests build $CIRCLE_BUILD_NUM"
-      - git push origin master
+      - cd ~/NGS_data_test ; git remote show origin
+      - cd ~/NGS_data_test ; git config --global user.email "follm@iarc.fr"
+      - cd ~/NGS_data_test ; git config --global user.name "Circle CI_$CIRCLE_PROJECT_REPONAME_$CIRCLE_BRANCH"
+      - cd ~/NGS_data_test ; git add .
+      - cd ~/NGS_data_test ; git status
+      - cd ~/NGS_data_test ; git commit --allow-empty -m "Results from $CIRCLE_PROJECT_REPONAME:$CIRCLE_BRANCH CircleCI tests build $CIRCLE_BUILD_NUM"
+      - cd ~/NGS_data_test ; git push origin master
