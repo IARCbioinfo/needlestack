@@ -1,52 +1,40 @@
-general:
-  branches:
-    ignore:
-      - dev
 machine:
   services:
     - docker
   post:
     - wget -qO- get.nextflow.io | bash ; chmod 755 nextflow ; sudo ln -s ~/nextflow /usr/local/bin/
+    - git clone https://github.com/mfoll/NGS_data_test.git
+    - mkdir -p ~/NGS_data_test/1000G_CEU_TP53/results/$CIRCLE_BRANCH
 test:
   override:
     - |
-      cd data_test
-      nextflow run mfoll/robust-regression-caller -r master -with-docker mfoll/robust-regression-caller --bed TP53_all.bed --nsplit 4 --fasta_ref 17.fasta.gz --bam_folder BAM/ --min_dp 50 
-      cp BAM/all_variants.vcf results/test1.vcf 
+      cd ~/NGS_data_test/1000G_CEU_TP53/
+      nextflow run mfoll/robust-regression-caller -r $CIRCLE_BRANCH -with-docker mfoll/robust-regression-caller --bed TP53_all.bed --nsplit 4 --fasta_ref 17.fasta.gz --bam_folder BAM/ --min_dp 50 
+      cp BAM/all_variants.vcf results/$CIRCLE_BRANCH/test1.vcf 
       rm -rf work/ .nextflow.* BAM/all_variants.vcf BAM/VCF/ BAM/PILEUP/ BAM/BED_REGIONS/ 
     - |
-      cd data_test 
-      nextflow run mfoll/robust-regression-caller -r master -with-docker mfoll/robust-regression-caller --bed TP53_exon2_11.bed --nsplit 4 --fasta_ref 17.fasta.gz --bam_folder BAM/ --min_dp 50 
-      cp BAM/all_variants.vcf results/test2.vcf 
+      cd ~/NGS_data_test/1000G_CEU_TP53/
+      nextflow run mfoll/robust-regression-caller -r $CIRCLE_BRANCH -with-docker mfoll/robust-regression-caller --bed TP53_exon2_11.bed --nsplit 4 --fasta_ref 17.fasta.gz --bam_folder BAM/ --min_dp 50 
+      cp BAM/all_variants.vcf results/$CIRCLE_BRANCH/test2.vcf 
       rm -rf work/ .nextflow.* BAM/all_variants.vcf BAM/VCF/ BAM/PILEUP/ BAM/BED_REGIONS/ 
     - |
-      cd data_test
-      nextflow run mfoll/robust-regression-caller -r dev -with-docker mfoll/robust-regression-caller:dev --bed TP53_all.bed --nsplit 4 --fasta_ref 17.fasta.gz --bam_folder BAM/ --min_dp 50 
-      cp BAM/all_variants.vcf results/test1_dev.vcf 
+      cd ~/NGS_data_test/1000G_CEU_TP53/
+      nextflow run mfoll/robust-regression-caller -r $CIRCLE_BRANCH -with-docker mfoll/robust-regression-caller:stable --bed TP53_all.bed --nsplit 4 --fasta_ref 17.fasta.gz --bam_folder BAM/ --min_dp 50 
+      cp BAM/all_variants.vcf results/$CIRCLE_BRANCH/test1_stable.vcf 
       rm -rf work/ .nextflow.* BAM/all_variants.vcf BAM/VCF/ BAM/PILEUP/ BAM/BED_REGIONS/ 
     - |
-      cd data_test 
-      nextflow run mfoll/robust-regression-caller -r dev -with-docker mfoll/robust-regression-caller:dev --bed TP53_exon2_11.bed --nsplit 4 --fasta_ref 17.fasta.gz --bam_folder BAM/ --min_dp 50 
-      cp BAM/all_variants.vcf results/test2_dev.vcf 
-      rm -rf work/ .nextflow.* BAM/all_variants.vcf BAM/VCF/ BAM/PILEUP/ BAM/BED_REGIONS/ 
-    - |
-      cd data_test
-      nextflow run mfoll/robust-regression-caller -r master -with-docker mfoll/robust-regression-caller:stable --bed TP53_all.bed --nsplit 4 --fasta_ref 17.fasta.gz --bam_folder BAM/ --min_dp 50 
-      cp BAM/all_variants.vcf results/test1_stable.vcf 
-      rm -rf work/ .nextflow.* BAM/all_variants.vcf BAM/VCF/ BAM/PILEUP/ BAM/BED_REGIONS/ 
-    - |
-      cd data_test 
-      nextflow run mfoll/robust-regression-caller -r master -with-docker mfoll/robust-regression-caller:stable --bed TP53_exon2_11.bed --nsplit 4 --fasta_ref 17.fasta.gz --bam_folder BAM/ --min_dp 50 
-      cp BAM/all_variants.vcf results/test2_stable.vcf 
+      cd ~/NGS_data_test/1000G_CEU_TP53/
+      nextflow run mfoll/robust-regression-caller -r $CIRCLE_BRANCH -with-docker mfoll/robust-regression-caller:stable --bed TP53_exon2_11.bed --nsplit 4 --fasta_ref 17.fasta.gz --bam_folder BAM/ --min_dp 50 
+      cp BAM/all_variants.vcf results/$CIRCLE_BRANCH/test2_stable.vcf 
       rm -rf work/ .nextflow.* BAM/all_variants.vcf BAM/VCF/ BAM/PILEUP/ BAM/BED_REGIONS/ 
 deployment:
   git:
-    branch: master
+    branch: /*/
     commands:
+      - cd ~/NGS_data_test
       - git config --global user.email "circle_ci@nomail.com"
       - git config --global user.name "Circle CI"
-      - git checkout dev
       - git add .
       - git status
-      - git commit --allow-empty -m "Added results from successful CircleCI tests build $CIRCLE_BUILD_NUM"
-      - git push origin dev
+      - git commit --allow-empty -m "Added results from successful $CIRCLE_PROJECT_REPONAME:$CIRCLE_BRANCH CircleCI tests build $CIRCLE_BUILD_NUM"
+      - git push origin master
