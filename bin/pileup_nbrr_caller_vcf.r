@@ -262,7 +262,7 @@ if (cluster) {
   do_plots=T
 }
 
-indiv_run=read.table("names.txt",stringsAsFactors=F)
+indiv_run=read.table("names.txt",stringsAsFactors=F,colClasses = "character")
 indiv_run[,2]=make.unique(indiv_run[,2],sep="_")
 
 pileups_files=list.files(pattern="sample[[:digit:]]+\\.txt")
