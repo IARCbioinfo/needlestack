@@ -235,7 +235,6 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,cols=c(),outlier_col="red",pl
 cluster=T
 
 if (cluster) {
-  #source("/appli57/somatic_reg/glmrob.nb.plot.r")
   samtools="samtools"
   out_file=commandArgs(TRUE)[1]
   fasta_ref=commandArgs(TRUE)[2]
@@ -248,8 +247,6 @@ if (cluster) {
   output_all_sites=as.logical(commandArgs(TRUE)[8])
   do_plots=as.logical(commandArgs(TRUE)[9])
 } else {
-  setwd("/Users/follm/Dropbox/Work/proton\ caller/pileup_caller/chr12-25380225-25380245")
-  #source("../glmrob.nb.plot.with.integrate_vcf.r")
   samtools="/usr/local/bin/samtools"
   out_file="test.vcf"
   fasta_ref="~/Dropbox/Work/genome_refs/hg19.fasta"
@@ -311,7 +308,7 @@ SOR=function(RO_forward,AO_forward,RO_reverse,AO_reverse) {
   X11=AO_reverse
   refRatio=pmax(X00,X01)/pmin(X00,X01)
   altRatio=pmax(X10,X11)/pmin(X10,X11)
-  R=(X00*X11)/(X01*X10)
+  R=(X00/X01)*(X11/X10)
   log((R+1/R)/(refRatio/altRatio))
 }
 
@@ -323,7 +320,7 @@ common_annot=function() {
   tmp_rvsbs=pmax(Vp * Cm, Vm * Cp) / (Vp * Cm + Vm * Cp)
   tmp_rvsbs[which(is.na(tmp_rvsbs))]=-1
   rvsbs<<-tmp_rvsbs
-  all_rvsb<<-max(sum(Vp) * sum(Cm), sum(Vm) * sum(Cp)) / (sum(Vp) * sum(Cm) + sum(Vm) * sum(Cp))
+  all_rvsb<<-max(as.numeric(sum(Vp)) * sum(Cm), as.numeric(sum(Vm)) * sum(Cp)) / (as.numeric(sum(Vp)) * sum(Cm) + as.numeric(sum(Vm)) * sum(Cp))
   if (is.na(all_rvsb)) all_rvsb<<- (-1)
   tmp_sors<<-SOR(Rp,Vp,Rm,Vm)
   tmp_sors[which(is.na(tmp_sors))]=-1
