@@ -8,23 +8,28 @@ machine:
 test:
   override:
     - |
+      cd ~/robust-regression-caller/docker
+      docker build -t mfoll/robust-regression-caller .
+      cd ~/robust-regression-caller/docker_stable
+      docker build -t mfoll/robust-regression-caller:stable .
+    - |
       cd ~/NGS_data_test/1000G_CEU_TP53/
-      nextflow run mfoll/robust-regression-caller -r $CIRCLE_BRANCH -with-docker mfoll/robust-regression-caller --bed TP53_all.bed --nsplit 4 --fasta_ref 17.fasta.gz --bam_folder BAM/ --min_dp 50 
+      nextflow run ~/robust-regression-caller/samtools_regression_somatic_vcf.nf -with-docker mfoll/robust-regression-caller --bed TP53_all.bed --nsplit 4 --fasta_ref 17.fasta.gz --bam_folder BAM/ --min_dp 50 
       cp BAM/all_variants.vcf results/$CIRCLE_BRANCH/test1.vcf 
       rm -rf work/ .nextflow.* BAM/all_variants.vcf BAM/VCF/ BAM/PILEUP/ BAM/BED_REGIONS/ 
     - |
       cd ~/NGS_data_test/1000G_CEU_TP53/
-      nextflow run mfoll/robust-regression-caller -r $CIRCLE_BRANCH -with-docker mfoll/robust-regression-caller --bed TP53_exon2_11.bed --nsplit 4 --fasta_ref 17.fasta.gz --bam_folder BAM/ --min_dp 50 
+      nextflow run ~/robust-regression-caller/samtools_regression_somatic_vcf.nf -with-docker mfoll/robust-regression-caller --bed TP53_exon2_11.bed --nsplit 4 --fasta_ref 17.fasta.gz --bam_folder BAM/ --min_dp 50 
       cp BAM/all_variants.vcf results/$CIRCLE_BRANCH/test2.vcf 
       rm -rf work/ .nextflow.* BAM/all_variants.vcf BAM/VCF/ BAM/PILEUP/ BAM/BED_REGIONS/ 
     - |
       cd ~/NGS_data_test/1000G_CEU_TP53/
-      nextflow run mfoll/robust-regression-caller -r $CIRCLE_BRANCH -with-docker mfoll/robust-regression-caller:stable --bed TP53_all.bed --nsplit 4 --fasta_ref 17.fasta.gz --bam_folder BAM/ --min_dp 50 
+      nextflow run ~/robust-regression-caller/samtools_regression_somatic_vcf.nf -with-docker mfoll/robust-regression-caller:stable --bed TP53_all.bed --nsplit 4 --fasta_ref 17.fasta.gz --bam_folder BAM/ --min_dp 50 
       cp BAM/all_variants.vcf results/$CIRCLE_BRANCH/test1_stable.vcf 
       rm -rf work/ .nextflow.* BAM/all_variants.vcf BAM/VCF/ BAM/PILEUP/ BAM/BED_REGIONS/ 
     - |
       cd ~/NGS_data_test/1000G_CEU_TP53/
-      nextflow run mfoll/robust-regression-caller -r $CIRCLE_BRANCH -with-docker mfoll/robust-regression-caller:stable --bed TP53_exon2_11.bed --nsplit 4 --fasta_ref 17.fasta.gz --bam_folder BAM/ --min_dp 50 
+      nextflow run ~/robust-regression-caller/samtools_regression_somatic_vcf.nf -with-docker mfoll/robust-regression-caller:stable --bed TP53_exon2_11.bed --nsplit 4 --fasta_ref 17.fasta.gz --bam_folder BAM/ --min_dp 50 
       cp BAM/all_variants.vcf results/$CIRCLE_BRANCH/test2_stable.vcf 
       rm -rf work/ .nextflow.* BAM/all_variants.vcf BAM/VCF/ BAM/PILEUP/ BAM/BED_REGIONS/ 
 deployment:
@@ -37,3 +42,4 @@ deployment:
       - cd ~/NGS_data_test ; git status
       - cd ~/NGS_data_test ; git commit --allow-empty -m "Results from $CIRCLE_PROJECT_REPONAME:$CIRCLE_BRANCH CircleCI tests build $CIRCLE_BUILD_NUM"
       - cd ~/NGS_data_test ; git push origin master
+      - curl -H "Content-Type: application/json" --data '&#123;"docker_tag_name": "$CIRCLE_BRANCH"&#125;' -X POST https://registry.hub.docker.com/u/mfoll/robust-regression-caller/trigger/e85e32e7-508d-4971-b621-e1a0409f711a/
