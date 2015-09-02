@@ -401,7 +401,7 @@ for (i in 1:npos) {
   		    cat("\t","GT:QVAL:DP:RO:AO:AF:SB:SOR:RVSB",sep = "",file=out_file,append=T)
           # all samples
   		    genotype=rep("0/0",l=nindiv)
-  		    variants=which(reg_res$GQ>=GQ_threshold)
+  		    variants=which(reg_res$GQ>=GQ_threshold & sors<=SOR_threshold_SNV)
   		    genotype[variants]="0/1"
           for (cur_sample in 1:nindiv) {
             cat("\t",genotype[cur_sample],":",reg_res$GQ[cur_sample],":",DP[cur_sample],":",(Rp+Rm)[cur_sample],":",ma_count[cur_sample],":",(ma_count/DP)[cur_sample],":",Rp[cur_sample],",",Rm[cur_sample],",",Vp[cur_sample],",",Vm[cur_sample],":",sors[cur_sample],":",rvsbs[cur_sample],sep = "",file=out_file,append=T)
@@ -457,7 +457,7 @@ for (i in 1:npos) {
             cat("\t","GT:GQ:DP:RO:AO:AF:SB:SOR:RVSB",sep = "",file=out_file,append=T)
             # all samples
             genotype=rep("0/0",l=nindiv)
-            variants=which(reg_res$GQ>=GQ_threshold)
+            variants=which(reg_res$GQ>=GQ_threshold & sors<=SOR_threshold_indel)
             genotype[variants]="0/1"
             for (cur_sample in 1:nindiv) {
               cat("\t",genotype[cur_sample],":",reg_res$GQ[cur_sample],":",DP[cur_sample],":",(Rp+Rm)[cur_sample],":",ma_count[cur_sample],":",(ma_count/DP)[cur_sample],":",Rp[cur_sample],",",Rm[cur_sample],",",Vp[cur_sample],",",Vm[cur_sample],":",sors[cur_sample],":",rvsbs[cur_sample],sep = "",file=out_file,append=T)
@@ -514,7 +514,7 @@ for (i in 1:npos) {
             cat("\t","GT:GQ:DP:RO:AO:AF:SB:SOR:RVSB",sep = "",file=out_file,append=T)
             # all samples
             genotype=rep("0/0",l=nindiv)
-            variants=which(reg_res$GQ>=GQ_threshold)
+            variants=which(reg_res$GQ>=GQ_threshold & sors<=SOR_threshold_indel)
             genotype[variants]="0/1"
             for (cur_sample in 1:nindiv) {
               cat("\t",genotype[cur_sample],":",reg_res$GQ[cur_sample],":",DP[cur_sample],":",(Rp+Rm)[cur_sample],":",ma_count[cur_sample],":",(ma_count/DP)[cur_sample],":",Rp[cur_sample],",",Rm[cur_sample],",",Vp[cur_sample],",",Vm[cur_sample],":",sors[cur_sample],":",rvsbs[cur_sample],sep = "",file=out_file,append=T)
