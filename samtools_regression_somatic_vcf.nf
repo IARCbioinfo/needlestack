@@ -11,18 +11,19 @@
 // - pileup2baseindel.pl (+ perl)
 // - vcfoverlay from vcflib
 
-params.min_dp = 50
-params.min_ao = 5
-params.nsplit = 1
-params.min_qval = 50
-params.sor_snv = 4 // http://gatkforums.broadinstitute.org/discussion/5533/strandoddsratio-computation filter out SOR > 4 for SNVs and > 10 for indels
-params.sor_indel = 10
-params.map_qual = 20
-params.base_qual = 20
-params.max_DP = 30000
+params.min_dp = 50 // minimum coverage in at least one sample to consider a site
+params.min_ao = 5 // minimum number of non-ref reads in at least one sample to consider a site
+params.nsplit = 1 // split the bed file in nsplit pieces and run in parallel 
+params.min_qval = 50 // qvalue in Phred scale to consider a variant 
+// http://gatkforums.broadinstitute.org/discussion/5533/strandoddsratio-computation filter out SOR > 4 for SNVs and > 10 for indels
+params.sor_snv = 4 // strand bias SOR threshold for snv 
+params.sor_indel = 10 // strand bias SOR threshold for indels
+params.map_qual = 20 // min mapping quality (passed to samtools)
+params.base_qual = 20 // min base quality (passed to samtools)
+params.max_DP = 30000 // downsample coverage per sample (passed to samtools)
 params.sample_names = "BAM" // put FILE to use the bam file names as sample names and BAM to use the sample name filed from the bam files
-params.all_sites = "FALSE"
-params.do_plots = "TRUE"
+params.all_sites = "FALSE" //  output all sites, even when no variant is detected (but still affected by min_dp and min_ao)
+params.do_plots = "TRUE" // produce pdf plots of regressions 
 
 bed = file( params.bed )
 fasta_ref = file( params.fasta_ref )
