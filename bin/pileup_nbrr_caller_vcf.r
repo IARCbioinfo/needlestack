@@ -262,19 +262,14 @@ if (cluster) {
 indiv_run=read.table("names.txt",stringsAsFactors=F,colClasses = "character")
 indiv_run[,2]=make.unique(indiv_run[,2],sep="_")
 
-pileups_files=list.files(pattern="sample[[:digit:]]+\\.txt")
-nindiv=length(pileups_files)
-
-rm_ext=function(x) {
-  sub("\\.[[:alnum:]]+$", "", basename(as.character(x)))
-}
+pileups_files=paste(indiv_run[,1],".txt",sep="")
+nindiv=nrow(indiv_run)
 
 npos=length(readLines(pileups_files[1]))-1
 atcg_matrix=matrix(nrow=npos,ncol=8*nindiv)
 coverage_matrix=matrix(nrow=npos,ncol=nindiv)
-all_samples=rm_ext(pileups_files)
 
-ins=as.data.frame(setNames(replicate(nindiv,rep(NA,npos), simplify = F), all_samples),optional=T)
+ins=as.data.frame(setNames(replicate(nindiv,rep(NA,npos), simplify = F), indiv_run[,1]),optional=T)
 del=ins
 for (k in 1:nindiv) {
   cur_data=read.table(pileups_files[k],header = T,stringsAsFactors = F,sep="\t")
@@ -283,8 +278,8 @@ for (k in 1:nindiv) {
   	pos_ref[,"ref"]=toupper(pos_ref[,"ref"])
   }
   atcg_matrix[,((k-1)*8+1):(k*8)]=as.matrix(cur_data[,4:11])
-  ins[,all_samples[k]]=cur_data[,12]
-  del[,all_samples[k]]=cur_data[,13]
+  ins[,indiv_run[k,1]]=cur_data[,12]
+  del[,indiv_run[k,1]]=cur_data[,13]
   coverage_matrix[,k]=rowSums(atcg_matrix[,((k-1)*8+1):(k*8)])
 }
 
