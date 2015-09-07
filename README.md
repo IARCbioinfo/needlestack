@@ -50,14 +50,14 @@ The VCF file containing the calls will sit in the `BAM` folder once done.
 |-----------|--------------:|-------------| 
 | min_dp    |            50 | Minimum coverage in at least one sample to consider a site |
 | min_ao | 5 | Minimum number of non-ref reads in at least one sample to consider a site|
-| nsplit | 1 | split the bed file in nsplit pieces and run in parallel |
+| nsplit | 1 | Split the bed file in nsplit pieces and run in parallel |
 | min_qval | 50 | qvalue in Phred scale to consider a variant |
-| sor_snv | 4 | strand bias SOR threshold for snv |
-| sor_indel | 10 | strand bias SOR threshold for indels |
-| map_qual | 20 | min mapping quality (passed to samtools) |
-| base_qual | 20 | min base quality (passed to samtools) |
-| max_DP | 30000 | downsample coverage per sample (passed to samtools) |
-| sample_names | "BAM" | put FILE to use the bam file names as sample names and BAM to use the sample name filed from the bam files |
+| sor_snv | 4 | Strand bias SOR threshold for snv |
+| sor_indel | 10 | Strand bias SOR threshold for indels |
+| map_qual | 20 | Min mapping quality (passed to samtools) |
+| base_qual | 20 | Min base quality (passed to samtools) |
+| max_DP | 30000 | Downsample coverage per sample (passed to samtools) |
+| sample_names | "BAM" | Put "FILE" to use the bam file names as sample names and "BAM" to use the sample name filed from the bam files |
 | all_sites | "FALSE" | Output all sites, even when no variant is detected (but still affected by min_dp and min_ao) |
 | do_plots | "TRUE" | Produce pdf plots of regressions |
 
