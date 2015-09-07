@@ -47,7 +47,7 @@ The VCF file containing the calls will sit in the `BAM` folder once done.
 `--bed`, `--bam_folder` and `--fasta_ref` are compulsary. The optional parameters with default values are:
 
 | Parameter | Default value | Description |
-|-----------|---------------|-------------| 
+|-----------|--------------:|-------------| 
 | min_dp    |            50 | Minimum coverage in at least one sample to consider a site |
 | min_ao | 5 | Minimum number of non-ref reads in at least one sample to consider a site|
 | nsplit | 1 | split the bed file in nsplit pieces and run in parallel |
