@@ -6,18 +6,23 @@ Warning: development in progress, unreliable results warrantied.
 
 Works under most Linux distributions and Apple OS X.
 
-1. Install [java](https://java.com/download/) if you don't already have it.
+1. Install [java](https://java.com/download/) JRE if you don't already have it.
+
 2. Install [nextflow](http://www.nextflow.io/).
 
-	And move it to a location in your `$PATH` (`/usr/local/bin` for example here):
 	```bash
 	curl -fsSL get.nextflow.io | bash
+	```
+	And move it to a location in your `$PATH` (`/usr/local/bin` for example here):
+	```bash
 	sudo mv nextflow /usr/local/bin
 	```
 3. Install [docker](https://www.docker.com).
 	
 	This is very system specific (but quite easy in most cases), follow  [docker documentation](https://docs.docker.com/installation/). Also follow the optional configuration step called `Create a Docker group` in their documentation.
+
 4. Optionally download a sample dataset.
+
 	```bash
 	git clone --depth=1 https://github.com/mfoll/NGS_data_test.git
 	```
@@ -28,7 +33,9 @@ Works under most Linux distributions and Apple OS X.
 	cd NGS_data_test/1000G_CEU_TP53/
 	nextflow run mfoll/robust-regression-caller -with-docker mfoll/robust-regression-caller --bed TP53_all.bed --nsplit 10 --bam_folder BAM/ --fasta_ref 17.fasta.gz
 	```
+	
 	You will find a VCF file in the `BAM` folder once done.
+	
 	The first time it will take more time as the pipeline will be downloaded from github and the docker container from [dockerhub](https://hub.docker.com/r/mfoll/robust-regression-caller/).
 
 
