@@ -34,7 +34,7 @@ Works under most Linux distributions and Apple OS X.
 	```sh
 	cd NGS_data_test/1000G_CEU_TP53/
 	nextflow run mfoll/robust-regression-caller -with-docker mfoll/robust-regression-caller \
-			--bed TP53_all.bed --nsplit 10 --bam_folder BAM/ --fasta_ref 17.fasta.gz
+			--bed TP53_all.bed --bam_folder BAM/ --fasta_ref 17.fasta.gz
 	```
 	
 	You will find a [VCF file](https://samtools.github.io/hts-specs/) called `all_variants.vcf` in the `BAM/` folder once done.
