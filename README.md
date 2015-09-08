@@ -1,6 +1,8 @@
-# Robust regression multi-sample variant caller
+# Robust regression multi-sample somatic variant caller
 
 Warning: development in progress, unreliable results warrantied. 
+
+You will need a set of [BAM files](https://samtools.github.io/hts-specs/) (called `*.bam`) grouped in a single folder along with their [index files](http://www.htslib.org/doc/samtools.html) (called `*.bam.bai`), a [`bed` file](https://genome.ucsc.edu/FAQ/FAQformat.html#format1) and a reference [`fasta` file](https://en.wikipedia.org/wiki/FASTA_format) (eventually compressed with [bgzip](http://www.htslib.org/doc/tabix.html)) along with its [`faidx` index](http://www.htslib.org/doc/faidx.html) (`*.fai`) (and [`tabix` index](http://www.htslib.org/doc/tabix.html) `*.gzi` if compressed).
 
 ## Quick start
 
@@ -34,7 +36,7 @@ Works under most Linux distributions and Apple OS X.
 	nextflow run mfoll/robust-regression-caller -with-docker mfoll/robust-regression-caller --bed TP53_all.bed --nsplit 10 --bam_folder BAM/ --fasta_ref 17.fasta.gz
 	```
 	
-	You will find a VCF file in the `BAM` folder once done.
+	You will find a VCF file called `all_variants.vcf` in the `BAM/` folder once done.
 	
 	The first time it will take more time as the pipeline will be downloaded from github and the docker container from [dockerhub](https://hub.docker.com/r/mfoll/robust-regression-caller/).
 
@@ -44,10 +46,6 @@ Works under most Linux distributions and Apple OS X.
 If you can't install [docker](https://www.docker.com) or don't want to use it, the pipeline will also work if you install [perl](https://www.perl.org),  [bedtools](http://bedtools.readthedocs.org/en/latest/), [samtools](http://www.htslib.org), vcfoverlay from [vcflib](https://github.com/ekg/vcflib) and Rscript from [R](https://www.r-project.org) and put them in your path (executables are assumed to be respectively called `perl`, `bedtools`, `samtools`, `vcflib` and `Rscript`). In this case, remove the `-with-docker` option from step 5 above.
 
 The exact same pipeline can be run on your computer or on a HPC cluster, simply by adding a [nextflow configuration file](http://www.nextflow.io/docs/latest/config.html) to choose your scheduler. See the nextflow documentation [here](http://www.nextflow.io/docs/latest/config.html#scope-executor) how to do that.
-
-You will need a set of BAM files (called `*.bam`) in a folder  (called `BAM` here) along with their index (called `*.bam.bai`), a `bed` file and a reference `fasta` file (eventually gz compressed) along with its index (`*.fai`, and `*.gzi` if compressed).
-
-The VCF file containing the calls will sit in the `BAM` folder once done.
 
 `--bed`, `--bam_folder` and `--fasta_ref` are compulsary. The optional parameters with default values are:
 
