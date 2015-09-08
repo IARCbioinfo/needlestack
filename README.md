@@ -7,27 +7,27 @@ Warning: development in progress, unreliable results warrantied.
 Works under most Linux distributions and Apple OS X.
 
 1. Install [java](https://java.com/download/).
-Only if you don't already have it.
+	Only if you don't already have it.
 2. Install [nextflow](http://www.nextflow.io/). 
-And move it to a location in your `$PATH` (`/usr/local/bin` for example here):
-```bash
-curl -fsSL get.nextflow.io | bash
-sudo mv nextflow /usr/local/bin
-```
+	And move it to a location in your `$PATH` (`/usr/local/bin` for example here):
+	```bash
+	curl -fsSL get.nextflow.io | bash
+	sudo mv nextflow /usr/local/bin
+	```
 3. Install [docker](https://www.docker.com).
-This is very system specific (but quite easy in most cases), follow  [docker documentation](https://docs.docker.com/installation/). Also follow the optional configuration step called `Create a Docker group` in their documentation.
+	This is very system specific (but quite easy in most cases), follow  [docker documentation](https://docs.docker.com/installation/). Also follow the optional configuration step called `Create a Docker group` in their documentation.
 4. Optionally download a sample dataset.
-```bash
-git clone --depth=1 https://github.com/mfoll/NGS_data_test.git
-```
+	```bash
+	git clone --depth=1 https://github.com/mfoll/NGS_data_test.git
+	```
 5. Run the pipeline.
-Here on the example dataset downloaded above
-```sh
-cd NGS_data_test/1000G_CEU_TP53/
-nextflow run mfoll/robust-regression-caller -with-docker mfoll/robust-regression-caller --bed TP53_all.bed --nsplit 10 --bam_folder BAM/ --fasta_ref 17.fasta.gz
-```
-You will find a VCF file in the `BAM` folder once done.
-The first time it will take more time as the pipeline will be downloaded from github and the docker container from [dockerhub](https://hub.docker.com/r/mfoll/robust-regression-caller/).
+	Here on the example dataset downloaded above
+	```sh
+	cd NGS_data_test/1000G_CEU_TP53/
+	nextflow run mfoll/robust-regression-caller -with-docker mfoll/robust-regression-caller --bed TP53_all.bed --nsplit 10 --bam_folder BAM/ --fasta_ref 17.fasta.gz
+	```
+	You will find a VCF file in the `BAM` folder once done.
+	The first time it will take more time as the pipeline will be downloaded from github and the docker container from [dockerhub](https://hub.docker.com/r/mfoll/robust-regression-caller/).
 
 
 ## Detailed instructions
