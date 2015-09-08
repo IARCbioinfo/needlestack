@@ -57,7 +57,12 @@ Works under most Linux distributions and Apple OS X.
 
 If you can't install [docker](https://www.docker.com) or don't want to use it, the pipeline will also work if you install [perl](https://www.perl.org),  [bedtools](http://bedtools.readthedocs.org/en/latest/), [samtools](http://www.htslib.org), vcfoverlay from [vcflib](https://github.com/ekg/vcflib) and Rscript from [R](https://www.r-project.org) and put them in your path (executables are assumed to be respectively called `perl`, `bedtools`, `samtools`, `vcflib` and `Rscript`). In this case, remove the `-with-docker` option from step 5 above.
 
-The exact same pipeline can be run on your computer or on a HPC cluster, simply by adding a [nextflow configuration file](http://www.nextflow.io/docs/latest/config.html) to choose your scheduler. See the nextflow documentation [here](http://www.nextflow.io/docs/latest/config.html#scope-executor) how to do that.
+The exact same pipeline can be run on your computer or on a HPC cluster, by adding a [nextflow configuration file](http://www.nextflow.io/docs/latest/config.html) to choose an appropriate [executor](http://www.nextflow.io/docs/latest/executor.html). For example to work on a cluster using [SGE scheduler](https://en.wikipedia.org/wiki/Oracle_Grid_Engine), simply add a file named `nextflow.config` in the current directory (or `~/.nextflow/config` to make global changes) containing:  
+```java
+process.executor = 'sge'
+```
+
+Other popular schedulers such as LSF, SLURM, PBS, TORQUE etc. are also compatible. See the nextflow documentation [here](http://www.nextflow.io/docs/latest/executor.html) for more details. Also have a look at the [other parameters for the executors](http://www.nextflow.io/docs/latest/config.html#scope-executor), in particular `queueSize` that defines the number of tasks the executor will handle in a parallel manner (default is 100 which is certainly too high if you are executing it on your local machine).
 
 `--bed`, `--bam_folder` and `--fasta_ref` are compulsary. The optional parameters with default values are:
 
