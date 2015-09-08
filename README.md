@@ -2,7 +2,7 @@
 
 Warning: development in progress, unreliable results warrantied. 
 
-You will need a set of [BAM files](https://samtools.github.io/hts-specs/) (called `*.bam`) grouped in a single folder along with their [index files](http://www.htslib.org/doc/samtools.html) (called `*.bam.bai`), a [bed file](https://genome.ucsc.edu/FAQ/FAQformat.html#format1) and a reference [fasta file](https://en.wikipedia.org/wiki/FASTA_format) (eventually compressed with [bgzip](http://www.htslib.org/doc/tabix.html)) along with its [faidx index](http://www.htslib.org/doc/faidx.html) (`*.fai`) (and [tabix index](http://www.htslib.org/doc/tabix.html) `*.gzi` if compressed).
+You will need a set of [BAM files](https://samtools.github.io/hts-specs/) (called `*.bam`) grouped in a single folder along with their [index files](http://www.htslib.org/doc/samtools.html) (called `*.bam.bai`), a [bed file](https://genome.ucsc.edu/FAQ/FAQformat.html#format1) and a reference [fasta file](https://en.wikipedia.org/wiki/FASTA_format) (eventually compressed with [bgzip](http://www.htslib.org/doc/tabix.html)) along with its [faidx index](http://www.htslib.org/doc/faidx.html) (and `*.gzi` faidx index if compressed).
 
 ## Quick start
 
@@ -36,7 +36,7 @@ Works under most Linux distributions and Apple OS X.
 	nextflow run mfoll/robust-regression-caller -with-docker mfoll/robust-regression-caller --bed TP53_all.bed --nsplit 10 --bam_folder BAM/ --fasta_ref 17.fasta.gz
 	```
 	
-	You will find a VCF file called `all_variants.vcf` in the `BAM/` folder once done.
+	You will find a [VCF file](https://samtools.github.io/hts-specs/) called `all_variants.vcf` in the `BAM/` folder once done.
 	
 	The first time it will take more time as the pipeline will be downloaded from github and the docker container from [dockerhub](https://hub.docker.com/r/mfoll/robust-regression-caller/).
 
