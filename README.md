@@ -41,7 +41,19 @@ Works under most Linux distributions and Apple OS X.
 	
 	The first time it will take more time as the pipeline will be downloaded from github and the docker container from [dockerhub](https://hub.docker.com/r/mfoll/robust-regression-caller/).
 
-
+	Creating an alias for the long command above can be useful. For example:
+	```sh
+	alias rrcaller='nextflow run mfoll/robust-regression-caller -with-docker mfoll/robust-regression-caller'
+	```
+	
+	If you want to permanantly add this alias (and not just for your current session), add the above  line to your `~/.bashrc` file (assuming you are using bash).
+	
+	Will allow you to do this:
+	```sh
+        rrcaller --bed TP53_all.bed --bam_folder BAM/ --fasta_ref 17.fasta.gz
+	```
+	
+	
 ## Detailed instructions
 
 If you can't install [docker](https://www.docker.com) or don't want to use it, the pipeline will also work if you install [perl](https://www.perl.org),  [bedtools](http://bedtools.readthedocs.org/en/latest/), [samtools](http://www.htslib.org), vcfoverlay from [vcflib](https://github.com/ekg/vcflib) and Rscript from [R](https://www.r-project.org) and put them in your path (executables are assumed to be respectively called `perl`, `bedtools`, `samtools`, `vcflib` and `Rscript`). In this case, remove the `-with-docker` option from step 5 above.
