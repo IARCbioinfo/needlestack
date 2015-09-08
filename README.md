@@ -33,7 +33,7 @@ Works under most Linux distributions and Apple OS X.
 	Here on the example dataset downloaded above:
 	```sh
 	cd NGS_data_test/1000G_CEU_TP53/
-	nextflow run mfoll/robust-regression-caller -with-docker mfoll/robust-regression-caller \\
+	nextflow run mfoll/robust-regression-caller -with-docker mfoll/robust-regression-caller \
 			--bed TP53_all.bed --nsplit 10 --bam_folder BAM/ --fasta_ref 17.fasta.gz
 	```
 	
