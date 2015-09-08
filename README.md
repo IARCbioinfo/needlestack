@@ -50,9 +50,8 @@ Works under most Linux distributions and Apple OS X.
 	
 	Will allow you to do this:
 	```sh
-        rrcaller --bed TP53_all.bed --bam_folder BAM/ --fasta_ref 17.fasta.gz
+	rrcaller --bed TP53_all.bed --bam_folder BAM/ --fasta_ref 17.fasta.gz
 	```
-	
 	
 ## Detailed instructions
 
