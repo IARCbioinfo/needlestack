@@ -52,7 +52,14 @@ Works under most Linux distributions and Apple OS X.
 	```sh
 	rrcaller --bed TP53_all.bed --bam_folder BAM/ --fasta_ref 17.fasta.gz
 	```
-	
+6. Update the pipeline
+
+	You can update the nextflow sofware and the pipeline itself simply using:
+	```bash
+	nextflow -self-update
+	nextflow pull mfoll/robust-regression-caller
+	```
+
 ## Detailed instructions
 
 If you can't install [docker](https://www.docker.com) or don't want to use it, the pipeline will also work if you install [perl](https://www.perl.org),  [bedtools](http://bedtools.readthedocs.org/en/latest/), [samtools](http://www.htslib.org), vcfoverlay from [vcflib](https://github.com/ekg/vcflib) and Rscript from [R](https://www.r-project.org) and put them in your path (executables are assumed to be respectively called `perl`, `bedtools`, `samtools`, `vcflib` and `Rscript`). In this case, remove the `-with-docker` option from step 5 above.
