@@ -22,7 +22,7 @@ params.map_qual = 20 // min mapping quality (passed to samtools)
 params.base_qual = 20 // min base quality (passed to samtools)
 params.max_DP = 30000 // downsample coverage per sample (passed to samtools)
 params.sample_names = "BAM" // put FILE to use the bam file names as sample names and BAM to use the sample name filed from the bam files
-params.all_sites = "FALSE" //  output all sites, even when no variant is detected (but still affected by min_dp and min_ao)
+params.all_sites = "FALSE" //  output all sites, even when no variant is detected
 params.do_plots = "TRUE" // produce pdf plots of regressions 
 
 bed = file( params.bed )
