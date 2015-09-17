@@ -188,32 +188,22 @@ glmrob.nb <- function(y,x,bounding.func='T/T',c.tukey.beta=5,c.tukey.sig=3,c.by.
   return(res)
 }
 
-plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,cols=c(),outlier_col="red",plot_title=NULL,legend=NULL,sors=NULL,SOR_threshold=Inf){
+plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_threshold=Inf){
   n=sum(rob_nb_res$qvalue>qthreshold)
   m=sum(rob_nb_res$qvalue<=qthreshold)
   
-  if(is.null(sors)) sors=rep(0.5,length(rob_nb_res$coverage))
-  
-  if (length(cols)>0) {
-    my_pch=21
-    outliers_color=cols
-  } else {
-    my_pch=19
-    outliers_color=rep("black",length(rob_nb_res$coverage))
-  }
-  outliers_color[which(rob_nb_res$qvalues<=qthreshold & !is.na(sors) & sors<=SOR_threshold)]=outlier_col
-  
+  outliers_color=rep("black",length(rob_nb_res$coverage))
+  cols=outliers_color
+  outliers_color[which(rob_nb_res$qvalues<=qthreshold)]="red"
+  cols[which(rob_nb_res$qvalues<=qthreshold & sbs<=SB_threshold)]="red"
+
   temp_title = bquote(e==.(format(rob_nb_res$coef[[2]],digits = 2)) ~ "," ~ sigma==.(format(rob_nb_res$coef[[1]],digits = 2)) 
                       ~ ", N="~.(n+m)~", pvar="~.(format(m/(n+m),digits=2)))
   plot(rob_nb_res$coverage, rob_nb_res$ma_count,
-       pch=my_pch,bg=cols,col=outliers_color,xlab="Coverage (DP)",ylab="Number of ALT reads (AO)",
+       pch=21,bg=cols,col=outliers_color,xlab="Coverage (DP)",ylab="Number of ALT reads (AO)",
        main=plot_title)
   mtext(temp_title)
-  
-  if (!is.null(legend)) {
-    legend("right",as.character(legend[[2]]),pch=19,col=legend[[1]])
-  }
-  
+   
   if (!is.na(reg_res$coef["slope"])) {
     xi=max(rob_nb_res$coverage)
     yi1=qnbinom(p=0.99, size=1/rob_nb_res$coef[[1]], mu=rob_nb_res$coef[[2]]*xi)
@@ -224,7 +214,7 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,cols=c(),outlier_col="red",pl
 
     logqvals=log10(rob_nb_res$qvalues)
     logqvals[logqvals<=-9]=-9
-    plot(logqvals,rob_nb_res$ma_count/rob_nb_res$coverage,pch=my_pch,bg=cols,col=outliers_color,ylab="Allelic fraction (AF)",xlab=bquote("log"[10] ~ "(q-value)"),main="Allelic fraction effect")
+    plot(logqvals,rob_nb_res$ma_count/rob_nb_res$coverage,pch=21,bg=cols,col=outliers_color,ylab="Allelic fraction (AF)",xlab=bquote("log"[10] ~ "(q-value)"),main="Allelic fraction effect")
     abline(v=log10(qthreshold),col="red",lwd=2)
 
     hist(rob_nb_res$pvalues,main="p-values distribution",ylab="Density",xlab="p-value",col="grey",freq=T,br=20,xlim=c(0,1))
@@ -242,16 +232,19 @@ if (cluster) {
   min_coverage=as.numeric(commandArgs(TRUE)[4])
   min_reads=as.numeric(commandArgs(TRUE)[5])
   # http://gatkforums.broadinstitute.org/discussion/5533/strandoddsratio-computation filter out SOR > 4 for SNVs and > 10 for indels
-  SOR_threshold_SNV=as.numeric(commandArgs(TRUE)[6])
-  SOR_threshold_indel=as.numeric(commandArgs(TRUE)[7])
-  output_all_sites=as.logical(commandArgs(TRUE)[8])
-  do_plots=as.logical(commandArgs(TRUE)[9])
+  # filter out RVSB > 0.85 (maybe less stringent for SNVs)
+  SB_type=commandArgs(TRUE)[6]
+  SB_threshold_SNV=as.numeric(commandArgs(TRUE)[7])
+  SB_threshold_indel=as.numeric(commandArgs(TRUE)[8])
+  output_all_sites=as.logical(commandArgs(TRUE)[9])
+  do_plots=as.logical(commandArgs(TRUE)[10])
 } else {
   samtools="/usr/local/bin/samtools"
   out_file="test.vcf"
   fasta_ref="~/Dropbox/Work/genome_refs/hg19.fasta"
-  SOR_threshold_SNV=4
-  SOR_threshold_indel=10
+  SB_type="SOR"
+  SB_threshold_SNV=4
+  SB_threshold_indel=10
   min_coverage=100
   min_reads=5
   GQ_threshold=10
@@ -337,7 +330,7 @@ write_out("##fileDate=",format(Sys.Date(), "%Y%m%d"))
 write_out("##source=NBRR_caller_beta")
 write_out("##reference=",fasta_ref)
 write_out("##phasing=none")
-write_out("##filter=\"QVAL > ",GQ_threshold," & SOR_SNV < ",SOR_threshold_SNV," & SOR_INDEL < ",SOR_threshold_indel," & max(AO) > ",min_reads," & max(DP) > ",min_coverage,"\"")
+write_out("##filter=\"QVAL > ",GQ_threshold," & ",SB_type,"_SNV < ",SB_threshold_SNV," & ",SB_type,"_INDEL < ",SB_threshold_indel," & max(AO) > ",min_reads," & max(DP) > ",min_coverage,"\"")
 
 write_out("##INFO=<ID=TYPE,Number=A,Type=String,Description=\"The type of allele, either snp, ins or del\">")
 write_out("##INFO=<ID=NS,Number=1,Type=Integer,Description=\"Number of samples with data\">")
@@ -382,7 +375,8 @@ for (i in 1:npos) {
         all_DP=sum(coverage_matrix[i,])
         common_annot()
         all_RO=sum(Rp+Rm)
-        if (output_all_sites | (sum(sors<=SOR_threshold_SNV & reg_res$GQ>=GQ_threshold,na.rm=TRUE)>0)) {
+        if (SB_type=="SOR") sbs=sors else sbs=rvsbs
+        if (output_all_sites | (sum(sbs<=SB_threshold_SNV & reg_res$GQ>=GQ_threshold,na.rm=TRUE)>0)) {
           con=pipe(paste(samtools," faidx ",fasta_ref," ",pos_ref[i,"chr"],":",pos_ref[i,"loc"]-3,"-",pos_ref[i,"loc"]-1," | tail -n1",sep=""))
   		    before=readLines(con)
           close(con)
@@ -396,7 +390,7 @@ for (i in 1:npos) {
   		    cat("\t","GT:QVAL:DP:RO:AO:AF:SB:SOR:RVSB",sep = "",file=out_file,append=T)
           # all samples
   		    genotype=rep("0/0",l=nindiv)
-  		    variants=which(reg_res$GQ>=GQ_threshold & sors<=SOR_threshold_SNV)
+  		    variants=which(reg_res$GQ>=GQ_threshold & sbs<=SB_threshold_SNV)
   		    genotype[variants]="0/1"
           for (cur_sample in 1:nindiv) {
             cat("\t",genotype[cur_sample],":",reg_res$GQ[cur_sample],":",DP[cur_sample],":",(Rp+Rm)[cur_sample],":",ma_count[cur_sample],":",(ma_count/DP)[cur_sample],":",Rp[cur_sample],",",Rm[cur_sample],",",Vp[cur_sample],",",Vm[cur_sample],":",sors[cur_sample],":",rvsbs[cur_sample],sep = "",file=out_file,append=T)
@@ -404,7 +398,7 @@ for (i in 1:npos) {
   		    cat("\n",sep = "",file=out_file,append=T)
           if (do_plots) {
             pdf(paste(pos_ref[i,"chr"],"_",pos_ref[i,"loc"],"_",pos_ref[i,"loc"],"_",pos_ref[i,"ref"],"_",alt,".pdf",sep=""),7,6)
-            plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(pos_ref[i,"loc"])," (",.(pos_ref[i,"ref"]) %->% .(alt),")",sep="")), sors=sors, SOR_threshold=SOR_threshold_SNV)
+            plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(pos_ref[i,"loc"])," (",.(pos_ref[i,"ref"]) %->% .(alt),")",sep="")), sbs=sbs, SB_threshold=SB_threshold_SNV)
             dev.off()
           }
         }
@@ -436,7 +430,8 @@ for (i in 1:npos) {
           all_DP=sum(coverage_matrix[i,])+sum(ma_count)
           common_annot()
           all_RO=sum(Rp+Rm)
-          if (sum(sors<=SOR_threshold_indel & reg_res$GQ>=GQ_threshold,na.rm=TRUE)>0) {
+          if (SB_type=="SOR") sbs=sors else sbs=rvsbs
+          if (sum(sbs<=SB_threshold_indel & reg_res$GQ>=GQ_threshold,na.rm=TRUE)>0) {
             con=pipe(paste(samtools," faidx ",fasta_ref," ",pos_ref[i,"chr"],":",pos_ref[i,"loc"]+1-3,"-",pos_ref[i,"loc"]+1-1," | tail -n1",sep=""))
             before=readLines(con)
             close(con)
@@ -452,7 +447,7 @@ for (i in 1:npos) {
             cat("\t","GT:GQ:DP:RO:AO:AF:SB:SOR:RVSB",sep = "",file=out_file,append=T)
             # all samples
             genotype=rep("0/0",l=nindiv)
-            variants=which(reg_res$GQ>=GQ_threshold & sors<=SOR_threshold_indel)
+            variants=which(reg_res$GQ>=GQ_threshold & sbs<=SB_threshold_indel)
             genotype[variants]="0/1"
             for (cur_sample in 1:nindiv) {
               cat("\t",genotype[cur_sample],":",reg_res$GQ[cur_sample],":",DP[cur_sample],":",(Rp+Rm)[cur_sample],":",ma_count[cur_sample],":",(ma_count/DP)[cur_sample],":",Rp[cur_sample],",",Rm[cur_sample],",",Vp[cur_sample],",",Vm[cur_sample],":",sors[cur_sample],":",rvsbs[cur_sample],sep = "",file=out_file,append=T)
@@ -461,7 +456,7 @@ for (i in 1:npos) {
             if (do_plots) {
               # deletions are shifted in samtools mpileup by 1bp, so put them at the right place by adding + to pos_ref[i,"loc"] everywhere in what follows
               pdf(paste(pos_ref[i,"chr"],"_",pos_ref[i,"loc"]+1,"_",pos_ref[i,"loc"]+1+nchar(cur_del)-1,"_",cur_del,"_","-",".pdf",sep=""),7,6)
-              plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(pos_ref[i,"loc"]+1)," (",.(cur_del) %->% .("-"),")",sep="")),sors=sors, SOR_threshold=SOR_threshold_indel)
+              plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(pos_ref[i,"loc"]+1)," (",.(cur_del) %->% .("-"),")",sep="")),sbs=sbs, SB_threshold=SB_threshold_indel)
               dev.off()
             }
           }
@@ -494,7 +489,8 @@ for (i in 1:npos) {
           all_DP=sum(coverage_matrix[i,])+sum(ma_count)
           common_annot()
           all_RO=sum(Rp+Rm)
-          if (sum(sors<=SOR_threshold_indel & reg_res$GQ>=GQ_threshold,na.rm=TRUE)>0) {
+          if (SB_type=="SOR") sbs=sors else sbs=rvsbs
+          if (sum(sbs<=SB_threshold_indel & reg_res$GQ>=GQ_threshold,na.rm=TRUE)>0) {
             con=pipe(paste(samtools," faidx ",fasta_ref," ",pos_ref[i,"chr"],":",pos_ref[i,"loc"]-2,"-",pos_ref[i,"loc"]," | tail -n1",sep=""))
             before=readLines(con)
             close(con)
@@ -509,7 +505,7 @@ for (i in 1:npos) {
             cat("\t","GT:GQ:DP:RO:AO:AF:SB:SOR:RVSB",sep = "",file=out_file,append=T)
             # all samples
             genotype=rep("0/0",l=nindiv)
-            variants=which(reg_res$GQ>=GQ_threshold & sors<=SOR_threshold_indel)
+            variants=which(reg_res$GQ>=GQ_threshold & sbs<=SB_threshold_indel)
             genotype[variants]="0/1"
             for (cur_sample in 1:nindiv) {
               cat("\t",genotype[cur_sample],":",reg_res$GQ[cur_sample],":",DP[cur_sample],":",(Rp+Rm)[cur_sample],":",ma_count[cur_sample],":",(ma_count/DP)[cur_sample],":",Rp[cur_sample],",",Rm[cur_sample],",",Vp[cur_sample],",",Vm[cur_sample],":",sors[cur_sample],":",rvsbs[cur_sample],sep = "",file=out_file,append=T)
@@ -517,7 +513,7 @@ for (i in 1:npos) {
             cat("\n",sep = "",file=out_file,append=T)
             if (do_plots) {
               pdf(paste(pos_ref[i,"chr"],"_",pos_ref[i,"loc"],"_",pos_ref[i,"loc"],"_","-","_",cur_ins,".pdf",sep=""),7,6)
-              plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(pos_ref[i,"loc"])," (",.("-") %->% .(cur_ins),")",sep="")),sors=sors, SOR_threshold=SOR_threshold_indel)
+              plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(pos_ref[i,"loc"])," (",.("-") %->% .(cur_ins),")",sep="")),sbs=sbs, SB_threshold=SB_threshold_indel)
               dev.off()
             }
           }
