@@ -16,8 +16,10 @@ params.min_ao = 5 // minimum number of non-ref reads in at least one sample to c
 params.nsplit = 1 // split the bed file in nsplit pieces and run in parallel 
 params.min_qval = 50 // qvalue in Phred scale to consider a variant 
 // http://gatkforums.broadinstitute.org/discussion/5533/strandoddsratio-computation filter out SOR > 4 for SNVs and > 10 for indels
-params.sor_snv = 4 // strand bias SOR threshold for snv 
-params.sor_indel = 10 // strand bias SOR threshold for indels
+// filter out RVSB > 0.85 (maybe less stringent for SNVs)
+params.sb_type = "SOR" // strand bias measure to be used: "SOR" or "RVSB"
+params.sb_snv = 100 // strand bias threshold for snv 
+params.sb_indel = 100 // strand bias threshold for indels
 params.map_qual = 20 // min mapping quality (passed to samtools)
 params.base_qual = 20 // min base quality (passed to samtools)
 params.max_DP = 30000 // downsample coverage per sample (passed to samtools)
@@ -141,7 +143,7 @@ process R_regression {
  	shell:
  	'''
  	touch !{region_tag}_empty.pdf
-	pileup_nbrr_caller_vcf.r !{region_tag}.vcf !{fasta_ref} !{params.min_qval} !{params.min_dp} !{params.min_ao} !{params.sor_snv} !{params.sor_indel} !{params.all_sites} !{params.do_plots}
+	pileup_nbrr_caller_vcf.r !{region_tag}.vcf !{fasta_ref} !{params.min_qval} !{params.min_dp} !{params.min_ao} !{params.sb_type} !{params.sb_snv} !{params.sb_indel} !{params.all_sites} !{params.do_plots}
 	'''
 }
 PDF.filter { it.size() == 0 }.subscribe { it.delete() }

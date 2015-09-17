@@ -79,8 +79,9 @@ Other popular schedulers such as LSF, SLURM, PBS, TORQUE etc. are also compatibl
 | min_ao | 5 | Minimum number of non-ref reads in at least one sample to consider a site|
 | nsplit | 1 | Split the bed file in nsplit pieces and run in parallel |
 | min_qval | 50 | qvalue in Phred scale to consider a variant |
-| sor_snv | 4 | Strand bias SOR threshold for snv |
-| sor_indel | 10 | Strand bias SOR threshold for indels |
+| sb_type | "SOR" | Strand bias measure, either "SOR" or "RVSB" |
+| sb_snv | 100 | Strand bias threshold for SNVs (100 =no filter) |
+| sb_indel | 100 | Strand bias threshold for indels (100 = no filter)|
 | map_qual | 20 | Min mapping quality (passed to samtools) |
 | base_qual | 20 | Min base quality (passed to samtools) |
 | max_DP | 30000 | Downsample coverage per sample (passed to samtools) |
@@ -89,6 +90,8 @@ Other popular schedulers such as LSF, SLURM, PBS, TORQUE etc. are also compatibl
 | do_plots | "TRUE" | Produce pdf plots of regressions |
 
 Simply add the parameters you want in the command line like `--min_dp 1000` for exmaple to change the min coverage.
+
+[Recommended values](http://gatkforums.broadinstitute.org/discussion/5533/strandoddsratio-computation) for SOR strand bias are SOR < 4 for SNVs and < 10 for indels. There is no hard filter by default as this is easy to do afterward using [bcftools filter](http://samtools.github.io/bcftools/bcftools.html#filter) command.
 
 [![Join the chat at https://gitter.im/mfoll/robust-regression-caller](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/mfoll/robust-regression-caller?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
