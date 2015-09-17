@@ -140,9 +140,11 @@ process R_regression {
         
  	shell:
  	'''
+ 	touch !{region_tag}_empty.pdf
 	pileup_nbrr_caller_vcf.r !{region_tag}.vcf !{fasta_ref} !{params.min_qval} !{params.min_dp} !{params.min_ao} !{params.sor_snv} !{params.sor_indel} !{params.all_sites} !{params.do_plots}
 	'''
 }
+PDF.filter { it.size() == 0 }.subscribe { it.delete() }
 
 // merge all vcf files in one big file 
 process collect_vcf_result {
