@@ -123,9 +123,7 @@ process mpileup2table {
 
 // perform regression in R
 process R_regression {
-     
-     errorStrategy 'ignore'
-     
+       
      storeDir { params.bam_folder+'/VCF/' }   
         
      tag { region_tag }   
@@ -142,11 +140,12 @@ process R_regression {
         
  	shell:
  	'''
+ 	# create a dummy empty pdf to avoid an error in the process when no variant is found 
  	touch !{region_tag}_empty.pdf
 	pileup_nbrr_caller_vcf.r !{region_tag}.vcf !{fasta_ref} !{params.min_qval} !{params.min_dp} !{params.min_ao} !{params.sb_type} !{params.sb_snv} !{params.sb_indel} !{params.all_sites} !{params.do_plots}
 	'''
 }
-PDF.filter { it.size() == 0 }.subscribe { it.delete() }
+PDF.flatten().filter { it.size() == 0 }.subscribe { it.delete() }
 
 // merge all vcf files in one big file 
 process collect_vcf_result {
