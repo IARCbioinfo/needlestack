@@ -64,7 +64,8 @@ Works under most Linux distributions and Apple OS X.
 
 	Official releases can be found [here](https://github.com/mfoll/robust-regression-caller/releases/). There is a corresponding official [docker container](https://hub.docker.com/r/mfoll/robust-regression-caller/) for each release and one can run a particular version using (for example for v0.1):
 	```bash
-	nextflow run mfoll/robust-regression-caller -r v0.1 -with-docker mfoll/robust-regression-caller:v0.1 --bed TP53_all.bed --bam_folder BAM/ --fasta_ref 17.fasta.gz
+	nextflow run mfoll/robust-regression-caller -r v0.1 -with-docker mfoll/robust-regression-caller:v0.1 \
+	         --bed TP53_all.bed --bam_folder BAM/ --fasta_ref 17.fasta.gz
 	```
 
 ## Detailed instructions
