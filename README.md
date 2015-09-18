@@ -31,7 +31,7 @@ Works under most Linux distributions and Apple OS X.
 5. Run the pipeline.
 	
 	Here on the example dataset downloaded above:
-	```sh
+	```bash
 	cd NGS_data_test/1000G_CEU_TP53/
 	nextflow run mfoll/robust-regression-caller -with-docker mfoll/robust-regression-caller \
 	         --bed TP53_all.bed --bam_folder BAM/ --fasta_ref 17.fasta.gz
@@ -42,14 +42,14 @@ Works under most Linux distributions and Apple OS X.
 	The first time it will take more time as the pipeline will be downloaded from github and the docker container from [dockerhub](https://hub.docker.com/r/mfoll/robust-regression-caller/).
 
 	Creating an alias for the long command above can be useful. For example:
-	```sh
+	```bash
 	alias rrcaller='nextflow run mfoll/robust-regression-caller -with-docker mfoll/robust-regression-caller'
 	```
 	
 	If you want to permanantly add this alias (and not just for your current session), add the above  line to your `~/.bashrc` file (assuming you are using bash).
 	
 	Will allow you to do this:
-	```sh
+	```bash
 	rrcaller --bed TP53_all.bed --bam_folder BAM/ --fasta_ref 17.fasta.gz
 	```
 6. Update the pipeline
@@ -58,6 +58,13 @@ Works under most Linux distributions and Apple OS X.
 	```bash
 	nextflow -self-update
 	nextflow pull mfoll/robust-regression-caller
+	```
+
+	You can also automatically update the pipeline when you run it by adding the option `-latest` in the `nextflow run` command. Doing so you will always run the latest version from [Github](https://github.com/mfoll/robust-regression-caller).
+
+	Official releases can be found [here](https://github.com/mfoll/robust-regression-caller/releases/). There is a corresponding official [docker container](https://hub.docker.com/r/mfoll/robust-regression-caller/) for each release and one can run a particular version using (for example for v0.1):
+	```bash
+	nextflow run mfoll/robust-regression-caller -r v0.1 -with-docker mfoll/robust-regression-caller:v0.1 --bed TP53_all.bed --bam_folder BAM/ --fasta_ref 17.fasta.gz
 	```
 
 ## Detailed instructions
