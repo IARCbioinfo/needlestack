@@ -204,7 +204,7 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
        main=plot_title)
   mtext(temp_title)
    
-  if (!is.na(reg_res$coef["slope"])) {
+  if (!is.na(rob_nb_res$coef["slope"])) {
     xi=max(rob_nb_res$coverage)
     yi1=qnbinom(p=0.99, size=1/rob_nb_res$coef[[1]], mu=rob_nb_res$coef[[2]]*xi)
     yi2=qnbinom(p=0.01, size=1/rob_nb_res$coef[[1]], mu=rob_nb_res$coef[[2]]*xi)
