@@ -4,6 +4,7 @@ machine:
   post:
     - wget -qO- get.nextflow.io | bash ; chmod 755 nextflow ; sudo ln -s ~/nextflow /usr/local/bin/
     - git clone --depth=1 https://github.com/mfoll/NGS_data_test.git
+    - rm -rf ~/NGS_data_test/1000G_CEU_TP53/results/$CIRCLE_BRANCH
     - mkdir -p ~/NGS_data_test/1000G_CEU_TP53/results/$CIRCLE_BRANCH
 test:
   override:
@@ -16,21 +17,29 @@ test:
       cd ~/NGS_data_test/1000G_CEU_TP53/
       nextflow run ~/robust-regression-caller/samtools_regression_somatic_vcf.nf -with-docker mfoll/robust-regression-caller --bed TP53_all.bed --nsplit 4 --fasta_ref 17.fasta.gz --bam_folder BAM/ --min_dp 50 
       cp BAM/all_variants.vcf results/$CIRCLE_BRANCH/test1.vcf 
+      mkdir -p results/$CIRCLE_BRANCH/PDF/test1
+      cp BAM/VCF/*.pdf results/$CIRCLE_BRANCH/PDF/test1/
       rm -rf work/ .nextflow.* BAM/all_variants.vcf BAM/VCF/ BAM/PILEUP/ BAM/BED_REGIONS/ 
     - |
       cd ~/NGS_data_test/1000G_CEU_TP53/
       nextflow run ~/robust-regression-caller/samtools_regression_somatic_vcf.nf -with-docker mfoll/robust-regression-caller --bed TP53_exon2_11.bed --nsplit 4 --fasta_ref 17.fasta.gz --bam_folder BAM/ --min_dp 50 
       cp BAM/all_variants.vcf results/$CIRCLE_BRANCH/test2.vcf 
+      mkdir -p results/$CIRCLE_BRANCH/PDF/test2
+      cp BAM/VCF/*.pdf results/$CIRCLE_BRANCH/PDF/test2/
       rm -rf work/ .nextflow.* BAM/all_variants.vcf BAM/VCF/ BAM/PILEUP/ BAM/BED_REGIONS/ 
     - |
       cd ~/NGS_data_test/1000G_CEU_TP53/
       nextflow run ~/robust-regression-caller/samtools_regression_somatic_vcf.nf -with-docker mfoll/robust-regression-caller:stable --bed TP53_all.bed --nsplit 4 --fasta_ref 17.fasta.gz --bam_folder BAM/ --min_dp 50 
       cp BAM/all_variants.vcf results/$CIRCLE_BRANCH/test1_stable.vcf 
+      mkdir -p results/$CIRCLE_BRANCH/PDF/test1_stable
+      cp BAM/VCF/*.pdf results/$CIRCLE_BRANCH/PDF/test1_stable/
       rm -rf work/ .nextflow.* BAM/all_variants.vcf BAM/VCF/ BAM/PILEUP/ BAM/BED_REGIONS/ 
     - |
       cd ~/NGS_data_test/1000G_CEU_TP53/
       nextflow run ~/robust-regression-caller/samtools_regression_somatic_vcf.nf -with-docker mfoll/robust-regression-caller:stable --bed TP53_exon2_11.bed --nsplit 4 --fasta_ref 17.fasta.gz --bam_folder BAM/ --min_dp 50 
       cp BAM/all_variants.vcf results/$CIRCLE_BRANCH/test2_stable.vcf 
+      mkdir -p results/$CIRCLE_BRANCH/PDF/test2_stable
+      cp BAM/VCF/*.pdf results/$CIRCLE_BRANCH/PDF/test2_stable/
       rm -rf work/ .nextflow.* BAM/all_variants.vcf BAM/VCF/ BAM/PILEUP/ BAM/BED_REGIONS/ 
 deployment:
   git:
