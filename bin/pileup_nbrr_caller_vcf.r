@@ -201,13 +201,21 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
                       ~ ", N="~.(n+m)~", pvar="~.(format(m/(n+m),digits=2)))
   plot(rob_nb_res$coverage, rob_nb_res$ma_count,
        pch=21,bg=cols,col=outliers_color,xlab="Coverage (DP)",ylab="Number of ALT reads (AO)",
-       main=plot_title)
+       main=plot_title, xlim=c(0,max(rob_nb_res$coverage)))
   mtext(temp_title)
    
-  if (!is.na(reg_res$coef["slope"])) {
+  if (!is.na(rob_nb_res$coef["slope"])) {
     xi=max(rob_nb_res$coverage)
     yi1=qnbinom(p=0.99, size=1/rob_nb_res$coef[[1]], mu=rob_nb_res$coef[[2]]*xi)
     yi2=qnbinom(p=0.01, size=1/rob_nb_res$coef[[1]], mu=rob_nb_res$coef[[2]]*xi)
+    abline(a=0, b=yi1/xi, lwd=2, lty=3, col="blue")
+    abline(a=0, b=yi2/xi, lwd=2, lty=3, col="blue")
+    abline(a=0, b=rob_nb_res$coef[[2]], col="blue")
+    
+    plot(rob_nb_res$coverage, rob_nb_res$ma_count,
+         pch=21,bg=cols,col=outliers_color,xlab="Coverage (DP)",ylab="Number of ALT reads (AO)",
+         main=plot_title, ylim=c(0,2*yi1), xlim=c(0,xi))
+    mtext("zoom on 99% confidence interval")
     abline(a=0, b=yi1/xi, lwd=2, lty=3, col="blue")
     abline(a=0, b=yi2/xi, lwd=2, lty=3, col="blue")
     abline(a=0, b=rob_nb_res$coef[[2]], col="blue")
@@ -215,6 +223,10 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
     logqvals=log10(rob_nb_res$qvalues)
     logqvals[logqvals<=-9]=-9
     plot(logqvals,rob_nb_res$ma_count/rob_nb_res$coverage,pch=21,bg=cols,col=outliers_color,ylab="Allelic fraction (AF)",xlab=bquote("log"[10] ~ "(q-value)"),main="Allelic fraction effect")
+    abline(v=log10(qthreshold),col="red",lwd=2)
+    
+    plot(logqvals,rob_nb_res$ma_count/rob_nb_res$coverage,pch=21,bg=cols,col=outliers_color,ylab="Allelic fraction (AF)",xlab=bquote("log"[10] ~ "(q-value)"),main="Allelic fraction effect", ylim=c(0,(2*yi1)/xi))
+    mtext("zoom on 99% confidence interval")
     abline(v=log10(qthreshold),col="red",lwd=2)
 
     hist(rob_nb_res$pvalues,main="p-values distribution",ylab="Density",xlab="p-value",col="grey",freq=T,br=20,xlim=c(0,1))
