@@ -8,6 +8,7 @@ MAINTAINER Matthieu Foll <follm@iarc.fr>
 ADD https://github.com/mfoll/robust-regression-caller/raw/master/bin/pileup2baseindel.pl /usr/local/bin/
 ADD https://github.com/mfoll/robust-regression-caller/raw/master/bin/bed_large_cut.r /usr/local/bin/
 ADD https://github.com/mfoll/robust-regression-caller/raw/master/bin/pileup_nbrr_caller_vcf.r /usr/local/bin/
+ADD https://github.com/mfoll/robust-regression-caller/raw/master/bin/fasta2contigvcf.awk /usr/local/bin/
 
 RUN apt-get update -y && \
 	# Add R new version repos and update the repository sources list
