@@ -154,6 +154,9 @@ process collect_vcf_result {
 
 	input:
 	file '*.vcf' from vcf.toList()
+	file fasta_ref
+     file fasta_ref_fai
+	file fasta_ref_gzi
   
 	output:
 	file 'all_variants.vcf' into big_vcf
