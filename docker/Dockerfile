@@ -1,14 +1,14 @@
-# Set the base image to Ubuntu
+# Set the base image to Debian
 FROM debian:latest
 
 # File Author / Maintainer
 MAINTAINER Matthieu Foll <follm@iarc.fr>
 
-# Install pileup2base 
-ADD https://github.com/mfoll/robust-regression-caller/raw/master/bin/pileup2baseindel.pl /usr/local/bin/
-ADD https://github.com/mfoll/robust-regression-caller/raw/master/bin/bed_large_cut.r /usr/local/bin/
-ADD https://github.com/mfoll/robust-regression-caller/raw/master/bin/pileup_nbrr_caller_vcf.r /usr/local/bin/
-ADD https://github.com/mfoll/robust-regression-caller/raw/master/bin/fasta2contigvcf.awk /usr/local/bin/
+# Add scripts 
+#ADD https://github.com/mfoll/robust-regression-caller/raw/master/bin/pileup2baseindel.pl /usr/local/bin/
+#ADD https://github.com/mfoll/robust-regression-caller/raw/master/bin/bed_large_cut.r /usr/local/bin/
+#ADD https://github.com/mfoll/robust-regression-caller/raw/master/bin/pileup_nbrr_caller_vcf.r /usr/local/bin/
+#ADD https://github.com/mfoll/robust-regression-caller/raw/master/bin/fasta2contigvcf.awk /usr/local/bin/
 
 RUN apt-get clean && \
 	apt-get update -y && \
