@@ -154,10 +154,14 @@ process collect_vcf_result {
 
 	input:
 	file '*.vcf' from vcf.toList()
+	file fasta_ref
+     file fasta_ref_fai
+	file fasta_ref_gzi
   
 	output:
 	file 'all_variants.vcf' into big_vcf
 
+	shell:
 	'''
 	nb_vcf=$(find . -maxdepth 1 -name '*vcf' | wc -l)
 	if [ $nb_vcf -gt 1 ]; then
@@ -165,5 +169,8 @@ process collect_vcf_result {
 	else 
 		cp .vcf all_variants.vcf
 	fi
+	# Add contigs in the VCF header
+	zless !{fasta_ref} | fasta2contigvcf.awk > contigs.txt
+	sed -i '/##reference=.*/ r contigs.txt' all_variants.vcf
 	'''
 }
