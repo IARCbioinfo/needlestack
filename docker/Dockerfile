@@ -10,10 +10,10 @@ ADD https://github.com/mfoll/robust-regression-caller/raw/master/bin/bed_large_c
 ADD https://github.com/mfoll/robust-regression-caller/raw/master/bin/pileup_nbrr_caller_vcf.r /usr/local/bin/
 ADD https://github.com/mfoll/robust-regression-caller/raw/master/bin/fasta2contigvcf.awk /usr/local/bin/
 
-RUN apt-get update -y && \
+RUN apt-get clean && \
+	apt-get update -y && \
 	# Add R new version repos and update the repository sources list
-	DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
-	software-properties-common && \
+	DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y software-properties-common && \
 	DEBIAN_FRONTEND=noninteractive add-apt-repository "deb http://cran.rstudio.com//bin/linux/debian jessie-cran3/" && \
 	apt-key adv --keyserver keys.gnupg.net --recv-key 381BA480 && \
 	apt-get update -y && \
