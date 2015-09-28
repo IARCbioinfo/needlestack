@@ -166,6 +166,7 @@ process collect_vcf_result {
 		cp .vcf all_variants.vcf
 	fi
 	# Add contigs in the VCF header
-	sed -i "/##reference=.*/ $(fasta2contigvcf.awk !{fasta_ref})" all_variants.vcf
+	zless !{fasta_ref} | fasta2contigvcf.awk > contigs.txt
+	sed -i '/##reference=.*/ r contigs.txt' all_variants.vcf
 	'''
 }
