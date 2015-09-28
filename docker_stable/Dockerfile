@@ -30,6 +30,7 @@ RUN apt-get update -y && \
 	dialog \
 	wget \
 	bzip2 \
+	less \
 	apt-utils && \
 
 	# Make pileup2base executable

@@ -10,7 +10,7 @@ ADD https://github.com/mfoll/robust-regression-caller/raw/master/bin/bed_large_c
 ADD https://github.com/mfoll/robust-regression-caller/raw/master/bin/pileup_nbrr_caller_vcf.r /usr/local/bin/
 ADD https://github.com/mfoll/robust-regression-caller/raw/master/bin/fasta2contigvcf.awk /usr/local/bin/
 
-RUN 	apk --update add g++ make git python perl zlib-dev ncurses-dev ca-certificates dialog gfortran readline-dev musl-utils grep wget curl ca-certificates tar bash && \
+RUN 	apk --update add g++ make git python perl zlib-dev ncurses-dev ca-certificates dialog gfortran readline-dev musl-utils grep wget curl ca-certificates tar bash less gzip && \
 
 	# install libiconv (needed for R, alpine linux has an implementation but R doesn't like it)
 	wget http://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.14.tar.gz && \
