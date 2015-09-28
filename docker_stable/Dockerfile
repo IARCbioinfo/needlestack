@@ -5,12 +5,6 @@ FROM debian:latest
 # File Author / Maintainer
 MAINTAINER Matthieu Foll <follm@iarc.fr>
 
-# Install pileup2base 
-#ADD https://github.com/mfoll/robust-regression-caller/raw/master/bin/pileup2baseindel.pl /usr/local/bin/
-#ADD https://github.com/mfoll/robust-regression-caller/raw/master/bin/bed_large_cut.r /usr/local/bin/
-#ADD https://github.com/mfoll/robust-regression-caller/raw/master/bin/pileup_nbrr_caller_vcf.r /usr/local/bin/
-#ADD https://github.com/mfoll/robust-regression-caller/raw/master/bin/fasta2contigvcf.awk /usr/local/bin/
-
 RUN apt-get clean && \
 	apt-get update -y && \
 	# Add R new version repos and update the repository sources list
@@ -33,12 +27,6 @@ RUN apt-get clean && \
 	bzip2 \
 	less \
 	apt-utils && \
-
-	# Make pileup2base executable
-	chmod +x /usr/local/bin/pileup2baseindel.pl && \
-	# Make R scripts executable
-	chmod +x /usr/local/bin/bed_large_cut.r && \
-	chmod +x /usr/local/bin/pileup_nbrr_caller_vcf.r && \
 
 	# Install bedtools specific version manually
 	wget https://github.com/arq5x/bedtools2/releases/download/v2.24.0/bedtools-2.24.0.tar.gz && \
