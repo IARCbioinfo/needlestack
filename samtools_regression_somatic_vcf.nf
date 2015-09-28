@@ -161,6 +161,7 @@ process collect_vcf_result {
 	output:
 	file 'all_variants.vcf' into big_vcf
 
+	shell:
 	'''
 	nb_vcf=$(find . -maxdepth 1 -name '*vcf' | wc -l)
 	if [ $nb_vcf -gt 1 ]; then

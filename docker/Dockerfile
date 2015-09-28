@@ -4,12 +4,6 @@ FROM debian:latest
 # File Author / Maintainer
 MAINTAINER Matthieu Foll <follm@iarc.fr>
 
-# Add scripts 
-#ADD https://github.com/mfoll/robust-regression-caller/raw/master/bin/pileup2baseindel.pl /usr/local/bin/
-#ADD https://github.com/mfoll/robust-regression-caller/raw/master/bin/bed_large_cut.r /usr/local/bin/
-#ADD https://github.com/mfoll/robust-regression-caller/raw/master/bin/pileup_nbrr_caller_vcf.r /usr/local/bin/
-#ADD https://github.com/mfoll/robust-regression-caller/raw/master/bin/fasta2contigvcf.awk /usr/local/bin/
-
 RUN apt-get clean && \
 	apt-get update -y && \
 	# Add R new version repos and update the repository sources list
@@ -47,15 +41,6 @@ RUN apt-get clean && \
 	cd .. && \
 	rm -rf vcflib && \
 
-# Install samtools specific version manually
-#RUN wget https://github.com/samtools/samtools/releases/download/1.2/samtools-1.2.tar.bz2 && \
-#	tar -jxvf samtools-1.2.tar.bz2 && \
-#	cd samtools-1.2 && \
-#	make && \
-#	make install && \
-#	cd .. && \
-#	rm -rf samtools-1.2 samtools-1.2.tar.bz2
-
 	# Install samtools from github repos (htslib needed first)
 	git clone git://github.com/samtools/htslib.git && \
 	cd htslib && \
@@ -71,7 +56,6 @@ RUN apt-get clean && \
 
 	# Install R and package qvalue from bioconductor 
 	DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y r-base && \
-#	Rscript -e 'source("http://bioconductor.org/biocLite.R");biocLite("qvalue")' && \
 
 	# Remove unnecessary dependences
 	DEBIAN_FRONTEND=noninteractive apt-get remove -y \
