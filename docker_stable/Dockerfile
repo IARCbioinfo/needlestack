@@ -25,7 +25,6 @@ RUN apt-get clean && \
 	dialog \
 	wget \
 	bzip2 \
-	less \
 	apt-utils && \
 
 	# Install bedtools specific version manually
