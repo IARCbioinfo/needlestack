@@ -22,7 +22,6 @@ RUN apt-get clean && \
 	libncurses5-dev \
 	ca-certificates \
 	dialog \
-	less \
 	apt-utils && \
 
 	# Install bedtools 
