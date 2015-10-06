@@ -154,9 +154,7 @@ process collect_vcf_result {
 
 	input:
 	file '*.vcf' from vcf.toList()
-	file fasta_ref
      file fasta_ref_fai
-	file fasta_ref_gzi
   
 	output:
 	file 'all_variants.vcf' into big_vcf
@@ -170,7 +168,7 @@ process collect_vcf_result {
 		cp .vcf all_variants.vcf
 	fi
 	# Add contigs in the VCF header
-	zless !{fasta_ref} | fasta2contigvcf.awk > contigs.txt
+	cat !{fasta_ref_fai} | cut -f1,2 | sed -e 's/^/##contig=<ID=/' -e 's/[	 ][	 ]*/,length=/' -e 's/$/>/' > contigs.txt
 	sed -i '/##reference=.*/ r contigs.txt' all_variants.vcf
 	'''
 }

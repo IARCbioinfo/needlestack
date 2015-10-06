@@ -456,7 +456,7 @@ for (i in 1:npos) {
             # INFO field
             cat("\t","TYPE=del;NS=",sum(coverage_matrix[i,]>0),";AF=",sum(reg_res$GQ>=GQ_threshold)/sum(coverage_matrix[i,]>0),";DP=",all_DP,";RO=",all_RO,";AO=",all_AO,";SRF=",sum(Rp),";SRR=",sum(Rm),";SAF=",sum(Vp),";SAR=",sum(Vm),";SOR=",all_sor,";RVSB=",all_rvsb,";ERR=",reg_res$coef["slope"],";SIG=",reg_res$coef["sigma"],";CONT=",paste(before,after,sep="x"),sep="",file=out_file,append=T)
             # FORMAT field
-            cat("\t","GT:GQ:DP:RO:AO:AF:SB:SOR:RVSB",sep = "",file=out_file,append=T)
+            cat("\t","GT:QVAL:DP:RO:AO:AF:SB:SOR:RVSB",sep = "",file=out_file,append=T)
             # all samples
             genotype=rep("0/0",l=nindiv)
             variants=which(reg_res$GQ>=GQ_threshold & sbs<=SB_threshold_indel)
@@ -514,7 +514,7 @@ for (i in 1:npos) {
             # INFO field
             cat("\t","TYPE=ins;NS=",sum(coverage_matrix[i,]>0),";AF=",sum(reg_res$GQ>=GQ_threshold)/sum(coverage_matrix[i,]>0),";DP=",all_DP,";RO=",all_RO,";AO=",all_AO,";SRF=",sum(Rp),";SRR=",sum(Rm),";SAF=",sum(Vp),";SAR=",sum(Vm),";SOR=",all_sor,";RVSB=",all_rvsb,";ERR=",reg_res$coef["slope"],";SIG=",reg_res$coef["sigma"],";CONT=",paste(before,after,sep="x"),sep="",file=out_file,append=T)
             # FORMAT field
-            cat("\t","GT:GQ:DP:RO:AO:AF:SB:SOR:RVSB",sep = "",file=out_file,append=T)
+            cat("\t","GT:QVAL:DP:RO:AO:AF:SB:SOR:RVSB",sep = "",file=out_file,append=T)
             # all samples
             genotype=rep("0/0",l=nindiv)
             variants=which(reg_res$GQ>=GQ_threshold & sbs<=SB_threshold_indel)

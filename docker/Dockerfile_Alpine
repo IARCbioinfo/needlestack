@@ -4,7 +4,7 @@ FROM alpine:latest
 # File Author / Maintainer
 MAINTAINER Matthieu Foll <follm@iarc.fr>
 
-RUN 	apk --update add g++ make git python perl zlib-dev ncurses-dev ca-certificates dialog gfortran readline-dev musl-utils grep wget curl ca-certificates tar bash less gzip && \
+RUN 	apk --update add g++ make git python perl zlib-dev ncurses-dev ca-certificates dialog gfortran readline-dev musl-utils grep wget curl ca-certificates tar bash && \
 
 	# install libiconv (needed for R, alpine linux has an implementation but R doesn't like it)
 	wget http://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.14.tar.gz && \
