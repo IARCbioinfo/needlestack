@@ -96,6 +96,7 @@ Other popular schedulers such as LSF, SLURM, PBS, TORQUE etc. are also compatibl
 | sample_names | "BAM" | Put "FILE" to use the bam file names as sample names and "BAM" to use the sample name filed from the bam files |
 | all_sites | "FALSE" | Output all SNVs sites, even when no variant is detected |
 | do_plots | "TRUE" | Produce pdf plots of regressions |
+| out_folder | --bam_folder | Output folder, by default equals to the input bam folder |
 
 Simply add the parameters you want in the command line like `--min_dp 1000` for exmaple to change the min coverage.
 
