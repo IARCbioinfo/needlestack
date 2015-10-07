@@ -26,6 +26,7 @@ params.max_DP = 30000 // downsample coverage per sample (passed to samtools)
 params.sample_names = "BAM" // put FILE to use the bam file names as sample names and BAM to use the sample name filed from the bam files
 params.all_sites = "FALSE" //  output all sites, even when no variant is detected
 params.do_plots = "TRUE" // produce pdf plots of regressions 
+params.out_folder = params.bam_folder // if not provided, outputs will be held on the input bam folder
 
 bed = file( params.bed )
 fasta_ref = file( params.fasta_ref )
@@ -38,7 +39,7 @@ bai = Channel.fromPath( params.bam_folder+'/*.bam.bai' ).toList()
 /* split bed file into nsplit regions */
 process split_bed {
      
-     storeDir { params.bam_folder+'/BED_REGIONS/' } 
+     storeDir { params.out_folder+'/BED_REGIONS/' } 
      
      intput:
      file bed
@@ -55,7 +56,7 @@ process split_bed {
 // create mpileup file + sed to have "*" when there is no coverage (otherwise pileup2baseindel.pl is unhappy)
 process samtools_mpileup {
 
-     storeDir { params.bam_folder+'/PILEUP/' }   
+     storeDir { params.out_folder+'/PILEUP/' }   
         
      tag { region_tag }   
         
@@ -84,7 +85,7 @@ process mpileup2table {
      
      errorStrategy 'ignore'
      
-     storeDir { params.bam_folder+'/PILEUP/'+region_tag }   
+     storeDir { params.out_folder+'/PILEUP/'+region_tag }   
         
      tag { region_tag }   
         
@@ -124,7 +125,7 @@ process mpileup2table {
 // perform regression in R
 process R_regression {
        
-     storeDir { params.bam_folder+'/VCF/' }   
+     storeDir { params.out_folder+'/VCF/' }   
         
      tag { region_tag }   
         
@@ -150,7 +151,7 @@ PDF.flatten().filter { it.size() == 0 }.subscribe { it.delete() }
 // merge all vcf files in one big file 
 process collect_vcf_result {
 
-	storeDir { params.bam_folder }
+	storeDir { params.out_folder }
 
 	input:
 	file '*.vcf' from vcf.toList()
