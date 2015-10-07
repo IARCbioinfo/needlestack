@@ -33,41 +33,6 @@ fasta_ref = file( params.fasta_ref )
 fasta_ref_fai = file( params.fasta_ref+'.fai' )
 fasta_ref_gzi = file( params.fasta_ref+'.gzi' )
 
-
-/* Verify user inputs are correct */
-
-assert params.sb_type in ["SOR","RVSB"]
-assert params.all_sites in ["TRUE","FALSE"]
-assert params.do_plots in ["TRUE","FALSE"]
-assert params.sample_names in ["FILE","BAM"]
-
-/* Software information */
-
-log.info "============================================"
-log.info "ROBUST REGRESSION VARIANT CALLER"
-log.info "somatic variant calling pipeline using multi-sampling from (ultra)deep next-generation sequencing"
-log.info "============================================"
-log.info "query bam folder                                 : ${params.bam_folder}"
-log.info "reference in fasta format                        : ${params.fasta_ref}"
-log.info "intervals for calling                            : ${params.bed}"
-log.info "number of splitted regions                       : ${params.nsplit}"
-log.info "to consider a site as alternative                : "
-log.info "	minimum coverage                         : ${params.min_dp}"
-log.info "	minimum of alternative reads             : ${params.min_ao}"
-log.info "to consider a sample as variant                  : "
-log.info "	Phred-scale qvalue threshold             : ${params.min_qval}"
-log.info "strand bias measure                              : ${params.sb_type}"
-log.info "strand bias threshold for SNV                    : ${params.sb_snv}"
-log.info "strand bias threshold for indel                  : ${params.sb_indel}"
-log.info "samtools minimum mapping quality                 : ${params.map_qual}"
-log.info "samtools minimum base quality                    : ${params.base_qual}"
-log.info "samtools maximum coverage before downsampling    : ${params.max_DP}"          
-log.info "sample names definition                          : ${params.sample_names}"
-log.info "output all sites                                 : ${params.all_sites}"
-log.info "pdf regression plots                             : ${params.do_plots}"
-log.info "output folder                                    : ${params.out_folder}"
-log.info "\n"
-
 /* If --help in parameters, print software usage */
 
 if (params.help) {
@@ -103,6 +68,40 @@ if (params.help) {
     log.info ''
     exit 1
 }
+
+/* Verify user inputs are correct */
+
+assert params.sb_type in ["SOR","RVSB"]
+assert params.all_sites in ["TRUE","FALSE"]
+assert params.do_plots in ["TRUE","FALSE"]
+assert params.sample_names in ["FILE","BAM"]
+
+/* Software information */
+
+log.info "============================================"
+log.info "ROBUST REGRESSION VARIANT CALLER"
+log.info "somatic variant calling pipeline using multi-sampling from (ultra)deep next-generation sequencing"
+log.info "============================================"
+log.info "query bam folder                                 : ${params.bam_folder}"
+log.info "reference in fasta format                        : ${params.fasta_ref}"
+log.info "intervals for calling                            : ${params.bed}"
+log.info "number of splitted regions                       : ${params.nsplit}"
+log.info "to consider a site as alternative                : "
+log.info "	minimum coverage                         : ${params.min_dp}"
+log.info "	minimum of alternative reads             : ${params.min_ao}"
+log.info "to consider a sample as variant                  : "
+log.info "	Phred-scale qvalue threshold             : ${params.min_qval}"
+log.info "strand bias measure                              : ${params.sb_type}"
+log.info "strand bias threshold for SNV                    : ${params.sb_snv}"
+log.info "strand bias threshold for indel                  : ${params.sb_indel}"
+log.info "samtools minimum mapping quality                 : ${params.map_qual}"
+log.info "samtools minimum base quality                    : ${params.base_qual}"
+log.info "samtools maximum coverage before downsampling    : ${params.max_DP}"          
+log.info "sample names definition                          : ${params.sample_names}"
+log.info "output all sites                                 : ${params.all_sites}"
+log.info "pdf regression plots                             : ${params.do_plots}"
+log.info "output folder                                    : ${params.out_folder}"
+log.info "\n"
 
 
 bam = Channel.fromPath( params.bam_folder+'/*.bam' ).toList()   
