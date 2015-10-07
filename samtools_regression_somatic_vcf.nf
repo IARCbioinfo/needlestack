@@ -28,11 +28,6 @@ params.all_sites = "FALSE" //  output all sites, even when no variant is detecte
 params.do_plots = "TRUE" // produce pdf plots of regressions 
 params.out_folder = params.bam_folder // if not provided, outputs will be held on the input bam folder
 
-bed = file( params.bed )
-fasta_ref = file( params.fasta_ref )
-fasta_ref_fai = file( params.fasta_ref+'.fai' )
-fasta_ref_gzi = file( params.fasta_ref+'.gzi' )
-
 /* If --help in parameters, print software usage */
 
 if (params.help) {
@@ -68,6 +63,12 @@ if (params.help) {
     log.info ''
     exit 1
 }
+
+bed = file( params.bed )
+fasta_ref = file( params.fasta_ref )
+fasta_ref_fai = file( params.fasta_ref+'.fai' )
+fasta_ref_gzi = file( params.fasta_ref+'.gzi' )
+
 
 /* Verify user inputs are correct */
 
