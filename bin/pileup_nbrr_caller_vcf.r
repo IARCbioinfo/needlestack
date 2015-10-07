@@ -234,35 +234,66 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
   }
 }
 
-cluster=T
+############################## ARGUMENTS SECTION ##############################
+args <- commandArgs(TRUE)
+parseArgs <- function(x) strsplit(sub("^--", "", x), "=")
+argsL <- as.list(as.character(as.data.frame(do.call("rbind", parseArgs(args)))$V2))
+names(argsL) <- as.data.frame(do.call("rbind", parseArgs(args)))$V1
+args <- argsL;rm(argsL)
 
-if (cluster) {
-  samtools="samtools"
-  out_file=commandArgs(TRUE)[1]
-  fasta_ref=commandArgs(TRUE)[2]
-  GQ_threshold=as.numeric(commandArgs(TRUE)[3])
-  min_coverage=as.numeric(commandArgs(TRUE)[4])
-  min_reads=as.numeric(commandArgs(TRUE)[5])
-  # http://gatkforums.broadinstitute.org/discussion/5533/strandoddsratio-computation filter out SOR > 4 for SNVs and > 10 for indels
-  # filter out RVSB > 0.85 (maybe less stringent for SNVs)
-  SB_type=commandArgs(TRUE)[6]
-  SB_threshold_SNV=as.numeric(commandArgs(TRUE)[7])
-  SB_threshold_indel=as.numeric(commandArgs(TRUE)[8])
-  output_all_sites=as.logical(commandArgs(TRUE)[9])
-  do_plots=as.logical(commandArgs(TRUE)[10])
-} else {
-  samtools="/usr/local/bin/samtools"
-  out_file="test.vcf"
-  fasta_ref="~/Dropbox/Work/genome_refs/hg19.fasta"
-  SB_type="SOR"
-  SB_threshold_SNV=4
-  SB_threshold_indel=10
-  min_coverage=100
-  min_reads=5
-  GQ_threshold=10
-  output_all_sites=F
-  do_plots=T
+if("--help" %in% args | is.null(args$out_file) | is.null(args$fasta_ref)) {
+  cat("
+      The R Script arguments_section.R
+      
+      Mandatory arguments:
+      --out_file=file_name           - name of output vcf
+      --fasta_ref=path               - path of fasta ref
+      --help                         - print this text
+      
+      Optionnal arguments:
+      --samtools=path                - path of samtools, default=samtools
+      --SB_type=SOR or RVSB      - strand bias estimator, default=SOR
+      --SB_threshold_SNV=value       - strand bias threshold for SNV, default=100
+      --SB_threshold_indel=value     - strand bias threshold for indel, default=100
+      --min_coverage=value           - minimum coverage for all sites, default=50
+      --min_reads=value              - minimum number of reads for all sites, default=5
+      --GQ_threshold=value           - phred scale Qvalue threshold for variants, default=50
+      --output_all_sites=boolean     - output all sites, even when no variant is detected, default=FALSE
+      --do_plots=boolean              - output all regression plots, default=TRUE
+      
+      WARNING : by default samtools has to be in your path
+      
+      Example:
+      pileup_nbrr_caller_vcf.r --out_file=test.vcf --fasta_ref=~/Documents/References/ \n\n")
+  
+  q(save="no")
 }
+
+if(is.null(args$samtools)) {args$samtools="samtools"}
+if(is.null(args$SB_type)) {args$SB_type="SOR"} 
+if(is.null(args$SB_threshold_SNV)) {args$SB_threshold_SNV=100} else {args$SB_threshold_SNV=as.numeric(args$SB_threshold_SNV)}
+if(is.null(args$SB_threshold_indel)) {args$SB_threshold_indel=100} else {args$SB_threshold_indel=as.numeric(args$SB_threshold_indel)}
+if(is.null(args$min_coverage)) {args$min_coverage=50} else {args$min_coverage=as.numeric(args$min_coverage)}
+if(is.null(args$min_reads)) {args$min_reads=5} else {args$min_reads=as.numeric(args$min_reads)}
+if(is.null(args$GQ_threshold)) {args$GQ_threshold=50} else {args$GQ_threshold=as.numeric(args$GQ_threshold)}
+if(is.null(args$output_all_sites)) {args$output_all_sites=FALSE} else {args$output_all_sites=as.logical(args$output_all_sites)}
+if(is.null(args$do_plots)) {args$do_plots=TRUE} else {args$do_plots=as.logical(args$do_plots)}
+
+samtools=args$samtools
+out_file=args$out_file
+fasta_ref=args$fasta_ref
+GQ_threshold=args$GQ_threshold
+min_coverage=args$min_coverage
+min_reads=args$min_reads
+# http://gatkforums.broadinstitute.org/discussion/5533/strandoddsratio-computation filter out SOR > 4 for SNVs and > 10 for indels
+# filter out RVSB > 0.85 (maybe less stringent for SNVs)
+SB_type=args$SB_type
+SB_threshold_SNV=args$SB_threshold_SNV
+SB_threshold_indel=args$SB_threshold_indel
+output_all_sites=args$output_all_sites
+do_plots=args$do_plots
+
+############################################################
 
 indiv_run=read.table("names.txt",stringsAsFactors=F,colClasses = "character")
 indiv_run[,2]=make.unique(indiv_run[,2],sep="_")
