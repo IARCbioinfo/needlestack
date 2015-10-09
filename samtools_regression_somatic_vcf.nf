@@ -218,7 +218,7 @@ process R_regression {
 	pileup_nbrr_caller_vcf.r --out_file=!{region_tag}.vcf --fasta_ref=!{fasta_ref} --GQ_threshold=!{params.min_qval} --min_coverage=!{params.min_dp} --min_reads=!{params.min_ao} --SB_type=!{params.sb_type} --SB_threshold_SNV=!{params.sb_snv} --SB_threshold_indel=!{params.sb_indel} --output_all_sites=!{params.all_sites} --do_plots=!{params.do_plots}
 	'''
 }
-PDF.flatten().filter { it.size() == 0 }.subscribe { it.delete() }
+//PDF.flatten().filter { it.size() == 0 }.subscribe { it.delete() }
 
 // merge all vcf files in one big file 
 process collect_vcf_result {
@@ -233,6 +233,10 @@ process collect_vcf_result {
 	file 'all_variants.vcf' into big_vcf
 
 	shell:
+	empty_files = file(params.out_folder+'/VCF/*_empty.pdf')
+	for( def file : empty_files ) {
+    		file.delete()
+	}
 	'''
 	nb_vcf=$(find . -maxdepth 1 -name '*vcf' | wc -l)
 	if [ $nb_vcf -gt 1 ]; then
