@@ -73,8 +73,8 @@ fasta_ref_gzi = file( params.fasta_ref+'.gzi' )
 /* Verify user inputs are correct */
 
 assert params.sb_type in ["SOR","RVSB"]
-assert params.all_sites in ["true","false"]
-assert params.do_plots in ["false","false"]
+assert params.all_sites in [true,false]
+assert params.do_plots in [false,false]
 assert params.sample_names in ["FILE","BAM"]
 
 /* Software information */
