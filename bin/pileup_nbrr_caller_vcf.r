@@ -404,7 +404,6 @@ write_out("##FORMAT=<ID=RVSB,Number=1,Type=Float,Description=\"Relative Variant 
 write_out("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t",paste(indiv_run[,2],collapse = "\t"))
 
 for (i in 1:npos) {
-  print(paste(pos_ref[i,"loc"],"/",max(pos_ref[,"loc"]),sep=""))
   if (is.element(pos_ref[i,"ref"],c("A","T","C","G"))) {  
     # SNV
     for (alt in non_ref_bases(pos_ref[i,"ref"])) {
