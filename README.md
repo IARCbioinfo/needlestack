@@ -93,9 +93,9 @@ Other popular schedulers such as LSF, SLURM, PBS, TORQUE etc. are also compatibl
 | map_qual | 20 | Min mapping quality (passed to samtools) |
 | base_qual | 20 | Min base quality (passed to samtools) |
 | max_DP | 30000 | Downsample coverage per sample (passed to samtools) |
-| sample_names | "BAM" | Put "FILE" to use the bam file names as sample names and "BAM" to use the sample name filed from the bam files |
-| all_sites | "FALSE" | Output all SNVs sites, even when no variant is detected |
-| do_plots | "TRUE" | Produce pdf plots of regressions |
+| use_file_name |   | Put this argument to use the bam file names as sample names and do not to use the sample name filed from the bam file (SM tag) |
+| all_SNVs |   | Put this argument to output all SNVs sites, even when no variant is detected |
+| no_plots |   | Put this argument to do not produce pdf plots of regressions |
 | out_folder | --bam_folder | Output folder, by default equals to the input bam folder |
 
 Simply add the parameters you want in the command line like `--min_dp 1000` for exmaple to change the min coverage.

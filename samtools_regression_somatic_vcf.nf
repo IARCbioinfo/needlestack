@@ -23,9 +23,9 @@ params.sb_indel = 100 // strand bias threshold for indels
 params.map_qual = 20 // min mapping quality (passed to samtools)
 params.base_qual = 20 // min base quality (passed to samtools)
 params.max_DP = 30000 // downsample coverage per sample (passed to samtools)
-params.sample_names = "BAM" // put FILE to use the bam file names as sample names and BAM to use the sample name filed from the bam files
-params.all_sites = "FALSE" //  output all sites, even when no variant is detected
-params.do_plots = "TRUE" // produce pdf plots of regressions 
+params.use_file_name = false //put these argument to use the bam file names as sample names and do not to use the sample name filed from the bam files (SM tag)
+params.all_SNVs = false //  output all sites, even when no variant is detected
+params.no_plots = false  // do not produce pdf plots of regressions 
 params.out_folder = params.bam_folder // if not provided, outputs will be held on the input bam folder
 
 /* If --help in parameters, print software usage */
@@ -56,26 +56,29 @@ if (params.help) {
     log.info '    --map_qual       VALUE                    Samtools minimum mapping quality.'
     log.info '    --base_qual      VALUE                    Samtools minimum base quality.'
     log.info '    --max_DP         INTEGER                  Samtools maximum coverage before downsampling.'
-    log.info '    --sample_names   FILE or BAM              Sample names definition.'
-    log.info '    --all_sites      BOOLEAN                  Output all sites, even when no variant found.'
-    log.info '    --do_plots       BOOLEAN                  PDF regression plots in the output.'
+    log.info '    --use_file_name                           Sample names are equals to file names, otherwise to BAM SM tag .'
+    log.info '    --all_SNVs                                 Output all sites, even when no variant found.'
+    log.info '    --no_plots                                Do not output PDF regression plots.'
     log.info '    --out_folder     OUTPUT FOLDER            Output directory, bu default input bam folder.'
     log.info ''
     exit 1
 }
+
+if(params.use_file_name == true){
+  sample_names = "FILE"
+} else { sample_names = "BAM" }
 
 bed = file( params.bed )
 fasta_ref = file( params.fasta_ref )
 fasta_ref_fai = file( params.fasta_ref+'.fai' )
 fasta_ref_gzi = file( params.fasta_ref+'.gzi' )
 
-
 /* Verify user inputs are correct */
 
 assert params.sb_type in ["SOR","RVSB"]
-assert params.all_sites in ["TRUE","FALSE"]
-assert params.do_plots in ["TRUE","FALSE"]
-assert params.sample_names in ["FILE","BAM"]
+assert params.all_SNVs in [true,false]
+assert params.no_plots in [true,false]
+assert sample_names in ["FILE","BAM"]
 
 /* Software information */
 
@@ -98,9 +101,9 @@ log.info "strand bias threshold for indel (--sb_indel)                    : ${pa
 log.info "samtools minimum mapping quality (--map_qual)                   : ${params.map_qual}"
 log.info "samtools minimum base quality (--base_qual)                     : ${params.base_qual}"
 log.info "samtools maximum coverage before downsampling (--max_DP)        : ${params.max_DP}"          
-log.info "sample names definition (--sample_names)                        : ${params.sample_names}"
-log.info "output all sites (--all_sites)                                  : ${params.all_sites}"
-log.info "pdf regression plots (--do_plots)                               : ${params.do_plots}"
+log.info "sample names definition (--use_file_name)                       : ${sample_names}"
+log.info(params.all_SNVs == true ? "output all SNVs (--all_SNVs)                                   : yes" : "output all sites (--all_SNVs)                                   : no" ) 
+log.info(params.no_plots == true ? "pdf regression plots (--no_plots)                               : no" : "pdf regression plots (--no_plots)                               : yes" ) 
 log.info "output folder (--out_folder)                                    : ${params.out_folder}"
 log.info "\n"
 
@@ -164,6 +167,7 @@ process mpileup2table {
      input:
      set val(region_tag), file("${region_tag}.pileup") from pileup
      file bam
+     val sample_names
      
      output:
      set val(region_tag), file('sample*.txt'), file('names.txt') into table
@@ -178,7 +182,7 @@ process mpileup2table {
 		i=1
 		for cur_bam in !{bam} 
 		do 
-			if [ "!{params.sample_names}" == "FILE" ]; then
+			if [ "!{sample_names}" == "FILE" ]; then
 				# use bam file name as sample name
 				bam_file_name="${cur_bam%.*}"
 				# remove whitespaces from name
@@ -215,7 +219,7 @@ process R_regression {
  	'''
  	# create a dummy empty pdf to avoid an error in the process when no variant is found 
  	touch !{region_tag}_empty.pdf
-	pileup_nbrr_caller_vcf.r --out_file=!{region_tag}.vcf --fasta_ref=!{fasta_ref} --GQ_threshold=!{params.min_qval} --min_coverage=!{params.min_dp} --min_reads=!{params.min_ao} --SB_type=!{params.sb_type} --SB_threshold_SNV=!{params.sb_snv} --SB_threshold_indel=!{params.sb_indel} --output_all_sites=!{params.all_sites} --do_plots=!{params.do_plots}
+	pileup_nbrr_caller_vcf.r --out_file=!{region_tag}.vcf --fasta_ref=!{fasta_ref} --GQ_threshold=!{params.min_qval} --min_coverage=!{params.min_dp} --min_reads=!{params.min_ao} --SB_type=!{params.sb_type} --SB_threshold_SNV=!{params.sb_snv} --SB_threshold_indel=!{params.sb_indel} --output_all_SNVs=!{params.all_SNVs} --do_plots=!{!params.no_plots}
 	'''
 }
 //PDF.flatten().filter { it.size() == 0 }.subscribe { it.delete() }
