@@ -64,10 +64,6 @@ if (params.help) {
     exit 1
 }
 
-if(params.use_file_name == true){
-  sample_names = "FILE"
-} else { sample_names = "BAM" }
-
 bed = file( params.bed )
 fasta_ref = file( params.fasta_ref )
 fasta_ref_fai = file( params.fasta_ref+'.fai' )
@@ -75,10 +71,18 @@ fasta_ref_gzi = file( params.fasta_ref+'.gzi' )
 
 /* Verify user inputs are correct */
 
-assert params.sb_type in ["SOR","RVSB"]
-assert params.all_SNVs in [true,false]
-assert params.no_plots in [true,false]
-assert sample_names in ["FILE","BAM"]
+assert params.sb_type in ["SOR","RVSB"] : "--sb_type must be equal to SOR or RVSB "
+assert params.all_SNVs in [true,false] : "do not assign a value to --all_SNVs"
+assert params.no_plots in [true,false] : "do not assign a value to --no_plots"
+assert params.use_file_name in [true,false] : "do not assign a value to --use_file_name"
+assert fasta_ref.exists() : "input fasta reference does not exist"
+assert fasta_ref_fai.exists() : "input fasta does not seem to have a .fai index"
+assert bed.exists() : "input bed file does not exist"
+assert file(params.bam_folder).exists() : "input bam folder does not exist"
+
+if(params.use_file_name == true){
+  sample_names = "FILE"
+} else { sample_names = "BAM" }
 
 /* Software information */
 
@@ -102,11 +106,10 @@ log.info "samtools minimum mapping quality (--map_qual)                   : ${pa
 log.info "samtools minimum base quality (--base_qual)                     : ${params.base_qual}"
 log.info "samtools maximum coverage before downsampling (--max_DP)        : ${params.max_DP}"          
 log.info "sample names definition (--use_file_name)                       : ${sample_names}"
-log.info(params.all_SNVs == true ? "output all SNVs (--all_SNVs)                                   : yes" : "output all sites (--all_SNVs)                                   : no" ) 
-log.info(params.no_plots == true ? "pdf regression plots (--no_plots)                               : no" : "pdf regression plots (--no_plots)                               : yes" ) 
+log.info(params.all_SNVs == true ? "output all SNVs (--all_SNVs)                                    : yes" : "output all sites (--all_SNVs)                                   : no" ) 
+log.info(params.no_plots == true ? "pdf regression plots (--no_plots)                               : no"  : "pdf regression plots (--no_plots)                               : yes" ) 
 log.info "output folder (--out_folder)                                    : ${params.out_folder}"
 log.info "\n"
-
 
 bam = Channel.fromPath( params.bam_folder+'/*.bam' ).toList()   
 bai = Channel.fromPath( params.bam_folder+'/*.bam.bai' ).toList()
