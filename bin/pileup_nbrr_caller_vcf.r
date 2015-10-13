@@ -258,7 +258,7 @@ if("--help" %in% args | is.null(args$out_file) | is.null(args$fasta_ref)) {
       --min_coverage=value           - minimum coverage for all sites, default=50
       --min_reads=value              - minimum number of reads for all sites, default=5
       --GQ_threshold=value           - phred scale Qvalue threshold for variants, default=50
-      --output_all_sites=boolean     - output all sites, even when no variant is detected, default=FALSE
+      --output_all_SNVs=boolean     - output all sites, even when no variant is detected, default=FALSE
       --do_plots=boolean              - output all regression plots, default=TRUE
       
       WARNING : by default samtools has to be in your path
@@ -276,7 +276,7 @@ if(is.null(args$SB_threshold_indel)) {args$SB_threshold_indel=100} else {args$SB
 if(is.null(args$min_coverage)) {args$min_coverage=50} else {args$min_coverage=as.numeric(args$min_coverage)}
 if(is.null(args$min_reads)) {args$min_reads=5} else {args$min_reads=as.numeric(args$min_reads)}
 if(is.null(args$GQ_threshold)) {args$GQ_threshold=50} else {args$GQ_threshold=as.numeric(args$GQ_threshold)}
-if(is.null(args$output_all_sites)) {args$output_all_sites=FALSE} else {args$output_all_sites=as.logical(args$output_all_sites)}
+if(is.null(args$output_all_SNVs)) {args$output_all_SNVs=FALSE} else {args$output_all_SNVs=as.logical(args$output_all_SNVs)}
 if(is.null(args$do_plots)) {args$do_plots=TRUE} else {args$do_plots=as.logical(args$do_plots)}
 
 samtools=args$samtools
@@ -290,7 +290,7 @@ min_reads=args$min_reads
 SB_type=args$SB_type
 SB_threshold_SNV=args$SB_threshold_SNV
 SB_threshold_indel=args$SB_threshold_indel
-output_all_sites=args$output_all_sites
+output_all_SNVs=args$output_all_SNVs
 do_plots=args$do_plots
 
 ############################################################
@@ -412,13 +412,13 @@ for (i in 1:npos) {
       ma_count=Vp+Vm
       DP=coverage_matrix[i,]
       reg_res=glmrob.nb(x=DP,y=ma_count,min_coverage=min_coverage,min_reads=min_reads)
-      if (output_all_sites | (!is.na(reg_res$coef["slope"]) & sum(reg_res$GQ>=GQ_threshold,na.rm=TRUE)>0)) {
+      if (output_all_SNVs | (!is.na(reg_res$coef["slope"]) & sum(reg_res$GQ>=GQ_threshold,na.rm=TRUE)>0)) {
         all_AO=sum(ma_count)
         all_DP=sum(coverage_matrix[i,])
         common_annot()
         all_RO=sum(Rp+Rm)
         if (SB_type=="SOR") sbs=sors else sbs=rvsbs
-        if (output_all_sites | (sum(sbs<=SB_threshold_SNV & reg_res$GQ>=GQ_threshold,na.rm=TRUE)>0)) {
+        if (output_all_SNVs | (sum(sbs<=SB_threshold_SNV & reg_res$GQ>=GQ_threshold,na.rm=TRUE)>0)) {
           con=pipe(paste(samtools," faidx ",fasta_ref," ",pos_ref[i,"chr"],":",pos_ref[i,"loc"]-3,"-",pos_ref[i,"loc"]-1," | tail -n1",sep=""))
   		    before=readLines(con)
           close(con)
