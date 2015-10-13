@@ -57,7 +57,7 @@ if (params.help) {
     log.info '    --base_qual      VALUE                    Samtools minimum base quality.'
     log.info '    --max_DP         INTEGER                  Samtools maximum coverage before downsampling.'
     log.info '    --use_file_name                           Sample names are equals to file names, otherwise to BAM SM tag .'
-    log.info '    --all_SNVs                                 Output all sites, even when no variant found.'
+    log.info '    --all_SNVs                                Output all sites, even when no variant found.'
     log.info '    --no_plots                                Do not output PDF regression plots.'
     log.info '    --out_folder     OUTPUT FOLDER            Output directory, bu default input bam folder.'
     log.info ''
@@ -79,6 +79,15 @@ assert fasta_ref.exists() : "input fasta reference does not exist"
 assert fasta_ref_fai.exists() : "input fasta does not seem to have a .fai index"
 assert bed.exists() : "input bed file does not exist"
 assert file(params.bam_folder).exists() : "input bam folder does not exist"
+assert (params.min_dp > 0) : "minimum coverage must be greater than 0 (--min_dp)"
+assert (params.max_DP > 1) : "maximum coverage before sampling must be greater than 1 (--max_DP)"
+assert (params.min_ao > 0) : "minimum alternative reads must be greater than 0 (--min_ao)"
+assert (params.nsplit > 0) : "number of splitted regions must be greater than 0 (--nsplit)"
+assert (params.min_qval > 0) : "minimum Phred-scale qvalue must be greater than 0 (--min_qval)"
+assert (params.sb_snv > 0 && params.sb_snv < 101) : "strand bias for SNVs must be in [0,100]"
+assert (params.sb_indel > 0 && params.sb_indel < 101) : "strand bias for indels must be in [0,100]"
+assert (params.map_qual > 0) : "minimum mapping quality (samtools) must be greater than 0"
+assert (params.base_qual > 0) : "minimum base quality (samtools) must be greater than 0"
 
 if(params.use_file_name == true){
   sample_names = "FILE"
