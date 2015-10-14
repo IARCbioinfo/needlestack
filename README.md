@@ -1,4 +1,4 @@
-# needlstack: multi-sample somatic variant caller
+# needlestack: multi-sample somatic variant caller
 
 Warning: development in progress, unreliable results warrantied.
 

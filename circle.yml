@@ -9,34 +9,34 @@ machine:
 test:
   override:
     - |
-      cd ~/needlstack/docker
+      cd ~/needlestack/docker
       docker build -t mfoll/robust-regression-caller .
-      cd ~/needlstack/docker_stable
+      cd ~/needlestack/docker_stable
       docker build -t mfoll/robust-regression-caller:stable .
     - |
       cd ~/NGS_data_test/1000G_CEU_TP53/
-      nextflow run ~/needlstack/needlstack.nf -with-docker mfoll/robust-regression-caller --bed TP53_all.bed --nsplit 4 --fasta_ref 17.fasta.gz --bam_folder BAM/ --min_dp 50 
+      nextflow run ~/needlestack/needlestack.nf -with-docker mfoll/robust-regression-caller --bed TP53_all.bed --nsplit 4 --fasta_ref 17.fasta.gz --bam_folder BAM/ --min_dp 50 
       cp BAM/all_variants.vcf results/$CIRCLE_BRANCH/test1.vcf 
       mkdir -p results/$CIRCLE_BRANCH/PDF/test1
       cp BAM/VCF/*.pdf results/$CIRCLE_BRANCH/PDF/test1/
       rm -rf work/ .nextflow.* BAM/all_variants.vcf BAM/VCF/ BAM/PILEUP/ BAM/BED_REGIONS/ 
     - |
       cd ~/NGS_data_test/1000G_CEU_TP53/
-      nextflow run ~/needlstack/needlstack.nf -with-docker mfoll/robust-regression-caller --bed TP53_exon2_11.bed --nsplit 4 --fasta_ref 17.fasta.gz --bam_folder BAM/ --min_dp 50 
+      nextflow run ~/needlestack/needlestack.nf -with-docker mfoll/robust-regression-caller --bed TP53_exon2_11.bed --nsplit 4 --fasta_ref 17.fasta.gz --bam_folder BAM/ --min_dp 50 
       cp BAM/all_variants.vcf results/$CIRCLE_BRANCH/test2.vcf 
       mkdir -p results/$CIRCLE_BRANCH/PDF/test2
       cp BAM/VCF/*.pdf results/$CIRCLE_BRANCH/PDF/test2/
       rm -rf work/ .nextflow.* BAM/all_variants.vcf BAM/VCF/ BAM/PILEUP/ BAM/BED_REGIONS/ 
     - |
       cd ~/NGS_data_test/1000G_CEU_TP53/
-      nextflow run ~/needlstack/needlstack.nf -with-docker mfoll/robust-regression-caller:stable --bed TP53_all.bed --nsplit 4 --fasta_ref 17.fasta.gz --bam_folder BAM/ --min_dp 50 
+      nextflow run ~/needlestack/needlestack.nf -with-docker mfoll/robust-regression-caller:stable --bed TP53_all.bed --nsplit 4 --fasta_ref 17.fasta.gz --bam_folder BAM/ --min_dp 50 
       cp BAM/all_variants.vcf results/$CIRCLE_BRANCH/test1_stable.vcf 
       mkdir -p results/$CIRCLE_BRANCH/PDF/test1_stable
       cp BAM/VCF/*.pdf results/$CIRCLE_BRANCH/PDF/test1_stable/
       rm -rf work/ .nextflow.* BAM/all_variants.vcf BAM/VCF/ BAM/PILEUP/ BAM/BED_REGIONS/ 
     - |
       cd ~/NGS_data_test/1000G_CEU_TP53/
-      nextflow run ~/needlstack/needlstack.nf -with-docker mfoll/robust-regression-caller:stable --bed TP53_exon2_11.bed --nsplit 4 --fasta_ref 17.fasta.gz --bam_folder BAM/ --min_dp 50 
+      nextflow run ~/needlestack/needlestack.nf -with-docker mfoll/robust-regression-caller:stable --bed TP53_exon2_11.bed --nsplit 4 --fasta_ref 17.fasta.gz --bam_folder BAM/ --min_dp 50 
       cp BAM/all_variants.vcf results/$CIRCLE_BRANCH/test2_stable.vcf 
       mkdir -p results/$CIRCLE_BRANCH/PDF/test2_stable
       cp BAM/VCF/*.pdf results/$CIRCLE_BRANCH/PDF/test2_stable/
