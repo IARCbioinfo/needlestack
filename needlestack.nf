@@ -2,7 +2,7 @@
 
 // needlestack: a multi-sample somatic variant caller
 // Copyright (C) 2015 Matthieu Foll and Tiffany Delhomme
-s
+
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
@@ -59,7 +59,7 @@ if (params.help) {
     log.info '--------------------------------------------------'
     log.info ''
     log.info 'Usage: '
-    log.info '    nextflow run mfoll/needlestack -with-docker mfoll/robust-regression-caller --bed your_bedfile.bed --bam_folder BAM/ --fasta_ref hg19.fasta [other options]'
+    log.info '    nextflow run iarcbioinfo/needlestack -with-docker iarcbioinfo/needlestack --bed your_bedfile.bed --bam_folder BAM/ --fasta_ref hg19.fasta [other options]'
     log.info ''
     log.info 'Mandatory arguments:'
     log.info '    --bed            BED_FILE                 Query intervals in bed format.'
