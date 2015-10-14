@@ -255,7 +255,7 @@ process R_regression {
  	'''
  	# create a dummy empty pdf to avoid an error in the process when no variant is found 
  	touch !{region_tag}_empty.pdf
-	pileup_nbrr_caller_vcf.r --out_file=!{region_tag}.vcf --fasta_ref=!{fasta_ref} --GQ_threshold=!{params.min_qval} --min_coverage=!{params.min_dp} --min_reads=!{params.min_ao} --SB_type=!{params.sb_type} --SB_threshold_SNV=!{params.sb_snv} --SB_threshold_indel=!{params.sb_indel} --output_all_SNVs=!{params.all_SNVs} --do_plots=!{!params.no_plots}
+	needlestack.r --out_file=!{region_tag}.vcf --fasta_ref=!{fasta_ref} --GQ_threshold=!{params.min_qval} --min_coverage=!{params.min_dp} --min_reads=!{params.min_ao} --SB_type=!{params.sb_type} --SB_threshold_SNV=!{params.sb_snv} --SB_threshold_indel=!{params.sb_indel} --output_all_SNVs=!{params.all_SNVs} --do_plots=!{!params.no_plots}
 	'''
 }
 //PDF.flatten().filter { it.size() == 0 }.subscribe { it.delete() }
