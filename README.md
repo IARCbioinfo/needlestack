@@ -79,6 +79,11 @@ process.executor = 'sge'
 
 Other popular schedulers such as LSF, SLURM, PBS, TORQUE etc. are also compatible. See the nextflow documentation [here](http://www.nextflow.io/docs/latest/executor.html) for more details. Also have a look at the [other parameters for the executors](http://www.nextflow.io/docs/latest/config.html#scope-executor), in particular `queueSize` that defines the number of tasks the executor will handle in a parallel manner (default is 100 which is certainly too high if you are executing it on your local machine).
 
+Following is an example of creating a global nextflow config file, with `queueSize` equals to your number of processors (works on linux platforms), replace `>>` by `>` if you want to add the argument line to an existing nextflow config file :
+```bash
+echo "executor.\$local.queueSize = "`getconf _NPROCESSORS_ONLN` >> ~/.nextflow/config
+```
+
 `--bed`, `--bam_folder` and `--fasta_ref` are compulsary. The optional parameters with default values are:
 
 | Parameter | Default value | Description |
