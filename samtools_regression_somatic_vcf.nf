@@ -2,7 +2,7 @@
 
 // needlestack: a multi-sample somatic variant caller
 // Copyright (C) 2015 Matthieu Foll and Tiffany Delhomme
-
+s
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
@@ -17,15 +17,15 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 // run using for ex.: 
-// samtools_regression_somatic_vcf.nf --bed my_bed_file.bed --nsplit 20 --fasta_ref /scratch/appli57_local_duplicates/reference/hg19_torrentserver.fasta --bam_folder BAM/
+// needlestack.nf --bed my_bed_file.bed --nsplit 20 --fasta_ref reference.fasta --bam_folder BAM/
 
 // requirement:
 // - bedtools
 // - samtools
 // - Rscript (R)
-// - bed_large_cut.r
-// - pileup_nbrr_caller_vcf.r 
-// - pileup2baseindel.pl (+ perl)
+// - bed_large_cut.r (in bin folder)
+// - needlestack.r (in bin folder)
+// - pileup2baseindel.pl (in bin folder) (+ perl)
 // - vcfoverlay from vcflib
 
 params.min_dp = 50 // minimum coverage in at least one sample to consider a site
@@ -49,14 +49,17 @@ params.out_folder = params.bam_folder // if not provided, outputs will be held o
 
 if (params.help) {
     log.info ''
-    log.info '----------------------------'
-    log.info 'ROBUST REGRESSION VARIANT CALLER'
-    log.info '----------------------------'
-    log.info 'somatic variant calling pipeline using multi-sampling from (ultra)deep next-generation sequencing'
-    log.info '----------------------------'
+    log.info '--------------------------------------------------'
+    log.info 'NEEDLESTACK: A MULTI-SAMPLE SOMATIC VARIANT CALLER'
+    log.info '--------------------------------------------------'
+    log.info 'needlestack Copyright (C) 2015 Matthieu Foll and Tiffany Delhomme
+    log.info 'This program comes with ABSOLUTELY NO WARRANTY; for details see LICENSE.txt'
+    log.info 'This is free software, and you are welcome to redistribute it'
+    log.info 'under certain conditions; see LICENSE.txt for details.'
+    log.info '--------------------------------------------------'
     log.info ''
     log.info 'Usage: '
-    log.info '    nextflow run mfoll/robust-regression-caller -with-docker mfoll/robust-regression-caller --bed your_bedfile.bed --bam_folder BAM/ --fasta_ref hg19.fasta [other options]'
+    log.info '    nextflow run mfoll/needlestack -with-docker mfoll/robust-regression-caller --bed your_bedfile.bed --bam_folder BAM/ --fasta_ref hg19.fasta [other options]'
     log.info ''
     log.info 'Mandatory arguments:'
     log.info '    --bed            BED_FILE                 Query intervals in bed format.'
@@ -112,10 +115,14 @@ if(params.use_file_name == true){
 
 /* Software information */
 
-log.info "============================================"
-log.info "ROBUST REGRESSION VARIANT CALLER"
-log.info "somatic variant calling pipeline using multi-sampling from (ultra)deep next-generation sequencing"
-log.info "============================================"
+log.info '--------------------------------------------------'
+log.info 'NEEDLESTACK: A MULTI-SAMPLE SOMATIC VARIANT CALLER'
+log.info '--------------------------------------------------'
+log.info 'needlestack Copyright (C) 2015 Matthieu Foll and Tiffany Delhomme
+log.info 'This program comes with ABSOLUTELY NO WARRANTY; for details see LICENSE.txt'
+log.info 'This is free software, and you are welcome to redistribute it'
+log.info 'under certain conditions; see LICENSE.txt for details.'
+log.info '--------------------------------------------------'
 log.info "query bam folder                                                : ${params.bam_folder}"
 log.info "reference in fasta format                                       : ${params.fasta_ref}"
 log.info "intervals for calling                                           : ${params.bed}"
