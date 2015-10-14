@@ -86,8 +86,8 @@ assert (params.nsplit > 0) : "number of splitted regions must be greater than 0 
 assert (params.min_qval > 0) : "minimum Phred-scale qvalue must be greater than 0 (--min_qval)"
 assert (params.sb_snv > 0 && params.sb_snv < 101) : "strand bias for SNVs must be in [0,100]"
 assert (params.sb_indel > 0 && params.sb_indel < 101) : "strand bias for indels must be in [0,100]"
-assert (params.map_qual > 0) : "minimum mapping quality (samtools) must be greater than 0"
-assert (params.base_qual > 0) : "minimum base quality (samtools) must be greater than 0"
+assert (params.map_qual >= 0) : "minimum mapping quality (samtools) must be greater than 0"
+assert (params.base_qual >= 0) : "minimum base quality (samtools) must be greater than 0"
 
 if(params.use_file_name == true){
   sample_names = "FILE"
