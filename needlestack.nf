@@ -1,14 +1,31 @@
 #! /usr/bin/env nextflow
+
+// needlestack: a multi-sample somatic variant caller
+// Copyright (C) 2015 Matthieu Foll and Tiffany Delhomme
+s
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 // run using for ex.: 
-// samtools_regression_somatic_vcf.nf --bed my_bed_file.bed --nsplit 20 --fasta_ref /scratch/appli57_local_duplicates/reference/hg19_torrentserver.fasta --bam_folder BAM/
+// needlestack.nf --bed my_bed_file.bed --nsplit 20 --fasta_ref reference.fasta --bam_folder BAM/
 
 // requirement:
 // - bedtools
 // - samtools
 // - Rscript (R)
-// - bed_large_cut.r
-// - pileup_nbrr_caller_vcf.r 
-// - pileup2baseindel.pl (+ perl)
+// - bed_large_cut.r (in bin folder)
+// - needlestack.r (in bin folder)
+// - pileup2baseindel.pl (in bin folder) (+ perl)
 // - vcfoverlay from vcflib
 
 params.min_dp = 50 // minimum coverage in at least one sample to consider a site
@@ -32,14 +49,17 @@ params.out_folder = params.bam_folder // if not provided, outputs will be held o
 
 if (params.help) {
     log.info ''
-    log.info '----------------------------'
-    log.info 'ROBUST REGRESSION VARIANT CALLER'
-    log.info '----------------------------'
-    log.info 'somatic variant calling pipeline using multi-sampling from (ultra)deep next-generation sequencing'
-    log.info '----------------------------'
+    log.info '--------------------------------------------------'
+    log.info 'NEEDLESTACK: A MULTI-SAMPLE SOMATIC VARIANT CALLER'
+    log.info '--------------------------------------------------'
+    log.info 'needlestack Copyright (C) 2015 Matthieu Foll and Tiffany Delhomme
+    log.info 'This program comes with ABSOLUTELY NO WARRANTY; for details see LICENSE.txt'
+    log.info 'This is free software, and you are welcome to redistribute it'
+    log.info 'under certain conditions; see LICENSE.txt for details.'
+    log.info '--------------------------------------------------'
     log.info ''
     log.info 'Usage: '
-    log.info '    nextflow run mfoll/robust-regression-caller -with-docker mfoll/robust-regression-caller --bed your_bedfile.bed --bam_folder BAM/ --fasta_ref hg19.fasta [other options]'
+    log.info '    nextflow run mfoll/needlestack -with-docker mfoll/robust-regression-caller --bed your_bedfile.bed --bam_folder BAM/ --fasta_ref hg19.fasta [other options]'
     log.info ''
     log.info 'Mandatory arguments:'
     log.info '    --bed            BED_FILE                 Query intervals in bed format.'
@@ -79,15 +99,15 @@ assert fasta_ref.exists() : "input fasta reference does not exist"
 assert fasta_ref_fai.exists() : "input fasta does not seem to have a .fai index"
 assert bed.exists() : "input bed file does not exist"
 assert file(params.bam_folder).exists() : "input bam folder does not exist"
-assert (params.min_dp > 0) : "minimum coverage must be greater than 0 (--min_dp)"
-assert (params.max_DP > 1) : "maximum coverage before sampling must be greater than 1 (--max_DP)"
-assert (params.min_ao > 0) : "minimum alternative reads must be greater than 0 (--min_ao)"
-assert (params.nsplit > 0) : "number of splitted regions must be greater than 0 (--nsplit)"
-assert (params.min_qval > 0) : "minimum Phred-scale qvalue must be greater than 0 (--min_qval)"
+assert (params.min_dp > 0) : "minimum coverage must be higher than 0 (--min_dp)"
+assert (params.max_DP > 1) : "maximum coverage before sampling must be higher than 1 (--max_DP)"
+assert (params.min_ao > 0) : "minimum alternative reads must be higher than 0 (--min_ao)"
+assert (params.nsplit > 0) : "number of splitted regions must be higher than 0 (--nsplit)"
+assert (params.min_qval > 0) : "minimum Phred-scale qvalue must be higher than 0 (--min_qval)"
 assert (params.sb_snv > 0 && params.sb_snv < 101) : "strand bias for SNVs must be in [0,100]"
 assert (params.sb_indel > 0 && params.sb_indel < 101) : "strand bias for indels must be in [0,100]"
-assert (params.map_qual > 0) : "minimum mapping quality (samtools) must be greater than 0"
-assert (params.base_qual > 0) : "minimum base quality (samtools) must be greater than 0"
+assert (params.map_qual >= 0) : "minimum mapping quality (samtools) must be higher than or equals to 0"
+assert (params.base_qual >= 0) : "minimum base quality (samtools) must be higher than or equals to 0"
 
 if(params.use_file_name == true){
   sample_names = "FILE"
@@ -95,10 +115,14 @@ if(params.use_file_name == true){
 
 /* Software information */
 
-log.info "============================================"
-log.info "ROBUST REGRESSION VARIANT CALLER"
-log.info "somatic variant calling pipeline using multi-sampling from (ultra)deep next-generation sequencing"
-log.info "============================================"
+log.info '--------------------------------------------------'
+log.info 'NEEDLESTACK: A MULTI-SAMPLE SOMATIC VARIANT CALLER'
+log.info '--------------------------------------------------'
+log.info 'needlestack Copyright (C) 2015 Matthieu Foll and Tiffany Delhomme
+log.info 'This program comes with ABSOLUTELY NO WARRANTY; for details see LICENSE.txt'
+log.info 'This is free software, and you are welcome to redistribute it'
+log.info 'under certain conditions; see LICENSE.txt for details.'
+log.info '--------------------------------------------------'
 log.info "query bam folder                                                : ${params.bam_folder}"
 log.info "reference in fasta format                                       : ${params.fasta_ref}"
 log.info "intervals for calling                                           : ${params.bed}"
