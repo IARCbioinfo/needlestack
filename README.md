@@ -1,4 +1,4 @@
-# Robust regression multi-sample somatic variant caller
+# needlstack: multi-sample somatic variant caller
 
 Warning: development in progress, unreliable results warrantied.
 
