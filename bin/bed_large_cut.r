@@ -1,4 +1,21 @@
 #! /usr/bin/env Rscript
+
+# needlestack: a multi-sample somatic variant caller
+# Copyright (C) 2015 Matthieu Foll and Tiffany Delhomme
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 nb_pieces=as.numeric(commandArgs(TRUE)[1])
 bed=read.table(pipe('cat /dev/stdin'),stringsAsFactors = F)
 bed_cum_size=cumsum(bed[,3]-bed[,2]+1)
