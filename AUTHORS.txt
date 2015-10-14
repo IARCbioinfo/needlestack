@@ -1,0 +1,6 @@
+This code is copyright (C) 2015 Matthieu Foll and Tiffany Delhomme, with the following exceptions:
+
+The perl script bin/pileup2baseindel.pl has been originally written by Jiang Li (original code here: https://github.com/riverlee/pileup2base).
+
+The R function glmrob.nb in bin/pileup_nbrr_caller_vcf.r has been originally written by William H. Aeberhard who kindly shared and helped modifying it (original code here: https://github.com/williamaeberhard/glmrob.nb). The method has been published in: 
+Aeberhard, W. H., Cantoni, E. and Heritier, S. (2014) Robust Inference in the Negative Binomial Regression Model with an Application to Falls Data. Biometrics (70), 920--931 (http://onlinelibrary.wiley.com/doi/10.1111/biom.12212/abstract).
