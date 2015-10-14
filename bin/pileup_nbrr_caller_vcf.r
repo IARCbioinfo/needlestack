@@ -12,6 +12,7 @@ glmrob.nb <- function(y,x,bounding.func='T/T',c.tukey.beta=5,c.tukey.sig=3,c.by.
   ## Disclaimer: Users of these routines are cautioned that, while due care has been taken and they are
   ## believed accurate, they have not been rigorously tested and their use and results are
   ## solely the responsibilities of the user.
+  ### Modified by Matthieu Foll and Tiffany Delhomme, 2015 (follm@iarc.fr)
   #-------------------------------------------------------------------
   # General set up
   #-------------------------------------------------------------------
