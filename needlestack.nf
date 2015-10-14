@@ -52,7 +52,7 @@ if (params.help) {
     log.info '--------------------------------------------------'
     log.info 'NEEDLESTACK: A MULTI-SAMPLE SOMATIC VARIANT CALLER'
     log.info '--------------------------------------------------'
-    log.info 'needlestack Copyright (C) 2015 Matthieu Foll and Tiffany Delhomme
+    log.info 'Copyright (C) 2015 Matthieu Foll and Tiffany Delhomme'
     log.info 'This program comes with ABSOLUTELY NO WARRANTY; for details see LICENSE.txt'
     log.info 'This is free software, and you are welcome to redistribute it'
     log.info 'under certain conditions; see LICENSE.txt for details.'
@@ -118,7 +118,7 @@ if(params.use_file_name == true){
 log.info '--------------------------------------------------'
 log.info 'NEEDLESTACK: A MULTI-SAMPLE SOMATIC VARIANT CALLER'
 log.info '--------------------------------------------------'
-log.info 'needlestack Copyright (C) 2015 Matthieu Foll and Tiffany Delhomme
+log.info 'Copyright (C) 2015 Matthieu Foll and Tiffany Delhomme'
 log.info 'This program comes with ABSOLUTELY NO WARRANTY; for details see LICENSE.txt'
 log.info 'This is free software, and you are welcome to redistribute it'
 log.info 'under certain conditions; see LICENSE.txt for details.'
