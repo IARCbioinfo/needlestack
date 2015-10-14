@@ -33,7 +33,7 @@ Works under most Linux distributions and Apple OS X.
 	Here on the example dataset downloaded above:
 	```bash
 	cd NGS_data_test/1000G_CEU_TP53/
-	nextflow run mfoll/robust-regression-caller -with-docker mfoll/robust-regression-caller \
+	nextflow run mfoll/needlestack -with-docker mfoll/robust-regression-caller \
 	         --bed TP53_all.bed --bam_folder BAM/ --fasta_ref 17.fasta.gz
 	```
 	
@@ -43,7 +43,7 @@ Works under most Linux distributions and Apple OS X.
 
 	Creating an alias for the long command above can be useful. For example:
 	```bash
-	alias rrcaller='nextflow run mfoll/robust-regression-caller -with-docker mfoll/robust-regression-caller'
+	alias rrcaller='nextflow run mfoll/needlestack -with-docker mfoll/robust-regression-caller'
 	```
 	
 	If you want to permanantly add this alias (and not just for your current session), add the above  line to your `~/.bashrc` file (assuming you are using bash).
@@ -57,14 +57,14 @@ Works under most Linux distributions and Apple OS X.
 	You can update the nextflow sofware and the pipeline itself simply using:
 	```bash
 	nextflow -self-update
-	nextflow pull mfoll/robust-regression-caller
+	nextflow pull mfoll/needlestack
 	```
 
-	You can also automatically update the pipeline when you run it by adding the option `-latest` in the `nextflow run` command. Doing so you will always run the latest version from [Github](https://github.com/mfoll/robust-regression-caller).
+	You can also automatically update the pipeline when you run it by adding the option `-latest` in the `nextflow run` command. Doing so you will always run the latest version from [Github](https://github.com/mfoll/needlestack).
 
-	Official releases can be found [here](https://github.com/mfoll/robust-regression-caller/releases/). There is a corresponding official [docker container](https://hub.docker.com/r/mfoll/robust-regression-caller/) for each release and one can run a particular version using (for example for v0.1):
+	Official releases can be found [here](https://github.com/mfoll/needlestack/releases/). There is a corresponding official [docker container](https://hub.docker.com/r/mfoll/robust-regression-caller/) for each release and one can run a particular version using (for example for v0.1):
 	```bash
-	nextflow run mfoll/robust-regression-caller -r v0.1 -with-docker mfoll/robust-regression-caller:v0.1 \
+	nextflow run mfoll/needlestack -r v0.1 -with-docker mfoll/robust-regression-caller:v0.1 \
 	         --bed TP53_all.bed --bam_folder BAM/ --fasta_ref 17.fasta.gz
 	```
 
@@ -109,8 +109,8 @@ Simply add the parameters you want in the command line like `--min_dp 1000` for 
 
 A good practice is to keep (and publish) the `.nextflow.log` file create during the pipeline process, as it contains useful information for reproducibility (full command line, software versions etc.). You should also add the option `-with-trace` in the `nextflow run` command line that will create an additional `trace.csv` file containing even more information to keep for records.
 
-[![Join the chat at https://gitter.im/mfoll/robust-regression-caller](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/mfoll/robust-regression-caller?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Join the chat at https://gitter.im/mfoll/needlestack](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/mfoll/needlestack?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-[![Circle CI](https://circleci.com/gh/mfoll/robust-regression-caller/tree/master.svg?style=shield)](https://circleci.com/gh/mfoll/robust-regression-caller/tree/master) 
+[![Circle CI](https://circleci.com/gh/mfoll/needlestack/tree/master.svg?style=shield)](https://circleci.com/gh/mfoll/needlestack/tree/master) 
 
 [![Docker Hub](https://img.shields.io/badge/docker-ready-blue.svg)](https://hub.docker.com/r/mfoll/robust-regression-caller/)
