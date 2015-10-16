@@ -44,6 +44,7 @@ params.use_file_name = false //put these argument to use the bam file names as s
 params.all_SNVs = false //  output all sites, even when no variant is detected
 params.no_plots = false  // do not produce pdf plots of regressions 
 params.out_folder = params.bam_folder // if not provided, outputs will be held on the input bam folder
+params.no_indels = false // do not skip indels
 
 /* If --help in parameters, print software usage */
 
@@ -79,6 +80,7 @@ if (params.help) {
     log.info '    --use_file_name                           Sample names are equals to file names, otherwise to BAM SM tag .'
     log.info '    --all_SNVs                                Output all sites, even when no variant found.'
     log.info '    --no_plots                                Do not output PDF regression plots.'
+    log.info '    --no_indels                               Do not call indels.'
     log.info '    --out_folder     OUTPUT FOLDER            Output directory, bu default input bam folder.'
     log.info ''
     exit 1
@@ -94,6 +96,7 @@ fasta_ref_gzi = file( params.fasta_ref+'.gzi' )
 assert params.sb_type in ["SOR","RVSB"] : "--sb_type must be equal to SOR or RVSB "
 assert params.all_SNVs in [true,false] : "do not assign a value to --all_SNVs"
 assert params.no_plots in [true,false] : "do not assign a value to --no_plots"
+assert params.no_indels in [true,false] : "do not assign a value to --no_indels"
 assert params.use_file_name in [true,false] : "do not assign a value to --use_file_name"
 assert fasta_ref.exists() : "input fasta reference does not exist"
 assert fasta_ref_fai.exists() : "input fasta does not seem to have a .fai index"
@@ -140,7 +143,8 @@ log.info "samtools minimum base quality (--base_qual)                     : ${pa
 log.info "samtools maximum coverage before downsampling (--max_DP)        : ${params.max_DP}"          
 log.info "sample names definition (--use_file_name)                       : ${sample_names}"
 log.info(params.all_SNVs == true ? "output all SNVs (--all_SNVs)                                    : yes" : "output all sites (--all_SNVs)                                   : no" ) 
-log.info(params.no_plots == true ? "pdf regression plots (--no_plots)                               : no"  : "pdf regression plots (--no_plots)                               : yes" ) 
+log.info(params.no_plots == true ? "pdf regression plots (--no_plots)                               : no"  : "pdf regression plots (--no_plots)                               : yes" )
+log.info(params.no_indels == true ? "skip indels (--no_indels)                                       : yes" : "skip indels (--no_indels)                                       : no" )  
 log.info "output folder (--out_folder)                                    : ${params.out_folder}"
 log.info "\n"
 
@@ -209,11 +213,16 @@ process mpileup2table {
      set val(region_tag), file('sample*.txt'), file('names.txt') into table
         
  	shell:
+	if ( params.no_indels ) {
+		indel_par = "-no-indels"
+	} else {
+    		indel_par = " "
+	}
  	'''
  	nb_pos=$(wc -l < !{region_tag}.pileup)
 	if [ $nb_pos -gt 0 ]; then 
 		# split and convert pileup file
-		pileup2baseindel.pl -i !{region_tag}.pileup
+		pileup2baseindel.pl -i !{region_tag}.pileup !{indel_par}
 		# rename the output (the converter call files sample{i}.txt)
 		i=1
 		for cur_bam in !{bam} 
