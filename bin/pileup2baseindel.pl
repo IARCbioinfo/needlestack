@@ -5,7 +5,7 @@
 #Creat Time: Fri 03 Aug 2012 10:34:54 PM CDT  
 #Vanderbilt Center for Quantitative Sciences
 #############################################
-#Modified by Matthieu Foll (follm@iarc.fr) 2015
+#Modified by Matthieu Foll (follm@iarc.fr) and Tiffany Delhomme 2015
 #from https://github.com/riverlee/pileup2base (see https://github.com/mfoll/pileup2base)
 use strict;
 use warnings;
@@ -14,7 +14,7 @@ use Getopt::Long;
 use IO::File;
 
 ######### Update from pile2base.pl ####################
-# 1).it will parse the insert and deletion too, 
+# 1).it will parse the insert and deletion too (and will not if option -no-indels), 
 # 2).it can parse pileups from multiple sample,
 # 3).you don't need to define the outputfile,instead, 
 #    you will need to provide 'prefix' which will name result from each sample
@@ -22,7 +22,7 @@ use IO::File;
 # 4).Provide option to define the base quality score offset, default is 33 (Sanger standard).
 # 5).Read parameters from command line with options
 
-#Usage: perl pileup2baseindel.pl -i <pileupfile> -bq [BQcutoff] -prefix [sample] -offset [33]
+#Usage: perl pileup2baseindel.pl -i <pileupfile> -bq [BQcutoff] -prefix [sample] -offset [33] (-no-indels)
 my $usage = <<USAGE;
 Usage: perl pileup2base.pl -i <pileupfile> -bq [BQcutoff] -prefix [sample] -offset [33]
         -i        input pileup file, could be from 1 sample or multiple samples
@@ -33,20 +33,19 @@ Usage: perl pileup2base.pl -i <pileupfile> -bq [BQcutoff] -prefix [sample] -offs
         -h        print out this
 USAGE
 
-my ($input,$BQcut,$offset,$prefix,$help) = (undef,-5,33,"sample",undef);
+my ($input,$BQcut,$offset,$prefix,$help,$noindel) = (undef,-5,33,"sample",undef,undef);
 GetOptions(
 	"i=s"=>\$input,
 	"bq=i"=>\$BQcut,
 	"offset=i"=>\$offset,
 	"prefix=s"=>\$prefix,
-	"h"=>\$help
+	"h"=>\$help,
+	"no-indels"=>\$noindel
 );
-
 if($help){
 	print $usage;
 	exit(0);
 }
-
 unless ($input){
 	print "Input file does not provide yet\n";
     print "\n$usage\n";
@@ -121,25 +120,29 @@ sub parsePileup{
 	#3,remove -[0-9]+[ACGTNacgtn]+ pattern
 	my %hash=();
 	my %deletion=();
+	my %insertion=();
 	while($bases=~/-(\d+)/g){
 		$hash{$1}=1;
 	}
-	#get the deletion sequences and delete them
+
+	#if !noindels get the deletion and insertion sequences and delete them
 	foreach my $k (keys %hash){
-		while($bases=~/-$k([ACGTNacgtn]{$k})/g){
-			$deletion{$1}++;
+		if(!$noindel){
+			while($bases=~/-$k([ACGTNacgtn]{$k})/g){
+	            		$deletion{$1}++;
+	        	}
 		}
-		$bases=~s/-$k[ACGTNacgtn]{$k}//g;
+	        $bases=~s/-$k[ACGTNacgtn]{$k}//g;
 	}
-	
 	%hash=();
-	my %insertion=();
 	while($bases=~/\+(\d+)/g){
 		$hash{$1}=1;
 	}
 	foreach my $k (keys %hash){
-		while($bases=~/\+$k([ACGTNacgtn]{$k})/g){
-			$insertion{$1}++;
+		if(!$noindel){
+		        while($bases=~/\+$k([ACGTNacgtn]{$k})/g){
+			    $insertion{$1}++;
+		        }
 		}
 		$bases=~s/\+$k[ACGTNacgtn]{$k}//g;
 	}
@@ -212,20 +215,22 @@ sub parsePileup{
 	my $str=$forward_A."\t".$forward_T."\t".$forward_C."\t".$forward_G."\t".$reverse_A."\t".$reverse_T."\t".$reverse_C."\t".$reverse_G."\t";
 	my $insertion="NA";
 	my $deletion="NA";
-	if(scalar(keys %insertion)){
-		$insertion="";
-		foreach my $k (sort {$insertion{$b}<=>$insertion{$a}} keys %insertion){
-			$insertion.=$insertion{$k}.":".$k."|";
+	if(!$noindel){
+		if(scalar(keys %insertion)){
+			$insertion="";
+			foreach my $k (sort {$insertion{$b}<=>$insertion{$a}} keys %insertion){
+				$insertion.=$insertion{$k}.":".$k."|";
+			}
+			chop($insertion);
 		}
-		chop($insertion);
-	}
 	
-	if(scalar(keys %deletion)){
-		$deletion="";
-		foreach my $k (sort {$deletion{$b}<=>$deletion{$a}} keys %deletion){
-			$deletion.=$deletion{$k}.":".$k."|";
+		if(scalar(keys %deletion)){
+			$deletion="";
+			foreach my $k (sort {$deletion{$b}<=>$deletion{$a}} keys %deletion){
+				$deletion.=$deletion{$k}.":".$k."|";
+			}
+			chop($deletion);
 		}
-		chop($deletion);
 	}
 	$str.=$insertion."\t".$deletion."\n";
 	return $str;
