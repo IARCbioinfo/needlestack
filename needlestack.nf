@@ -86,6 +86,10 @@ if (params.help) {
     exit 1
 }
 
+assert (params.fasta_ref != true) && (params.fasta_ref != null) : "please specify --fasta_ref option (--fasta_ref your_reference.fasta(.gz))"
+assert (params.bed != true) && (params.bed != null) : "please specify --bed option (--bed your_bedfile.bed)"
+assert (params.bam_folder != true) && (params.bam_folder != null) : "please specify --bam_folder option (--bam_folder your_bamfolder)"
+
 bed = file( params.bed )
 fasta_ref = file( params.fasta_ref )
 fasta_ref_fai = file( params.fasta_ref+'.fai' )
