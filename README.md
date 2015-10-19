@@ -10,11 +10,13 @@ Contact: follm@iarc.fr
 
 ## Input
 
-You will need a set of [BAM files](https://samtools.github.io/hts-specs/) (called `*.bam`) grouped in a single folder along with their [index files](http://www.htslib.org/doc/samtools.html) (called `*.bam.bai`), a [bed file](https://genome.ucsc.edu/FAQ/FAQformat.html#format1) and a reference [fasta file](https://en.wikipedia.org/wiki/FASTA_format) (eventually compressed with [bgzip](http://www.htslib.org/doc/tabix.html)) along with its [faidx index](http://www.htslib.org/doc/faidx.html) (and `*.gzi` faidx index if compressed).
+- A set of [BAM files](https://samtools.github.io/hts-specs/) (called `*.bam`) grouped in a single folder along with their [index files](http://www.htslib.org/doc/samtools.html) (called `*.bam.bai`). A minimum of 20 BAM files is recommended. 
+- A [bed file](https://genome.ucsc.edu/FAQ/FAQformat.html#format1) .
+- A reference [fasta file](https://en.wikipedia.org/wiki/FASTA_format) (eventually compressed with [bgzip](http://www.htslib.org/doc/tabix.html)) along with its [faidx index](http://www.htslib.org/doc/faidx.html) (and `*.gzi` faidx index if compressed).
 
 ## Quick start
 
-Works under most Linux distributions and Apple OS X.
+Needlestack works under most Linux distributions and Apple OS X.
 
 1. Install [java](https://java.com/download/) JRE if you don't already have it.
 
@@ -51,15 +53,18 @@ Works under most Linux distributions and Apple OS X.
 
 	Creating an alias for the long command above can be useful. For example:
 	```bash
-	alias rrcaller='nextflow run iarcbioinfo/needlestack -with-docker iarcbioinfo/needlestack'
+	alias needlestack='nextflow run iarcbioinfo/needlestack -with-docker iarcbioinfo/needlestack'
 	```
 	
 	If you want to permanantly add this alias (and not just for your current session), add the above  line to your `~/.bashrc` file (assuming you are using bash).
 	
-	Will allow you to do this:
+	It will allow you to do this:
 	```bash
-	rrcaller --bed TP53_all.bed --bam_folder BAM/ --fasta_ref 17.fasta.gz
+	needlestack --bed TP53_all.bed --bam_folder BAM/ --fasta_ref 17.fasta.gz
 	```
+	
+	See below for a more complete alias we recommend using.
+	
 6. Update the pipeline
 
 	You can update the nextflow sofware and the pipeline itself simply using:
@@ -70,9 +75,9 @@ Works under most Linux distributions and Apple OS X.
 
 	You can also automatically update the pipeline when you run it by adding the option `-latest` in the `nextflow run` command. Doing so you will always run the latest version from [Github](https://github.com/iarcbioinfo/needlestack).
 
-	Official releases can be found [here](https://github.com/iarcbioinfo/needlestack/releases/). There is a corresponding official [docker container](https://hub.docker.com/r/iarcbioinfo/needlestack/) for each release and one can run a particular version using (for example for v0.1):
+	Official releases can be found [here](https://github.com/iarcbioinfo/needlestack/releases/). There is a corresponding official [docker container](https://hub.docker.com/r/iarcbioinfo/needlestack/) for each release and one can run a particular version using (for example for v0.2):
 	```bash
-	nextflow run iarcbioinfo/needlestack -r v0.1 -with-docker iarcbioinfo/needlestack:v0.1 \
+	nextflow run iarcbioinfo/needlestack -r v0.2 -with-docker iarcbioinfo/needlestack:v0.2 \
 	         --bed TP53_all.bed --bam_folder BAM/ --fasta_ref 17.fasta.gz
 	```
 
@@ -85,37 +90,45 @@ The exact same pipeline can be run on your computer or on a HPC cluster, by addi
 process.executor = 'sge'
 ```
 
-Other popular schedulers such as LSF, SLURM, PBS, TORQUE etc. are also compatible. See the nextflow documentation [here](http://www.nextflow.io/docs/latest/executor.html) for more details. Also have a look at the [other parameters for the executors](http://www.nextflow.io/docs/latest/config.html#scope-executor), in particular `queueSize` that defines the number of tasks the executor will handle in a parallel manner (default is 100 which is certainly too high if you are executing it on your local machine).
+Other popular schedulers such as LSF, SLURM, PBS, TORQUE etc. are also compatible. See the nextflow documentation [here](http://www.nextflow.io/docs/latest/executor.html) for more details. Also have a look at the [other parameters for the executors](http://www.nextflow.io/docs/latest/config.html#scope-executor), in particular `queueSize` that defines the number of tasks the executor will handle in a parallel manner.  
 
-Following is an example of creating a global nextflow config file, with `queueSize` equals to your number of processors (works on linux platforms and Mac OS X), replace `>` by `>>` if you want to add the argument line to an existing nextflow config file :
+The default number of tasks the executor will handle in a parallel is 100, which is certainly too high if you are executing it on your local machine. In this case a good idea is to set it to the number of computing cores your local machine has. Following is an example to create a config file with this information automatically (works on Linux and Mac OS X):
 ```bash
 echo "executor.\$local.queueSize = "`getconf _NPROCESSORS_ONLN` > ~/.nextflow/config
 ```
+
+Replace `>` by `>>` if you want to add the argument line to an existing nextflow config file.
+
 
 `--bed`, `--bam_folder` and `--fasta_ref` are compulsary. The optional parameters with default values are:
 
 | Parameter | Default value | Description |
 |-----------|--------------:|-------------| 
 | min_dp    |            50 | Minimum coverage in at least one sample to consider a site |
-| min_ao | 5 | Minimum number of non-ref reads in at least one sample to consider a site|
+| min_ao | 5 | Minimum number of non-ref reads in at least one sample to consider a site |
 | nsplit | 1 | Split the bed file in nsplit pieces and run in parallel |
-| min_qval | 50 | qvalue in Phred scale to consider a variant |
-| sb_type | "SOR" | Strand bias measure, either "SOR" or "RVSB" |
+| min_qval | 50 | qvalue in [Phred scale](https://en.wikipedia.org/wiki/Phred_quality_score) to consider a variant |
+| sb_type | SOR | Strand bias measure, either SOR or RVSB |
 | sb_snv | 100 | Strand bias threshold for SNVs (100 =no filter) |
 | sb_indel | 100 | Strand bias threshold for indels (100 = no filter)|
 | map_qual | 20 | Min mapping quality (passed to samtools) |
 | base_qual | 20 | Min base quality (passed to samtools) |
 | max_DP | 30000 | Downsample coverage per sample (passed to samtools) |
-| use_file_name |   | Put this argument to use the bam file names as sample names and do not to use the sample name filed from the bam file (SM tag) |
-| all_SNVs |   | Put this argument to output all SNVs sites, even when no variant is detected |
-| no_plots |   | Put this argument to do not produce pdf plots of regressions |
+| use_file_name |   | Put this argument to use the bam file names as sample names. By default the sample name is extracted from the bam file SM tag. |
+| all_SNVs |   | Put this argument to output all SNVs, even when no variant is detected |
+| no_plots |   | Put this argument to remove pdf plots of regressions from the output |
 | out_folder | --bam_folder | Output folder, by default equals to the input bam folder |
 
 Simply add the parameters you want in the command line like `--min_dp 1000` for exmaple to change the min coverage.
 
 [Recommended values](http://gatkforums.broadinstitute.org/discussion/5533/strandoddsratio-computation) for SOR strand bias are SOR < 4 for SNVs and < 10 for indels. For RVSB, a good starting point is to filter out variant with RVSB>0.85. There is no hard filter by default as this is easy to do afterward using [bcftools filter](http://samtools.github.io/bcftools/bcftools.html#filter) command.
 
-A good practice is to keep (and publish) the `.nextflow.log` file create during the pipeline process, as it contains useful information for reproducibility (full command line, software versions etc.). You should also add the option `-with-trace` in the `nextflow run` command line that will create an additional `trace.csv` file containing even more information to keep for records.
+A good practice is to keep (and publish) the `.nextflow.log` file create during the pipeline process, as it contains useful information for reproducibility (full command line, software versions etc.). You should also add the option `-with-trace` in the `nextflow run` command line that will create an additional `trace.csv` file containing even more information to keep for records. The option `-with-timeline` also creates a nice processes execution timeline file (a web page).
+
+All in all, our recommended alias for the full command line to run needlestack is:
+```bash
+alias needlestack='nextflow run iarcbioinfo/needlestack -with-docker iarcbioinfo/needlestack -latest -with-trace --with-timeline'
+```
 
 [![Join the chat at https://gitter.im/iarcbioinfo/needlestack](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/iarcbioinfo/needlestack?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 

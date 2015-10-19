@@ -14,7 +14,7 @@ use Getopt::Long;
 use IO::File;
 
 ######### Update from pile2base.pl ####################
-# 1).it will parse the insert and deletion too (and will not if option -no-indels), 
+# 1).it will parse the insert and deletion too (unless option -no-indels is used), 
 # 2).it can parse pileups from multiple sample,
 # 3).you don't need to define the outputfile,instead, 
 #    you will need to provide 'prefix' which will name result from each sample
@@ -24,13 +24,14 @@ use IO::File;
 
 #Usage: perl pileup2baseindel.pl -i <pileupfile> -bq [BQcutoff] -prefix [sample] -offset [33] (-no-indels)
 my $usage = <<USAGE;
-Usage: perl pileup2base.pl -i <pileupfile> -bq [BQcutoff] -prefix [sample] -offset [33]
-        -i        input pileup file, could be from 1 sample or multiple samples
-        -bq       base quality score cutoff for each mapped/unmapped base,
-                  only those larger than cutoff will be output in the result, default is -5, means no filter
-        -prefix   output file prefix, default is sample, the output will be named as prefix1.txt, prefix2.txt, etc.
-        -offset   Offset to change ASCII character to base quality score, default is 33 (sanger format).
-        -h        print out this
+Usage: perl pileup2base.pl -i <pileupfile> -bq [BQcutoff] -prefix [sample] -offset [33] (-no-indels)
+        -i         input pileup file, could be from 1 sample or multiple samples
+        -bq        base quality score cutoff for each mapped/unmapped base,
+                   only those larger than cutoff will be output in the result, default is -5, means no filter
+        -prefix    output file prefix, default is sample, the output will be named as prefix1.txt, prefix2.txt, etc.
+        -offset    Offset to change ASCII character to base quality score, default is 33 (sanger format).
+        -no-indels Ignore indels.
+        -h         print out this
 USAGE
 
 my ($input,$BQcut,$offset,$prefix,$help,$noindel) = (undef,-5,33,"sample",undef,undef);
