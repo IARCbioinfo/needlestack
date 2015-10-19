@@ -133,7 +133,7 @@ log.info '--------------------------------------------------'
 log.info "Input BAM folder (--bam_folder)                                 : ${params.bam_folder}"
 log.info "Reference in fasta format (--fasta_ref)                         : ${params.fasta_ref}"
 log.info "Intervals for calling (--bed)                                   : ${params.bed}"
-log.info "Number of regions to splot (--nsplit)                           : ${params.nsplit}"
+log.info "Number of regions to split (--nsplit)                           : ${params.nsplit}"
 log.info "To consider a site for calling:"
 log.info "     minimum coverage (--min_dp)                                : ${params.min_dp}"
 log.info "     minimum of alternative reads (--min_ao)                    : ${params.min_ao}"
