@@ -60,35 +60,35 @@ if (params.help) {
     log.info '--------------------------------------------------'
     log.info ''
     log.info 'Usage: '
-    log.info '    nextflow run iarcbioinfo/needlestack -with-docker iarcbioinfo/needlestack --bed your_bedfile.bed --bam_folder BAM/ --fasta_ref hg19.fasta [other options]'
+    log.info '    nextflow run iarcbioinfo/needlestack -with-docker iarcbioinfo/needlestack --bed bedfile.bed --bam_folder BAM/ --fasta_ref reference.fasta [other options]'
     log.info ''
     log.info 'Mandatory arguments:'
-    log.info '    --bed            BED_FILE                 Query intervals in bed format.'
-    log.info '    --bam_folder     BAM_DIR                  Query bam files directory.'
-    log.info '    --fasta_ref      REF_IN_FASTA             Reference genome in fasta.'
+    log.info '    --bed            BED_FILE                 Restrict the calling to regions listed in the BED file'
+    log.info '    --bam_folder     BAM_DIR                  BAM files directory.'
+    log.info '    --fasta_ref      REF_IN_FASTA             Reference genome in fasta format.'
     log.info 'Options:'
-    log.info '    --nsplit         INTEGER                  Number of splitted regions for parallel computations'
-    log.info '    --min_dp         INTEGER                  Minimum coverage for a site to be considered as alternative.'
-    log.info '    --min_ao         INTEGER                  Minimum of alternative reads to be considered as alternative.'
-    log.info '    --min_qval       VALUE                    Phred-scale qvalue threshold to consider a sample as variant.'
+    log.info '    --nsplit         INTEGER                  Split the bed file in nsplit pieces and run in parallel.'
+    log.info '    --min_dp         INTEGER                  Minimum coverage in at least one sample to consider a site.'
+    log.info '    --min_ao         INTEGER                  Minimum number of non-ref reads in at least one sample to consider a site.'
+    log.info '    --min_qval       VALUE                    Qvalue in Phred scale to consider a variant.'
     log.info '    --sb_type        SOR or RVSB              Strand bias measure.'
-    log.info '    --sb_snv         VALUE                    Strand bias threshold for SNV.'
-    log.info '    --sb_indel       VALUE                    Strand bias threshold for indel.'
+    log.info '    --sb_snv         VALUE                    Strand bias threshold for SNVs.'
+    log.info '    --sb_indel       VALUE                    Strand bias threshold for indels.'
     log.info '    --map_qual       VALUE                    Samtools minimum mapping quality.'
     log.info '    --base_qual      VALUE                    Samtools minimum base quality.'
     log.info '    --max_DP         INTEGER                  Samtools maximum coverage before downsampling.'
-    log.info '    --use_file_name                           Sample names are equals to file names, otherwise to BAM SM tag .'
-    log.info '    --all_SNVs                                Output all sites, even when no variant found.'
+    log.info '    --use_file_name                           Sample names are taken from file names, otherwise extracted from the bam file SM tag.'
+    log.info '    --all_SNVs                                Output all SNVs, even when no variant found.'
     log.info '    --no_plots                                Do not output PDF regression plots.'
     log.info '    --no_indels                               Do not call indels.'
-    log.info '    --out_folder     OUTPUT FOLDER            Output directory, bu default input bam folder.'
+    log.info '    --out_folder     OUTPUT FOLDER            Output directory, by default input bam folder.'
     log.info ''
     exit 1
 }
 
-assert (params.fasta_ref != true) && (params.fasta_ref != null) : "please specify --fasta_ref option (--fasta_ref your_reference.fasta(.gz))"
-assert (params.bed != true) && (params.bed != null) : "please specify --bed option (--bed your_bedfile.bed)"
-assert (params.bam_folder != true) && (params.bam_folder != null) : "please specify --bam_folder option (--bam_folder your_bamfolder)"
+assert (params.fasta_ref != true) && (params.fasta_ref != null) : "please specify --fasta_ref option (--fasta_ref reference.fasta(.gz))"
+assert (params.bed != true) && (params.bed != null) : "please specify --bed option (--bed bedfile.bed)"
+assert (params.bam_folder != true) && (params.bam_folder != null) : "please specify --bam_folder option (--bam_folder bamfolder)"
 
 bed = file( params.bed )
 fasta_ref = file( params.fasta_ref )
@@ -97,19 +97,19 @@ fasta_ref_gzi = file( params.fasta_ref+'.gzi' )
 
 /* Verify user inputs are correct */
 
-assert params.sb_type in ["SOR","RVSB"] : "--sb_type must be equal to SOR or RVSB "
+assert params.sb_type in ["SOR","RVSB"] : "--sb_type must be SOR or RVSB "
 assert params.all_SNVs in [true,false] : "do not assign a value to --all_SNVs"
 assert params.no_plots in [true,false] : "do not assign a value to --no_plots"
 assert params.no_indels in [true,false] : "do not assign a value to --no_indels"
 assert params.use_file_name in [true,false] : "do not assign a value to --use_file_name"
 assert fasta_ref.exists() : "input fasta reference does not exist"
-assert fasta_ref_fai.exists() : "input fasta does not seem to have a .fai index"
+assert fasta_ref_fai.exists() : "input fasta reference does not seem to have a .fai index (use samtools faidx)"
 assert bed.exists() : "input bed file does not exist"
 assert file(params.bam_folder).exists() : "input bam folder does not exist"
 assert (params.min_dp > 0) : "minimum coverage must be higher than 0 (--min_dp)"
-assert (params.max_DP > 1) : "maximum coverage before sampling must be higher than 1 (--max_DP)"
+assert (params.max_DP > 1) : "maximum coverage before downsampling must be higher than 1 (--max_DP)"
 assert (params.min_ao > 0) : "minimum alternative reads must be higher than 0 (--min_ao)"
-assert (params.nsplit > 0) : "number of splitted regions must be higher than 0 (--nsplit)"
+assert (params.nsplit > 0) : "number of regions to split must be higher than 0 (--nsplit)"
 assert (params.min_qval > 0) : "minimum Phred-scale qvalue must be higher than 0 (--min_qval)"
 assert (params.sb_snv > 0 && params.sb_snv < 101) : "strand bias for SNVs must be in [0,100]"
 assert (params.sb_indel > 0 && params.sb_indel < 101) : "strand bias for indels must be in [0,100]"
@@ -130,25 +130,24 @@ log.info 'This program comes with ABSOLUTELY NO WARRANTY; for details see LICENS
 log.info 'This is free software, and you are welcome to redistribute it'
 log.info 'under certain conditions; see LICENSE.txt for details.'
 log.info '--------------------------------------------------'
-log.info "query bam folder                                                : ${params.bam_folder}"
-log.info "reference in fasta format                                       : ${params.fasta_ref}"
-log.info "intervals for calling                                           : ${params.bed}"
-log.info "number of splitted regions (--nsplit)                           : ${params.nsplit}"
-log.info "to consider a site as alternative                               : "
-log.info "	minimum coverage (--min_dp)                             : ${params.min_dp}"
-log.info "	minimum of alternative reads (--min_ao)                 : ${params.min_ao}"
-log.info "to consider a sample as variant                                 : "
-log.info "	Phred-scale qvalue threshold (--min_qval)               : ${params.min_qval}"
-log.info "strand bias measure (--sb_type)                                 : ${params.sb_type}"
-log.info "strand bias threshold for SNV (--sb_snv)                        : ${params.sb_snv}"
-log.info "strand bias threshold for indel (--sb_indel)                    : ${params.sb_indel}"
-log.info "samtools minimum mapping quality (--map_qual)                   : ${params.map_qual}"
-log.info "samtools minimum base quality (--base_qual)                     : ${params.base_qual}"
-log.info "samtools maximum coverage before downsampling (--max_DP)        : ${params.max_DP}"          
-log.info "sample names definition (--use_file_name)                       : ${sample_names}"
-log.info(params.all_SNVs == true ? "output all SNVs (--all_SNVs)                                    : yes" : "output all sites (--all_SNVs)                                   : no" ) 
-log.info(params.no_plots == true ? "pdf regression plots (--no_plots)                               : no"  : "pdf regression plots (--no_plots)                               : yes" )
-log.info(params.no_indels == true ? "skip indels (--no_indels)                                       : yes" : "skip indels (--no_indels)                                       : no" )  
+log.info "Input BAM folder (--bam_folder)                                 : ${params.bam_folder}"
+log.info "Reference in fasta format (--fasta_ref)                         : ${params.fasta_ref}"
+log.info "Intervals for calling (--bed)                                   : ${params.bed}"
+log.info "Number of regions to splot (--nsplit)                           : ${params.nsplit}"
+log.info "To consider a site for calling:"
+log.info "     minimum coverage (--min_dp)                                : ${params.min_dp}"
+log.info "     minimum of alternative reads (--min_ao)                    : ${params.min_ao}"
+log.info "Phred-scale qvalue threshold (--min_qval)                       : ${params.min_qval}"
+log.info "Strand bias measure (--sb_type)                                 : ${params.sb_type}"
+log.info "Strand bias threshold for SNVs (--sb_snv)                       : ${params.sb_snv}"
+log.info "Strand bias threshold for indels (--sb_indel)                   : ${params.sb_indel}"
+log.info "Samtools minimum mapping quality (--map_qual)                   : ${params.map_qual}"
+log.info "Samtools minimum base quality (--base_qual)                     : ${params.base_qual}"
+log.info "Samtools maximum coverage before downsampling (--max_DP)        : ${params.max_DP}"          
+log.info "Sample names definition (--use_file_name)                       : ${sample_names}"
+log.info(params.all_SNVs == true ? "Output all SNVs (--all_SNVs)                                    : yes" : "Output all SNVs (--all_SNVs)                                    : no" ) 
+log.info(params.no_plots == true ? "PDF regression plots (--no_plots)                               : no"  : "PDF regression plots (--no_plots)                               : yes" )
+log.info(params.no_indels == true ? "Skip indels (--no_indels)                                       : yes" : "Skip indels (--no_indels)                                       : no" )  
 log.info "output folder (--out_folder)                                    : ${params.out_folder}"
 log.info "\n"
 

@@ -269,14 +269,14 @@ if("--help" %in% args | is.null(args$out_file) | is.null(args$fasta_ref)) {
       
       Optionnal arguments:
       --samtools=path                - path of samtools, default=samtools
-      --SB_type=SOR or RVSB      - strand bias estimator, default=SOR
+      --SB_type=SOR or RVSB      - strand bias measure, default=SOR
       --SB_threshold_SNV=value       - strand bias threshold for SNV, default=100
       --SB_threshold_indel=value     - strand bias threshold for indel, default=100
-      --min_coverage=value           - minimum coverage for all sites, default=50
-      --min_reads=value              - minimum number of reads for all sites, default=5
-      --GQ_threshold=value           - phred scale Qvalue threshold for variants, default=50
-      --output_all_SNVs=boolean     - output all sites, even when no variant is detected, default=FALSE
-      --do_plots=boolean              - output all regression plots, default=TRUE
+      --min_coverage=value           - minimum coverage in at least one sample to consider a site, default=50
+      --min_reads=value              - minimum number of non-ref reads in at least one sample to consider a site, default=5
+      --GQ_threshold=value           - phred scale qvalue threshold for variants, default=50
+      --output_all_SNVs=boolean     - output all SNVs, even when no variant is detected, default=FALSE
+      --do_plots=boolean              - output regression plots, default=TRUE
       
       WARNING : by default samtools has to be in your path
       
@@ -387,7 +387,7 @@ write_out=function(...) {
 }
 write_out("##fileformat=VCFv4.1")
 write_out("##fileDate=",format(Sys.Date(), "%Y%m%d"))
-write_out("##source=needlestack")
+write_out("##source=needlestack v0.2")
 write_out("##reference=",fasta_ref)
 write_out("##phasing=none")
 write_out("##filter=\"QVAL > ",GQ_threshold," & ",SB_type,"_SNV < ",SB_threshold_SNV," & ",SB_type,"_INDEL < ",SB_threshold_indel," & max(AO) > ",min_reads," & max(DP) > ",min_coverage,"\"")
