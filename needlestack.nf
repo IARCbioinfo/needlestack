@@ -155,7 +155,7 @@ bai = Channel.fromPath( params.bam_folder+'/*.bam.bai' ).toList()
 /* split bed file into nsplit regions */
 process split_bed {
      
-     storeDir { params.out_folder+'/BED_REGIONS/' } 
+     publishDir  "${params.out_folder}/BED_REGIONS/"
      
      intput:
      file bed
@@ -172,7 +172,7 @@ process split_bed {
 // create mpileup file + sed to have "*" when there is no coverage (otherwise pileup2baseindel.pl is unhappy)
 process samtools_mpileup {
 
-     storeDir { params.out_folder+'/PILEUP/' }   
+     publishDir "${params.out_folder}/PILEUP/"
         
      tag { region_tag }   
         
@@ -201,7 +201,7 @@ process mpileup2table {
      
      errorStrategy 'ignore'
      
-     storeDir { params.out_folder+'/PILEUP/'+region_tag }   
+     publishDir "${params.out_folder}/PILEUP/${region_tag}"  
         
      tag { region_tag }   
         
@@ -247,7 +247,7 @@ process mpileup2table {
 // perform regression in R
 process R_regression {
        
-     storeDir { params.out_folder+'/VCF/' }   
+     publishDir "${params.out_folder}/VCF"     
         
      tag { region_tag }   
         
@@ -273,7 +273,7 @@ process R_regression {
 // merge all vcf files in one big file 
 process collect_vcf_result {
 
-	storeDir { params.out_folder }
+	publishDir { params.out_folder }
 
 	input:
 	file '*.vcf' from vcf.toList()
