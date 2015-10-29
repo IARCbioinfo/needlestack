@@ -116,9 +116,7 @@ assert (params.sb_indel > 0 && params.sb_indel < 101) : "strand bias for indels 
 assert (params.map_qual >= 0) : "minimum mapping quality (samtools) must be higher than or equals to 0"
 assert (params.base_qual >= 0) : "minimum base quality (samtools) must be higher than or equals to 0"
 
-if(params.use_file_name == true){
-  sample_names = "FILE"
-} else { sample_names = "BAM" }
+sample_names = params.use_file_name ? "FILE" : "BAM"
 
 /* Software information */
 
