@@ -127,7 +127,7 @@ A good practice is to keep (and publish) the `.nextflow.log` file create during 
 
 All in all, our recommended alias for the full command line to run needlestack is:
 ```bash
-alias needlestack='nextflow run iarcbioinfo/needlestack -with-docker iarcbioinfo/needlestack -latest -with-trace --with-timeline'
+alias needlestack='nextflow run iarcbioinfo/needlestack -with-docker iarcbioinfo/needlestack -latest -with-trace -with-timeline'
 ```
 
 [![Join the chat at https://gitter.im/iarcbioinfo/needlestack](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/iarcbioinfo/needlestack?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
