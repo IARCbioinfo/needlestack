@@ -117,6 +117,7 @@ Replace `>` by `>>` if you want to add the argument line to an existing nextflow
 | use_file_name |   | Put this argument to use the bam file names as sample names. By default the sample name is extracted from the bam file SM tag. |
 | all_SNVs |   | Put this argument to output all SNVs, even when no variant is detected |
 | no_plots |   | Put this argument to remove pdf plots of regressions from the output |
+| no_indels |   | Put this argument to do not perform the variant calling on insertions and deletions |
 | out_folder | --bam_folder | Output folder, by default equals to the input bam folder |
 
 Simply add the parameters you want in the command line like `--min_dp 1000` for exmaple to change the min coverage.
