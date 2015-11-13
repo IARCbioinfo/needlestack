@@ -107,7 +107,7 @@ Replace `>` by `>>` if you want to add the argument line to an existing nextflow
 | min_dp    |            50 | Minimum coverage in at least one sample to consider a site |
 | min_ao | 5 | Minimum number of non-ref reads in at least one sample to consider a site |
 | nsplit | 1 | Split the bed file in nsplit pieces and run in parallel |
-| min_qval | 50 | qvalue in [Phred scale](https://en.wikipedia.org/wiki/Phred_quality_score) to consider a variant |
+| min_qval | 50 | qvalue threshold in [Phred scale](https://en.wikipedia.org/wiki/Phred_quality_score) to consider a variant |
 | sb_type | SOR | Strand bias measure, either SOR or RVSB |
 | sb_snv | 100 | Strand bias threshold for SNVs (100 =no filter) |
 | sb_indel | 100 | Strand bias threshold for indels (100 = no filter)|
