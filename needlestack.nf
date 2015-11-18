@@ -106,6 +106,7 @@ try { assert fasta_ref.exists() : "\n WARNING : fasta reference not located in e
 if (fasta_ref.exists()) {assert fasta_ref_fai.exists() : "input fasta reference does not seem to have a .fai index (use samtools faidx)"}
 try { assert bed.exists() : "\n WARNING : bed file not located in execution directory" } catch (AssertionError e) { println e.getMessage() }
 try { assert file(params.bam_folder).exists() : "\n WARNING : input BAM folder not located in execution directory" } catch (AssertionError e) { println e.getMessage() }
+if ( fasta_ref.exists() && params.fasta_ref.tokenize('.')[-1] == 'gz') {assert fasta_ref_gzi.exists() : "input gz fasta reference does not seem to have a .gzi index (use samtools faidx)"}
 assert (params.min_dp > 0) : "minimum coverage must be higher than 0 (--min_dp)"
 assert (params.max_DP > 1) : "maximum coverage before downsampling must be higher than 1 (--max_DP)"
 assert (params.min_ao > 0) : "minimum alternative reads must be higher than 0 (--min_ao)"
