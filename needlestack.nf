@@ -110,7 +110,11 @@ try { assert file(params.bam_folder).exists() : "\n WARNING : input BAM folder n
 assert file(params.bam_folder).listFiles().findAll { it.name ==~ /.*bam/ }.size() > 0 : "BAM folder contains no BAM" 
 if (file(params.bam_folder).exists()) {
   if (file(params.bam_folder).listFiles().findAll { it.name ==~ /.*bam/ }.size() < 10) {println "\n WARNING : BAM folder contains less than 10 BAM, regression will not be performed."} 
-    else if (file(params.bam_folder).listFiles().findAll { it.name ==~ /.*bam/ }.size() < 20) {println "\n WARNING : BAM folder contains less than 20 BAM, method accuracy not warranted."} }
+    else if (file(params.bam_folder).listFiles().findAll { it.name ==~ /.*bam/ }.size() < 20) {println "\n WARNING : BAM folder contains less than 20 BAM, method accuracy not warranted."} 
+  bamID = file(params.bam_folder).listFiles().findAll { it.name ==~ /.*bam/ }.collect { it.getName() }.collect { it.replace('.bam','') }
+  baiID = file(params.bam_folder).listFiles().findAll { it.name ==~ /.*bam.bai/ }.collect { it.getName() }.collect { it.replace('.bam.bai','') }
+  assert baiID.containsAll(bamID) : "check that every bam file has an index (.bam.bai)" 
+}
 assert (params.min_dp > 0) : "minimum coverage must be higher than 0 (--min_dp)"
 assert (params.max_DP > 1) : "maximum coverage before downsampling must be higher than 1 (--max_DP)"
 assert (params.min_ao > 0) : "minimum alternative reads must be higher than 0 (--min_ao)"
