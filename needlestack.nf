@@ -109,7 +109,7 @@ try { assert bed.exists() : "\n WARNING : bed file not located in execution dire
 try { assert file(params.bam_folder).exists() : "\n WARNING : input BAM folder not located in execution directory" } catch (AssertionError e) { println e.getMessage() }
 assert file(params.bam_folder).listFiles().findAll { it.name ==~ /.*bam/ }.size() > 0 : "BAM folder contains no BAM" 
 if (file(params.bam_folder).exists()) {
-  if (file(params.bam_folder).listFiles().findAll { it.name ==~ /.*bam/ }.size() < 10) {println "\n ERROR : BAM folder contains less than 10 BAM, regression will not be performed."; System.exit(0)} 
+  if (file(params.bam_folder).listFiles().findAll { it.name ==~ /.*bam/ }.size() < 10) {println "\n ERROR : BAM folder contains less than 10 BAM, exit."; System.exit(0)} 
     else if (file(params.bam_folder).listFiles().findAll { it.name ==~ /.*bam/ }.size() < 20) {println "\n WARNING : BAM folder contains less than 20 BAM, method accuracy not warranted."} 
   bamID = file(params.bam_folder).listFiles().findAll { it.name ==~ /.*bam/ }.collect { it.getName() }.collect { it.replace('.bam','') }
   baiID = file(params.bam_folder).listFiles().findAll { it.name ==~ /.*bam.bai/ }.collect { it.getName() }.collect { it.replace('.bam.bai','') }
