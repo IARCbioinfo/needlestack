@@ -279,7 +279,7 @@ process R_regression {
 // merge all vcf files in one big file
 process collect_vcf_result {
 
-	publishDir  params.out_folder+'/VCF/', mode: 'copy'
+	publishDir  params.out_folder, mode: 'move'
 
 	input:
 	file '*.vcf' from vcf.toList()
