@@ -253,7 +253,7 @@ process mpileup2table {
 // perform regression in R
 process R_regression {
 
-     publishDir  params.out_folder+'/PDF/', mode: 'move', pattern: "*[ATCG].pdf"
+     publishDir  params.out_folder+'/PDF/', mode: 'move', pattern: "*[ATCG-].pdf"
 
      tag { region_tag }
 
