@@ -119,6 +119,7 @@ Replace `>` by `>>` if you want to add the argument line to an existing nextflow
 | no_plots |   | Put this argument to remove pdf plots of regressions from the output |
 | no_indels |   | Put this argument to do not perform the variant calling on insertions and deletions |
 | out_folder | --bam_folder | Output folder, by default equals to the input bam folder |
+| out_vcf | all_variants.vcf | File name of final VFC. |
 
 Simply add the parameters you want in the command line like `--min_dp 1000` for exmaple to change the min coverage.
 
@@ -133,6 +134,6 @@ alias needlestack='nextflow run iarcbioinfo/needlestack -with-docker iarcbioinfo
 
 [![Join the chat at https://gitter.im/iarcbioinfo/needlestack](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/iarcbioinfo/needlestack?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-[![Circle CI](https://circleci.com/gh/iarcbioinfo/needlestack/tree/master.svg?style=shield)](https://circleci.com/gh/iarcbioinfo/needlestack/tree/master) 
+[![Circle CI](https://circleci.com/gh/IARCbioinfo/needlestack/tree/master.svg?style=shield&circle-token=402d456a7c50af352bb4e1a52425ce0fe645f78f)](https://circleci.com/gh/IARCbioinfo/needlestack/tree/master)
 
 [![Docker Hub](https://img.shields.io/badge/docker-ready-blue.svg)](https://hub.docker.com/r/iarcbioinfo/needlestack/)
