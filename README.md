@@ -119,6 +119,7 @@ Replace `>` by `>>` if you want to add the argument line to an existing nextflow
 | no_plots |   | Put this argument to remove pdf plots of regressions from the output |
 | no_indels |   | Put this argument to do not perform the variant calling on insertions and deletions |
 | out_folder | --bam_folder | Output folder, by default equals to the input bam folder |
+| out_vcf | all_variants.vcf | File name of final VFC. |
 
 Simply add the parameters you want in the command line like `--min_dp 1000` for exmaple to change the min coverage.
 
