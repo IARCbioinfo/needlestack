@@ -125,11 +125,10 @@ assert (params.sb_indel > 0 && params.sb_indel < 101) : "strand bias for indels 
 assert (params.map_qual >= 0) : "minimum mapping quality (samtools) must be higher than or equals to 0"
 assert (params.base_qual >= 0) : "minimum base quality (samtools) must be higher than or equals to 0"
 
-if(params.use_file_name == true){
-  sample_names = "FILE"
-} else { sample_names = "BAM" }
-
-/* Software information */
+sample_names = params.use_file_name ? "FILE" : "BAM"
+out_vcf = params.out_vcf ? params.out_vcf : "all_variants.vcf"
+  
+/* Software information */ 
 
 log.info ''
 log.info '--------------------------------------------------'
@@ -282,22 +281,23 @@ process collect_vcf_result {
 	publishDir  params.out_folder, mode: 'move'
 
 	input:
+	val out_vcf
 	file '*.vcf' from vcf.toList()
      file fasta_ref_fai
 
 	output:
-	file 'all_variants.vcf' into big_vcf
+	file "$out_vcf" into big_vcf
 
 	shell:
 	'''
 	nb_vcf=$(find . -maxdepth 1 -name '*vcf' | wc -l)
 	if [ $nb_vcf -gt 1 ]; then
-		vcfoverlay *.vcf > all_variants.vcf
+		vcfoverlay *.vcf > !{out_vcf}
 	else
-		cp .vcf all_variants.vcf
+		cp .vcf !{out_vcf}
 	fi
 	# Add contigs in the VCF header
 	cat !{fasta_ref_fai} | cut -f1,2 | sed -e 's/^/##contig=<ID=/' -e 's/[	 ][	 ]*/,length=/' -e 's/$/>/' > contigs.txt
-	sed -i '/##reference=.*/ r contigs.txt' all_variants.vcf
+	sed -i '/##reference=.*/ r contigs.txt' !{out_vcf}
 	'''
 }
