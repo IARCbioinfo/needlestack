@@ -397,7 +397,7 @@ write_out("##INFO=<ID=NS,Number=1,Type=Integer,Description=\"Number of samples w
 write_out("##INFO=<ID=DP,Number=1,Type=Integer,Description=\"Total read depth\">")
 write_out("##INFO=<ID=RO,Number=1,Type=Integer,Description=\"Total reference allele observation count\">")
 write_out("##INFO=<ID=AO,Number=A,Type=Integer,Description=\"Total alternate allele observation count\">")
-write_out("##INFO=<ID=AF,Number=A,Type=Float,Description=\"Estimated allele frequency in the range (0,1]\">")
+write_out("##INFO=<ID=AF,Number=A,Type=Float,Description=\"Estimated allele frequency in the range [0,1]\">")
 write_out("##INFO=<ID=SRF,Number=1,Type=Integer,Description=\"Total number of reference observations on the forward strand\">")
 write_out("##INFO=<ID=SRR,Number=1,Type=Integer,Description=\"Total number of reference observations on the reverse strand\">")
 write_out("##INFO=<ID=SAF,Number=A,Type=Integer,Description=\"Total number of alternate observations on the forward strand\">")
