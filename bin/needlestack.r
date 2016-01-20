@@ -390,7 +390,7 @@ write_out("##fileDate=",format(Sys.Date(), "%Y%m%d"))
 write_out("##source=needlestack v0.2")
 write_out("##reference=",fasta_ref)
 write_out("##phasing=none")
-write_out("##filter=\"QVAL > ",GQ_threshold," & ",SB_type,"_SNV < ",SB_threshold_SNV," & ",SB_type,"_INDEL < ",SB_threshold_indel," & max(AO) > ",min_reads," & max(DP) > ",min_coverage,"\"")
+write_out("##filter=\"QVAL > ",GQ_threshold," & ",SB_type,"_SNV < ",SB_threshold_SNV," & ",SB_type,"_INDEL < ",SB_threshold_indel," & min(AO) >= ",min_reads," & min(DP) >= ",min_coverage,"\"")
 
 write_out("##INFO=<ID=TYPE,Number=A,Type=String,Description=\"The type of allele, either snp, ins or del\">")
 write_out("##INFO=<ID=NS,Number=1,Type=Integer,Description=\"Number of samples with data\">")
