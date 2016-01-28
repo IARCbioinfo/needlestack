@@ -102,7 +102,7 @@ echo "executor.\$local.queueSize = "`getconf _NPROCESSORS_ONLN` > ~/.nextflow/co
 Replace `>` by `>>` if you want to add the argument line to an existing nextflow config file.
 
 
-`--bed`, `--bam_folder` and `--fasta_ref` are compulsary. The optional parameters with default values are:
+`--bam_folder` and `--fasta_ref` are compulsary. The optional parameters with default values are:
 
 | Parameter | Default value | Description |
 |-----------|--------------:|-------------| 
@@ -122,8 +122,13 @@ Replace `>` by `>>` if you want to add the argument line to an existing nextflow
 | no_indels |   | Put this argument to do not perform the variant calling on insertions and deletions |
 | out_folder | --bam_folder | Output folder, by default equals to the input bam folder |
 | out_vcf | all_variants.vcf | File name of final VFC. |
+| bed |   | BED file containing a list of regions (or positions) where needlestack should be run |
+| region |   | A region in format CHR:START-END where calling should be done |
 
-Simply add the parameters you want in the command line like `--min_dp 1000` for exmaple to change the min coverage.
+By default, if neither `--bed` nor `--region` are provided, needlestack would run on whole genome, building a bed file from fasta index inputed.
+If `--bed` and `--region` are both provided, it should run on the region only.
+
+Simply add the parameters you want in the command line like `--min_dp 1000` for example to change the min coverage or `--all_SNVs` to output all sites.
 
 [Recommended values](http://gatkforums.broadinstitute.org/discussion/5533/strandoddsratio-computation) for SOR strand bias are SOR < 4 for SNVs and < 10 for indels. For RVSB, a good starting point is to filter out variant with RVSB>0.85. There is no hard filter by default as this is easy to do afterward using [bcftools filter](http://samtools.github.io/bcftools/bcftools.html#filter) command.
 
