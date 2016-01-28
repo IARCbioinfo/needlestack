@@ -23,14 +23,14 @@
 // - bedtools
 // - samtools
 // - Rscript (R)
-// - bed_large_cut.r (in bin folder)
+// - bed_cut.r (in bin folder)
 // - needlestack.r (in bin folder)
 // - pileup2baseindel.pl (in bin folder) (+ perl)
 // - vcfoverlay from vcflib
 
 params.min_dp = 50 // minimum coverage in at least one sample to consider a site
 params.min_ao = 5 // minimum number of non-ref reads in at least one sample to consider a site
-params.nsplit = 1 // split the bed file in nsplit pieces and run in parallel
+params.nsplit = 1 // split the positions for calling in nsplit pieces and run in parallel
 params.min_qval = 50 // qvalue in Phred scale to consider a variant
 // http://gatkforums.broadinstitute.org/discussion/5533/strandoddsratio-computation filter out SOR > 4 for SNVs and > 10 for indels
 // filter out RVSB > 0.85 (maybe less stringent for SNVs)
@@ -63,11 +63,10 @@ if (params.help) {
     log.info '    nextflow run iarcbioinfo/needlestack -with-docker iarcbioinfo/needlestack --bed bedfile.bed --bam_folder BAM/ --fasta_ref reference.fasta [other options]'
     log.info ''
     log.info 'Mandatory arguments:'
-    log.info '    --bed            BED_FILE                 Restrict the calling to regions listed in the BED file'
     log.info '    --bam_folder     BAM_DIR                  BAM files directory.'
     log.info '    --fasta_ref      REF_IN_FASTA             Reference genome in fasta format.'
     log.info 'Options:'
-    log.info '    --nsplit         INTEGER                  Split the bed file in nsplit pieces and run in parallel.'
+    log.info '    --nsplit         INTEGER                  Split the region for calling in nsplit pieces and run in parallel.'
     log.info '    --min_dp         INTEGER                  Minimum coverage in at least one sample to consider a site.'
     log.info '    --min_ao         INTEGER                  Minimum number of non-ref reads in at least one sample to consider a site.'
     log.info '    --min_qval       VALUE                    Qvalue in Phred scale to consider a variant.'
@@ -82,6 +81,8 @@ if (params.help) {
     log.info '    --no_plots                                Do not output PDF regression plots.'
     log.info '    --no_indels                               Do not call indels.'
     log.info '    --out_folder     OUTPUT FOLDER            Output directory, by default input bam folder.'
+    log.info '    --bed            BED FILE                 A BED file for calling.'
+    log.info '    --region         CHR:START-END            A region for calling.'
     log.info ''
     exit 1
 }
@@ -125,6 +126,16 @@ assert (params.base_qual >= 0) : "minimum base quality (samtools) must be higher
 sample_names = params.use_file_name ? "FILE" : "BAM"
 out_vcf = params.out_vcf ? params.out_vcf : "all_variants.vcf"
 
+/* manage input positions to call (bed or region or whole-genome) */
+if(params.region){
+    input_region = 'region'
+  } else if (params.bed){
+    input_region = 'bed'
+    bed = file(params.bed)
+  } else {
+    input_region = 'whole_genome'
+  }
+
 /* Software information */
 
 log.info ''
@@ -138,7 +149,7 @@ log.info 'under certain conditions; see LICENSE.txt for details.'
 log.info '--------------------------------------------------'
 log.info "Input BAM folder (--bam_folder)                                 : ${params.bam_folder}"
 log.info "Reference in fasta format (--fasta_ref)                         : ${params.fasta_ref}"
-log.info "Intervals for calling (--bed)                                   : ${params.bed}"
+log.info "Intervals for calling                                           : ${input_region}"
 log.info "Number of regions to split (--nsplit)                           : ${params.nsplit}"
 log.info "To consider a site for calling:"
 log.info "     minimum coverage (--min_dp)                                : ${params.min_dp}"
@@ -160,16 +171,7 @@ log.info "\n"
 bam = Channel.fromPath( params.bam_folder+'/*.bam' ).toList()
 bai = Channel.fromPath( params.bam_folder+'/*.bam.bai' ).toList()
 
-/* manage input positions to call (bed or region or whole-genome) */
-if(params.region){
-    input_region = 'region'
-  } else if (params.bed){
-    input_region = 'bed'
-    bed = file(params.bed)
-  } else {
-    input_region = 'whole_genome'
-  }
-
+/* Building the bed file where calling would be done */
 process bed {
   output:
   file "temp.bed" into outbed
@@ -203,7 +205,7 @@ process split_bed {
 
 	shell:
 	'''
-	grep -v '^track' !{bed} | sort -k1,1 -k2,2n | bedtools merge -i stdin | awk '{print $1" "$2" "$3}' | bed_large_cut.r !{params.nsplit}
+	grep -v '^track' !{bed} | sort -k1,1 -k2,2n | bedtools merge -i stdin | awk '{print $1" "$2" "$3}' | bed_cut.r !{params.nsplit}
 	'''
 }
 
