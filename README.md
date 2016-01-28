@@ -3,6 +3,8 @@
 
 <img align="center" src="https://cloud.githubusercontent.com/assets/3366818/10489240/7da79144-729c-11e5-8cb3-0225106d9b06.jpg" width="600">
 
+[![Join the chat at https://gitter.im/iarcbioinfo/needlestack](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/iarcbioinfo/needlestack?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Circle CI](https://circleci.com/gh/IARCbioinfo/needlestack/tree/master.svg?style=shield&circle-token=402d456a7c50af352bb4e1a52425ce0fe645f78f)](https://circleci.com/gh/IARCbioinfo/needlestack/tree/master) [![Docker Hub](https://img.shields.io/badge/docker-ready-blue.svg)](https://hub.docker.com/r/iarcbioinfo/needlestack/) [![Stories in Ready](https://badge.waffle.io/IARCbioinfo/needlestack.svg?label=ready&title=Ready)](http://waffle.io/IARCbioinfo/needlestack)
+
 Warning: development in progress, unreliable results warrantied. 
 
 Please wait upcoming publication before using it in production. 
@@ -101,7 +103,7 @@ echo "executor.\$local.queueSize = "`getconf _NPROCESSORS_ONLN` > ~/.nextflow/co
 Replace `>` by `>>` if you want to add the argument line to an existing nextflow config file.
 
 
-`--bed`, `--bam_folder` and `--fasta_ref` are compulsary. The optional parameters with default values are:
+`--bam_folder` and `--fasta_ref` are compulsary. The optional parameters with default values are:
 
 | Parameter | Default value | Description |
 |-----------|--------------:|-------------| 
@@ -121,8 +123,13 @@ Replace `>` by `>>` if you want to add the argument line to an existing nextflow
 | no_indels |   | Put this argument to do not perform the variant calling on insertions and deletions |
 | out_folder | --bam_folder | Output folder, by default equals to the input bam folder |
 | out_vcf | all_variants.vcf | File name of final VFC. |
+| bed |   | BED file containing a list of regions (or positions) where needlestack should be run |
+| region |   | A region in format CHR:START-END where calling should be done |
 
-Simply add the parameters you want in the command line like `--min_dp 1000` for exmaple to change the min coverage.
+By default, if neither `--bed` nor `--region` are provided, needlestack would run on whole genome, building a bed file from fasta index inputed.
+If `--bed` and `--region` are both provided, it should run on the region only.
+
+Simply add the parameters you want in the command line like `--min_dp 1000` for example to change the min coverage or `--all_SNVs` to output all sites.
 
 [Recommended values](http://gatkforums.broadinstitute.org/discussion/5533/strandoddsratio-computation) for SOR strand bias are SOR < 4 for SNVs and < 10 for indels. For RVSB, a good starting point is to filter out variant with RVSB>0.85. There is no hard filter by default as this is easy to do afterward using [bcftools filter](http://samtools.github.io/bcftools/bcftools.html#filter) command.
 
@@ -132,9 +139,3 @@ All in all, our recommended alias for the full command line to run needlestack i
 ```bash
 alias needlestack='nextflow run iarcbioinfo/needlestack -with-docker iarcbioinfo/needlestack -latest -with-trace --with-timeline'
 ```
-
-[![Join the chat at https://gitter.im/iarcbioinfo/needlestack](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/iarcbioinfo/needlestack?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-
-[![Circle CI](https://circleci.com/gh/IARCbioinfo/needlestack/tree/master.svg?style=shield&circle-token=402d456a7c50af352bb4e1a52425ce0fe645f78f)](https://circleci.com/gh/IARCbioinfo/needlestack/tree/master)
-
-[![Docker Hub](https://img.shields.io/badge/docker-ready-blue.svg)](https://hub.docker.com/r/iarcbioinfo/needlestack/)

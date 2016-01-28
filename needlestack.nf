@@ -87,10 +87,8 @@ if (params.help) {
 }
 
 assert (params.fasta_ref != true) && (params.fasta_ref != null) : "please specify --fasta_ref option (--fasta_ref reference.fasta(.gz))"
-assert (params.bed != true) && (params.bed != null) : "please specify --bed option (--bed bedfile.bed)"
 assert (params.bam_folder != true) && (params.bam_folder != null) : "please specify --bam_folder option (--bam_folder bamfolder)"
 
-bed = file( params.bed )
 fasta_ref = file( params.fasta_ref )
 fasta_ref_fai = file( params.fasta_ref+'.fai' )
 fasta_ref_gzi = file( params.fasta_ref+'.gzi' )
@@ -105,7 +103,6 @@ assert params.use_file_name in [true,false] : "do not assign a value to --use_fi
 try { assert fasta_ref.exists() : "\n WARNING : fasta reference not located in execution directory. Make sure reference index is in the same folder as fasta reference" } catch (AssertionError e) { println e.getMessage() }
 if (fasta_ref.exists()) {assert fasta_ref_fai.exists() : "input fasta reference does not seem to have a .fai index (use samtools faidx)"}
 if (fasta_ref.exists() && params.fasta_ref.tokenize('.')[-1] == 'gz') {assert fasta_ref_gzi.exists() : "input gz fasta reference does not seem to have a .gzi index (use samtools faidx)"}
-try { assert bed.exists() : "\n WARNING : bed file not located in execution directory" } catch (AssertionError e) { println e.getMessage() }
 try { assert file(params.bam_folder).exists() : "\n WARNING : input BAM folder not located in execution directory" } catch (AssertionError e) { println e.getMessage() }
 assert file(params.bam_folder).listFiles().findAll { it.name ==~ /.*bam/ }.size() > 0 : "BAM folder contains no BAM"
 if (file(params.bam_folder).exists()) {
@@ -127,8 +124,8 @@ assert (params.base_qual >= 0) : "minimum base quality (samtools) must be higher
 
 sample_names = params.use_file_name ? "FILE" : "BAM"
 out_vcf = params.out_vcf ? params.out_vcf : "all_variants.vcf"
-  
-/* Software information */ 
+
+/* Software information */
 
 log.info ''
 log.info '--------------------------------------------------'
@@ -163,11 +160,43 @@ log.info "\n"
 bam = Channel.fromPath( params.bam_folder+'/*.bam' ).toList()
 bai = Channel.fromPath( params.bam_folder+'/*.bam.bai' ).toList()
 
+/* manage input positions to call (bed or region or whole-genome) */
+if(params.region){
+    input_region = 'region'
+  } else if (params.bed){
+    input_region = 'bed'
+    bed = file(params.bed)
+  } else {
+    input_region = 'whole_genome'
+  }
+
+process bed {
+  output:
+  file "temp.bed" into outbed
+
+  script:
+  if (input_region == 'region')
+  """
+  echo $params.region | sed -e 's/[:|-]/\t/g' > temp.bed
+  """
+
+  else if (input_region == 'bed')
+  """
+  ln -s $bed temp.bed
+  """
+
+  else if (input_region == 'whole_genome')
+  """
+  cat $fasta_ref_fai | awk '{print \$1"\t"0"\t"\$2 }' > temp.bed
+  """
+}
+
+
 /* split bed file into nsplit regions */
 process split_bed {
 
-     intput:
-     file bed
+  input:
+  file bed from outbed
 
 	output:
 	file '*_regions' into split_bed mode flatten
