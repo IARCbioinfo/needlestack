@@ -1,4 +1,5 @@
-# needlestack: multi-sample somatic variant caller
+<img align="center" src="https://cloud.githubusercontent.com/assets/3366818/12507528/99afd6fa-c0f6-11e5-993b-5ac925d178fa.png" width="700">
+# A multi-sample somatic variant caller
 
 <img align="center" src="https://cloud.githubusercontent.com/assets/3366818/10489240/7da79144-729c-11e5-8cb3-0225106d9b06.jpg" width="600">
 
