@@ -209,17 +209,41 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
   n=sum(rob_nb_res$qvalue>qthreshold)
   m=sum(rob_nb_res$qvalue<=qthreshold)
   
-  outliers_color=rep("black",length(rob_nb_res$coverage))
-  cols=outliers_color
-  outliers_color[which(rob_nb_res$qvalues<=qthreshold)]="red"
-  cols[which(rob_nb_res$qvalues<=qthreshold & sbs<=SB_threshold)]="red"
-
+  cut_max_qvals=100
+  palette=rev(rainbow(cut_max_qvals+1,start=0, end=4/6))
+  col_indices = round(-10*log10(rob_nb_res$qvalues))+1
+  col_indices[which(col_indices>cut_max_qvals)]=cut_max_qvals+1
+  cols=palette[col_indices]
+  outliers_color=cols
+  outliers_color[which(sbs>SB_threshold)]="black"
+  
   temp_title = bquote(e==.(format(rob_nb_res$coef[[2]],digits = 2)) ~ "," ~ sigma==.(format(rob_nb_res$coef[[1]],digits = 2)) 
                       ~ ", N="~.(n+m)~", pvar="~.(format(m/(n+m),digits=2)))
   plot(rob_nb_res$coverage, rob_nb_res$ma_count,
        pch=21,bg=cols,col=outliers_color,xlab="Coverage (DP)",ylab="Number of ALT reads (AO)",
        main=plot_title, xlim=c(0,max(rob_nb_res$coverage)))
   mtext(temp_title)
+  #### plot the color palette
+  xmin <- par("usr")[1]
+  xmax <- par("usr")[2]
+  ymin <- par("usr")[3]
+  ymax <- par("usr")[4]
+  xright=xmin+(xmax-xmin)*(1-0.9)
+  xleft=xmin+(xmax-xmin)*(1-0.94)
+  ybottom=ymin+(ymax-ymin)*0.72
+  ytop=ymin+(ymax-ymin)*0.94
+  
+  rasterImage(as.raster(matrix(rev(palette), ncol=1)),xright ,ybottom ,xleft,ytop )    
+  rect(xright ,ybottom ,xleft,ytop )    
+  text(x=(xright+xleft)/2, y = ytop+(ytop-ybottom)*0.1, labels = "QVAL", cex=0.8) 
+  keep_labels=seq(0,cut_max_qvals,by=20)
+  keep_labels_pos=seq(ybottom,ytop,l=length(keep_labels))
+  tick_width=-(xleft-xright)/5    
+  for (i in 1:length(keep_labels)) {
+    lines(c(xleft,xleft-tick_width),c(keep_labels_pos[i],keep_labels_pos[i]))
+  }
+  text(x=(xright-(xright-xleft))*0.3, y = keep_labels_pos, labels = keep_labels,adj = c(1,0.5), cex = 0.8)     
+  ####
    
   if (!is.na(rob_nb_res$coef["slope"])) {
     xi=max(rob_nb_res$coverage)
