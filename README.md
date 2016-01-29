@@ -126,7 +126,7 @@ Replace `>` by `>>` if you want to add the argument line to an existing nextflow
 | bed |   | BED file containing a list of regions (or positions) where needlestack should be run |
 | region |   | A region in format CHR:START-END where calling should be done |
 
-By default, if neither `--bed` nor `--region` are provided, needlestack would run on whole genome, building a bed file from fasta index inputed.
+By default, if neither `--bed` nor `--region` are provided, needlestack would run on whole reference, building a bed file from fasta index inputed.
 If `--bed` and `--region` are both provided, it should run on the region only.
 
 Simply add the parameters you want in the command line like `--min_dp 1000` for example to change the min coverage or `--all_SNVs` to output all sites.
