@@ -217,8 +217,7 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
   outliers_color=cols
   outliers_color[which(sbs>SB_threshold)]="black"
   
-  temp_title = bquote(e==.(format(rob_nb_res$coef[[2]],digits = 2)) ~ "," ~ sigma==.(format(rob_nb_res$coef[[1]],digits = 2)) 
-                      ~ ", N="~.(n+m)~", pvar="~.(format(m/(n+m),digits=2)))
+  temp_title = bquote(e==.(format(rob_nb_res$coef[[2]],digits = 2)) ~ "," ~ sigma==.(format(rob_nb_res$coef[[1]],digits = 2)))
   plot(rob_nb_res$coverage, rob_nb_res$ma_count,
        pch=21,bg=cols,col=outliers_color,xlab="Coverage (DP)",ylab="Number of ALT reads (AO)",
        main=plot_title, xlim=c(0,max(rob_nb_res$coverage)))
