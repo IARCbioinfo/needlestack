@@ -210,6 +210,7 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
   m=sum(rob_nb_res$qvalue<=qthreshold)
   
   cut_max_qvals=100
+  cols=rep("black",length(rob_nb_res$coverage))
   palette=rev(rainbow(cut_max_qvals+1,start=0, end=4/6))
   col_indices = round(-10*log10(rob_nb_res$qvalues))+1
   col_indices[which(col_indices>cut_max_qvals)]=cut_max_qvals+1
@@ -223,25 +224,37 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
        main=plot_title, xlim=c(0,max(rob_nb_res$coverage)))
   mtext(temp_title)
   #### plot the color palette
-  xmin <- par("usr")[1]
-  xmax <- par("usr")[2]
-  ymin <- par("usr")[3]
-  ymax <- par("usr")[4]
-  xright=xmin+(xmax-xmin)*(1-0.9)
-  xleft=xmin+(xmax-xmin)*(1-0.94)
-  ybottom=ymin+(ymax-ymin)*0.72
-  ytop=ymin+(ymax-ymin)*0.94
-  
-  rasterImage(as.raster(matrix(rev(palette), ncol=1)),xright ,ybottom ,xleft,ytop )    
-  rect(xright ,ybottom ,xleft,ytop )    
-  text(x=(xright+xleft)/2, y = ytop+(ytop-ybottom)*0.1, labels = "QVAL", cex=0.8) 
-  keep_labels=seq(0,cut_max_qvals,by=20)
-  keep_labels_pos=seq(ybottom,ytop,l=length(keep_labels))
-  tick_width=-(xleft-xright)/5    
-  for (i in 1:length(keep_labels)) {
-    lines(c(xleft,xleft-tick_width),c(keep_labels_pos[i],keep_labels_pos[i]))
+  plot_palette <- function(topright=FALSE) {
+    xmin <- par("usr")[1]
+    xmax <- par("usr")[2]
+    ymin <- par("usr")[3]
+    ymax <- par("usr")[4]
+    xright=xmin+(xmax-xmin)*(1-0.9)
+    xleft=xmin+(xmax-xmin)*(1-0.94)
+    if(topright){xright=xmin+(xmax-xmin)*0.9;xleft=xmin+(xmax-xmin)*0.94}
+    ybottom=ymin+(ymax-ymin)*0.72
+    ytop=ymin+(ymax-ymin)*0.94
+    
+    rasterImage(as.raster(matrix(rev(palette), ncol=1)),xright ,ybottom ,xleft,ytop )    
+    rect(xright ,ybottom ,xleft,ytop )    
+    text(x=(xright+xleft)/2, y = ytop+(ytop-ybottom)*0.1, labels = "QVAL", cex=0.8) 
+    keep_labels=seq(0,cut_max_qvals,by=20)
+    keep_labels_pos=seq(ybottom,ytop,l=length(keep_labels))
+    tick_width=-(xleft-xright)/5    
+    for (i in 1:length(keep_labels)) {
+      if (topright) {
+        lines(c(xright,xright+tick_width),c(keep_labels_pos[i],keep_labels_pos[i]))
+      } else {
+        lines(c(xleft,xleft-tick_width),c(keep_labels_pos[i],keep_labels_pos[i]))      
+      }
+    }
+    if(topright) {
+      text(x=(xright+(xright-xleft))*0.8, y = keep_labels_pos, labels = keep_labels,adj = c(1,0.5), cex = 0.8)   
+    } else {
+      text(x=(xright-(xright-xleft))*0.3, y = keep_labels_pos, labels = keep_labels,adj = c(1,0.5), cex = 0.8)   
+    }
   }
-  text(x=(xright-(xright-xleft))*0.3, y = keep_labels_pos, labels = keep_labels,adj = c(1,0.5), cex = 0.8)     
+  plot_palette()  
   ####
    
   if (!is.na(rob_nb_res$coef["slope"])) {
@@ -259,16 +272,19 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
     abline(a=0, b=yi1/xi, lwd=2, lty=3, col="blue")
     abline(a=0, b=yi2/xi, lwd=2, lty=3, col="blue")
     abline(a=0, b=rob_nb_res$coef[[2]], col="blue")
-
+    plot_palette()  
+    
     logqvals=log10(rob_nb_res$qvalues)
     logqvals[logqvals<=-9]=-9
     plot(logqvals,rob_nb_res$ma_count/rob_nb_res$coverage,pch=21,bg=cols,col=outliers_color,ylab="Allelic fraction (AF)",xlab=bquote("log"[10] ~ "(q-value)"),main="Allelic fraction effect")
     abline(v=log10(qthreshold),col="red",lwd=2)
+    plot_palette(topright = TRUE)
     
     plot(logqvals,rob_nb_res$ma_count/rob_nb_res$coverage,pch=21,bg=cols,col=outliers_color,ylab="Allelic fraction (AF)",xlab=bquote("log"[10] ~ "(q-value)"),main="Allelic fraction effect", ylim=c(0,(2*yi1)/xi))
     mtext("zoom on 99% confidence interval")
     abline(v=log10(qthreshold),col="red",lwd=2)
-
+    plot_palette(topright = TRUE)
+    
     hist(rob_nb_res$pvalues,main="p-values distribution",ylab="Density",xlab="p-value",col="grey",freq=T,br=20,xlim=c(0,1))
     hist(rob_nb_res$qvalues,main="q-values distribution",breaks=20,xlab="q-value",col="grey",freq=T,xlim=c(0,1))
   }
