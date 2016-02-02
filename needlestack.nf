@@ -166,7 +166,7 @@ log.info "Samtools maximum coverage before downsampling (--max_DP)        : ${pa
 log.info "Sample names definition (--use_file_name)                       : ${sample_names}"
 log.info(params.all_SNVs == true ? "Output all SNVs (--all_SNVs)                                    : yes" : "Output all SNVs (--all_SNVs)                                    : no" )
 log.info(params.no_plots == true ? "PDF regression plots (--no_plots)                               : no"  : "PDF regression plots (--no_plots)                               : yes" )
-log.info(params.no_labels == true ? "Labeling outliers in regression plots (--no_labels)            : no"  : "Labeling outliers in regression plots (--no_labels)             : yes" )
+log.info(params.no_labels == true ? "Labeling outliers in regression plots (--no_labels)             : no"  : "Labeling outliers in regression plots (--no_labels)             : yes" )
 log.info(params.no_indels == true ? "Skip indels (--no_indels)                                       : yes" : "Skip indels (--no_indels)                                       : no" )
 log.info "output folder (--out_folder)                                    : ${params.out_folder}"
 log.info "\n"
