@@ -205,7 +205,7 @@ glmrob.nb <- function(y,x,bounding.func='T/T',c.tukey.beta=5,c.tukey.sig=3,c.by.
   return(res)
 }
 
-plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_threshold=Inf){
+plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_threshold=Inf,names=NULL,plot_labels=FALSE){
   n=sum(rob_nb_res$qvalue>qthreshold)
   m=sum(rob_nb_res$qvalue<=qthreshold)
   
@@ -223,6 +223,12 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
        pch=21,bg=cols,col=outliers_color,xlab="Coverage (DP)",ylab="Number of ALT reads (AO)",
        main=plot_title, xlim=c(0,max(rob_nb_res$coverage)))
   mtext(temp_title)
+  #### labeling outliers
+  if(!is.null(names) & plot_labels) {
+    text((rob_nb_res$coverage[which(rob_nb_res$qvalues<=qthreshold)]-par("usr")[2]*0.05), rob_nb_res$ma_count[which(rob_nb_res$qvalues<=qthreshold)],
+         labels=names[which(rob_nb_res$qvalues<=qthreshold)], cex= 0.6)
+  }
+  
   #### plot the color palette
   plot_palette <- function(topright=FALSE) {
     xmin <- par("usr")[1]
@@ -269,6 +275,11 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
          pch=21,bg=cols,col=outliers_color,xlab="Coverage (DP)",ylab="Number of ALT reads (AO)",
          main=plot_title, ylim=c(0,2*yi1), xlim=c(0,xi))
     mtext("zoom on 99% confidence interval")
+    #### labeling outliers
+    if(!is.null(names) & plot_labels) {
+      text((rob_nb_res$coverage[which(rob_nb_res$qvalues<=qthreshold)]-par("usr")[2]*0.05), rob_nb_res$ma_count[which(rob_nb_res$qvalues<=qthreshold)],
+           labels=names[which(rob_nb_res$qvalues<=qthreshold)], cex= 0.6)
+    }
     abline(a=0, b=yi1/xi, lwd=2, lty=3, col="blue")
     abline(a=0, b=yi2/xi, lwd=2, lty=3, col="blue")
     abline(a=0, b=rob_nb_res$coef[[2]], col="blue")
@@ -334,6 +345,7 @@ if(is.null(args$min_reads)) {args$min_reads=5} else {args$min_reads=as.numeric(a
 if(is.null(args$GQ_threshold)) {args$GQ_threshold=50} else {args$GQ_threshold=as.numeric(args$GQ_threshold)}
 if(is.null(args$output_all_SNVs)) {args$output_all_SNVs=FALSE} else {args$output_all_SNVs=as.logical(args$output_all_SNVs)}
 if(is.null(args$do_plots)) {args$do_plots=TRUE} else {args$do_plots=as.logical(args$do_plots)}
+if(is.null(args$plot_labels)) {args$plot_labels=FALSE} else {args$plot_labels=as.logical(args$plot_labels)}
 
 samtools=args$samtools
 out_file=args$out_file
@@ -348,6 +360,7 @@ SB_threshold_SNV=args$SB_threshold_SNV
 SB_threshold_indel=args$SB_threshold_indel
 output_all_SNVs=args$output_all_SNVs
 do_plots=args$do_plots
+plot_labels=args$plot_labels
 
 ############################################################
 
@@ -496,7 +509,7 @@ for (i in 1:npos) {
   		    cat("\n",sep = "",file=out_file,append=T)
           if (do_plots) {
             pdf(paste(pos_ref[i,"chr"],"_",pos_ref[i,"loc"],"_",pos_ref[i,"loc"],"_",pos_ref[i,"ref"],"_",alt,".pdf",sep=""),7,6)
-            plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(pos_ref[i,"loc"])," (",.(pos_ref[i,"ref"]) %->% .(alt),")",sep="")), sbs=sbs, SB_threshold=SB_threshold_SNV)
+            plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(pos_ref[i,"loc"])," (",.(pos_ref[i,"ref"]) %->% .(alt),")",sep="")), sbs=sbs, SB_threshold=SB_threshold_SNV,plot_labels=plot_labels,names=indiv_run[,2])
             dev.off()
           }
         }
@@ -554,7 +567,7 @@ for (i in 1:npos) {
             if (do_plots) {
               # deletions are shifted in samtools mpileup by 1bp, so put them at the right place by adding + to pos_ref[i,"loc"] everywhere in what follows
               pdf(paste(pos_ref[i,"chr"],"_",pos_ref[i,"loc"]+1,"_",pos_ref[i,"loc"]+1+nchar(cur_del)-1,"_",cur_del,"_","-",".pdf",sep=""),7,6)
-              plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(pos_ref[i,"loc"]+1)," (",.(cur_del) %->% .("-"),")",sep="")),sbs=sbs, SB_threshold=SB_threshold_indel)
+              plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(pos_ref[i,"loc"]+1)," (",.(cur_del) %->% .("-"),")",sep="")),sbs=sbs, SB_threshold=SB_threshold_indel,plot_labels=plot_labels,names=indiv_run[,2])
               dev.off()
             }
           }
@@ -611,7 +624,7 @@ for (i in 1:npos) {
             cat("\n",sep = "",file=out_file,append=T)
             if (do_plots) {
               pdf(paste(pos_ref[i,"chr"],"_",pos_ref[i,"loc"],"_",pos_ref[i,"loc"],"_","-","_",cur_ins,".pdf",sep=""),7,6)
-              plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(pos_ref[i,"loc"])," (",.("-") %->% .(cur_ins),")",sep="")),sbs=sbs, SB_threshold=SB_threshold_indel)
+              plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(pos_ref[i,"loc"])," (",.("-") %->% .(cur_ins),")",sep="")),sbs=sbs, SB_threshold=SB_threshold_indel,plot_labels=plot_labels,names=indiv_run[,2])
               dev.off()
             }
           }
