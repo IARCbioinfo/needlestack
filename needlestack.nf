@@ -45,6 +45,7 @@ params.all_SNVs = false //  output all sites, even when no variant is detected
 params.no_plots = false  // do not produce pdf plots of regressions
 params.out_folder = params.bam_folder // if not provided, outputs will be held on the input bam folder
 params.no_indels = false // do not skip indels
+params.add_labels = false // do not label outliers
 
 /* If --help in parameters, print software usage */
 
@@ -79,6 +80,7 @@ if (params.help) {
     log.info '    --use_file_name                           Sample names are taken from file names, otherwise extracted from the bam file SM tag.'
     log.info '    --all_SNVs                                Output all SNVs, even when no variant found.'
     log.info '    --no_plots                                Do not output PDF regression plots.'
+    log.info '    --add_labels                              Add labels to outliers in regression plots.'
     log.info '    --no_indels                               Do not call indels.'
     log.info '    --out_folder     OUTPUT FOLDER            Output directory, by default input bam folder.'
     log.info '    --bed            BED FILE                 A BED file for calling.'
@@ -164,6 +166,7 @@ log.info "Samtools maximum coverage before downsampling (--max_DP)        : ${pa
 log.info "Sample names definition (--use_file_name)                       : ${sample_names}"
 log.info(params.all_SNVs == true ? "Output all SNVs (--all_SNVs)                                    : yes" : "Output all SNVs (--all_SNVs)                                    : no" )
 log.info(params.no_plots == true ? "PDF regression plots (--no_plots)                               : no"  : "PDF regression plots (--no_plots)                               : yes" )
+log.info(params.add_labels == true ? "Labeling outliers in regression plots (--add_labels)           : yes"  : "Labeling outliers in regression plots (--add_labels)            : no" )
 log.info(params.no_indels == true ? "Skip indels (--no_indels)                                       : yes" : "Skip indels (--no_indels)                                       : no" )
 log.info "output folder (--out_folder)                                    : ${params.out_folder}"
 log.info "\n"
@@ -301,7 +304,7 @@ process R_regression {
  	'''
  	# create a dummy empty pdf to avoid an error in the process when no variant is found
  	touch !{region_tag}_empty.pdf
-	needlestack.r --out_file=!{region_tag}.vcf --fasta_ref=!{fasta_ref} --GQ_threshold=!{params.min_qval} --min_coverage=!{params.min_dp} --min_reads=!{params.min_ao} --SB_type=!{params.sb_type} --SB_threshold_SNV=!{params.sb_snv} --SB_threshold_indel=!{params.sb_indel} --output_all_SNVs=!{params.all_SNVs} --do_plots=!{!params.no_plots}
+	needlestack.r --out_file=!{region_tag}.vcf --fasta_ref=!{fasta_ref} --GQ_threshold=!{params.min_qval} --min_coverage=!{params.min_dp} --min_reads=!{params.min_ao} --SB_type=!{params.sb_type} --SB_threshold_SNV=!{params.sb_snv} --SB_threshold_indel=!{params.sb_indel} --output_all_SNVs=!{params.all_SNVs} --do_plots=!{!params.no_plots} --plot_labels=!{params.add_labels}
 	'''
 }
 //PDF.flatten().filter { it.size() == 0 }.subscribe { it.delete() }
