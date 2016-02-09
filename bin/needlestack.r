@@ -224,7 +224,7 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
        main=plot_title, xlim=c(0,max(rob_nb_res$coverage)))
   mtext(temp_title)
   #### labeling outliers
-  if(!is.null(names) & plot_labels) {
+  if(!is.null(names) & plot_labels & length(names[which(rob_nb_res$qvalues<=qthreshold)]) > 0) {
     text((rob_nb_res$coverage[which(rob_nb_res$qvalues<=qthreshold)]-par("usr")[2]*0.05), rob_nb_res$ma_count[which(rob_nb_res$qvalues<=qthreshold)],
          labels=names[which(rob_nb_res$qvalues<=qthreshold)], cex= 0.6)
   }
@@ -276,7 +276,7 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
          main=plot_title, ylim=c(0,2*yi1), xlim=c(0,xi))
     mtext("zoom on 99% confidence interval")
     #### labeling outliers
-    if(!is.null(names) & plot_labels) {
+    if(!is.null(names) & plot_labels & length(names[which(rob_nb_res$qvalues<=qthreshold)]) > 0) {
       text((rob_nb_res$coverage[which(rob_nb_res$qvalues<=qthreshold)]-par("usr")[2]*0.05), rob_nb_res$ma_count[which(rob_nb_res$qvalues<=qthreshold)],
            labels=names[which(rob_nb_res$qvalues<=qthreshold)], cex= 0.6)
     }
