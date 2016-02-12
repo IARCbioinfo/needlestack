@@ -21,7 +21,7 @@ Contact: follm@iarc.fr
 
 Needlestack works under most Linux distributions and Apple OS X.
 
-1. Install [java](https://java.com/download/) JRE if you don't already have it.
+1. Install [java](https://java.com/download/) JRE if you don't already have it (7 or higher).
 
 2. Install [nextflow](http://www.nextflow.io/).
 

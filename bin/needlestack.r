@@ -385,7 +385,7 @@ for (k in 1:nindiv) {
   atcg_matrix[,((k-1)*8+1):(k*8)]=as.matrix(cur_data[,4:11])
   ins[,indiv_run[k,1]]=cur_data[,12]
   del[,indiv_run[k,1]]=cur_data[,13]
-  coverage_matrix[,k]=rowSums(atcg_matrix[,((k-1)*8+1):(k*8)])
+  coverage_matrix[,k]=rowSums(matrix(atcg_matrix[,((k-1)*8+1):(k*8)],nrow=npos))
 }
 
 A_cols=(1:nindiv)*8 - 7
