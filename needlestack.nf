@@ -240,8 +240,6 @@ process samtools_mpileup {
 // split mpileup file and convert to table
 process mpileup2table {
 
-     errorStrategy 'ignore'
-
      tag { region_tag }
 
      input:
