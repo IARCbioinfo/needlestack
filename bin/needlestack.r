@@ -225,8 +225,8 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
   mtext(temp_title)
   #### labeling outliers
   if(!is.null(names) & plot_labels & length(names[which(rob_nb_res$qvalues<=qthreshold)]) > 0) {
-    text((rob_nb_res$coverage[which(rob_nb_res$qvalues<=qthreshold)]-par("usr")[2]*0.05), rob_nb_res$ma_count[which(rob_nb_res$qvalues<=qthreshold)],
-         labels=names[which(rob_nb_res$qvalues<=qthreshold)], cex= 0.6)
+    text(rob_nb_res$coverage[which(rob_nb_res$qvalues<=qthreshold)], rob_nb_res$ma_count[which(rob_nb_res$qvalues<=qthreshold)],
+         labels=names[which(rob_nb_res$qvalues<=qthreshold)], cex= 0.6, pos=1)
   }
   
   #### plot the color palette
@@ -277,8 +277,8 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
     mtext("zoom on 99% confidence interval")
     #### labeling outliers
     if(!is.null(names) & plot_labels & length(names[which(rob_nb_res$qvalues<=qthreshold)]) > 0) {
-      text((rob_nb_res$coverage[which(rob_nb_res$qvalues<=qthreshold)]-par("usr")[2]*0.05), rob_nb_res$ma_count[which(rob_nb_res$qvalues<=qthreshold)],
-           labels=names[which(rob_nb_res$qvalues<=qthreshold)], cex= 0.6)
+      text(rob_nb_res$coverage[which(rob_nb_res$qvalues<=qthreshold)], rob_nb_res$ma_count[which(rob_nb_res$qvalues<=qthreshold)],
+         labels=names[which(rob_nb_res$qvalues<=qthreshold)], cex= 0.6, pos=1)
     }
     abline(a=0, b=yi1/xi, lwd=2, lty=3, col="blue")
     abline(a=0, b=yi2/xi, lwd=2, lty=3, col="blue")
