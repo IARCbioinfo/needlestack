@@ -377,7 +377,7 @@ coverage_matrix=matrix(nrow=npos,ncol=nindiv)
 ins=as.data.frame(setNames(replicate(nindiv,rep(NA,npos), simplify = F), indiv_run[,1]),optional=T)
 del=ins
 for (k in 1:nindiv) {
-  cur_data=read.table(pileups_files[k],header = T,stringsAsFactors = F,sep="\t")
+  cur_data=read.table(pileups_files[k],header = T,stringsAsFactors = F,sep="\t",colClasses = c("character","numeric","character","numeric","numeric","numeric","numeric","numeric","numeric","numeric","numeric","character","character"))
   if (k==1) {
   	pos_ref=cur_data[,1:3]
   	pos_ref[,"ref"]=toupper(pos_ref[,"ref"])
