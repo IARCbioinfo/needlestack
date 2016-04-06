@@ -103,6 +103,7 @@ assert params.all_SNVs in [true,false] : "do not assign a value to --all_SNVs"
 assert params.no_plots in [true,false] : "do not assign a value to --no_plots"
 assert params.no_indels in [true,false] : "do not assign a value to --no_indels"
 assert params.use_file_name in [true,false] : "do not assign a value to --use_file_name"
+if (params.bed) { try { assert file(params.bed).exists() : "\n WARNING : input bed file not located in execution directory" } catch (AssertionError e) { println e.getMessage() } }
 try { assert fasta_ref.exists() : "\n WARNING : fasta reference not located in execution directory. Make sure reference index is in the same folder as fasta reference" } catch (AssertionError e) { println e.getMessage() }
 if (fasta_ref.exists()) {assert fasta_ref_fai.exists() : "input fasta reference does not seem to have a .fai index (use samtools faidx)"}
 if (fasta_ref.exists() && params.fasta_ref.tokenize('.')[-1] == 'gz') {assert fasta_ref_gzi.exists() : "input gz fasta reference does not seem to have a .gzi index (use samtools faidx)"}
