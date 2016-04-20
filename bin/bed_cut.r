@@ -20,7 +20,7 @@ nb_pieces=as.numeric(commandArgs(TRUE)[1])
 bed=read.table(pipe('cat /dev/stdin'),stringsAsFactors = F)
 bed_cum_size=cumsum(bed[,3]-bed[,2]+1)
 if(nb_pieces>bed_cum_size[length(bed_cum_size)]) nb_pieces=bed_cum_size[length(bed_cum_size)]
-if(nb_pieces==1) { cat(paste(bed[,1],":",bed[,2],"-",bed[,3], sep=""), sep="\n", file=paste(bed[,1],"_",bed[,2],"-",bed[,1],"_",bed[,3],"_regions",sep="")) } else {
+if(nb_pieces==1) { cat(paste(bed[,1],":",bed[,2],"-",bed[,3], sep=""), sep="\n", file=paste(bed[1,1],"_",bed[1,2],"-",bed[dim(bed)[1],1],"_",bed[dim(bed)[1],3],"_regions",sep="")) } else {
   cut_cum_size=floor(seq(1,bed_cum_size[length(bed_cum_size)],l=nb_pieces+1))
   for(k in 1:(nb_pieces-1) ) {
     cur_size = cut_cum_size[k+1]

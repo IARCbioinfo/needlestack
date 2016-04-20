@@ -244,7 +244,7 @@ process mpileup2table {
      tag { region_tag }
 
      input:
-     set val(region_tag), file("${region_tag}.pileup") from pileup
+     set val(region_tag), file("${region_tag}.pileup") from pileup.filter { tag, file -> !file.isEmpty() }
      file bam
      val sample_names
 
@@ -309,14 +309,18 @@ process R_regression {
 //PDF.flatten().filter { it.size() == 0 }.subscribe { it.delete() }
 
 // merge all vcf files in one big file
+vcf_list = vcf.toList()
 process collect_vcf_result {
 
 	publishDir  params.out_folder, mode: 'move'
 
 	input:
 	val out_vcf
-	file '*.vcf' from vcf.toList()
-     file fasta_ref_fai
+	file '*.vcf' from vcf_list
+        file fasta_ref_fai        
+ 
+        when:
+        vcf_list.val.size()>0
 
 	output:
 	file "$out_vcf" into big_vcf

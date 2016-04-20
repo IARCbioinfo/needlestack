@@ -264,6 +264,33 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
   ####
    
   if (!is.na(rob_nb_res$coef["slope"])) {
+    ############## ADD CONTOURS ################
+    max_nb_grid_pts = 1000
+    min_ylength = 5
+    max_qvalue=100
+    if(max(rob_nb_res$ma_count)*max(rob_nb_res$cov) < max_nb_grid_pts){
+      xgrid = seq(0,max(rob_nb_res$coverage), by=1) 
+      ygrid = seq(0,max(rob_nb_res$ma_count),by=1) #use by=1 to have integer, if not dnbinom not happy
+    } else {
+      ylength = round(sqrt(max_nb_grid_pts*max(rob_nb_res$ma_count)/max(rob_nb_res$coverage)))
+      if(ylength<min_ylength) ylength=min_ylength
+      xlength = round(max_nb_grid_pts/ylength)
+      xgrid = round(seq(0,max(rob_nb_res$coverage),length=xlength))
+      ygrid = round(seq(0,max(rob_nb_res$ma_count),length=ylength))
+    }
+    
+    toQvalue <- function(x,y){
+      unlist(-10*log10(p.adjust((dnbinom(c(rob_nb_res$ma_count,y),size=1/rob_nb_res$coef[[1]],mu=rob_nb_res$coef[[2]]*c(rob_nb_res$coverage,x)) + 
+                                          pnbinom(c(rob_nb_res$ma_count,y),size=1/rob_nb_res$coef[[1]],mu=rob_nb_res$coef[[2]]*c(rob_nb_res$coverage,x),lower.tail = F)))
+                              [length(rob_nb_res$coverage)+1]))
+    }
+    
+    matgrid=matrix(1:(length(xgrid)*length(ygrid)),length(xgrid),length(ygrid))
+    matgrid=matrix(sapply(matgrid,function(case) toQvalue(xgrid[row(matgrid)[matgrid==case]],ygrid[col(matgrid)[matgrid==case]])),length(xgrid),length(ygrid))
+    
+    qlevels = c(10,30,50,70,100)
+    contour(xgrid, ygrid, matgrid, levels=qlevels , col = rev(rainbow(length(qlevels),start=0, end=4/6)), add=T, lwd = 1.3, labcex = 0.8, lty=3)
+    ##############################################
     xi=max(rob_nb_res$coverage)
     yi1=qnbinom(p=0.99, size=1/rob_nb_res$coef[[1]], mu=rob_nb_res$coef[[2]]*xi)
     yi2=qnbinom(p=0.01, size=1/rob_nb_res$coef[[1]], mu=rob_nb_res$coef[[2]]*xi)
@@ -271,10 +298,13 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
     abline(a=0, b=yi2/xi, lwd=2, lty=3, col="blue")
     abline(a=0, b=rob_nb_res$coef[[2]], col="blue")
     
+    #### plot zoom on max_qvalue and add contours
+    ylim_zoom=ifelse(sum(matgrid[length(xgrid),]>=max_qvalue)>0,ygrid[which(matgrid[length(xgrid),]>=max_qvalue)[1]],ygrid[match(max(matgrid[length(xgrid),]),matgrid[length(xgrid),])])
     plot(rob_nb_res$coverage, rob_nb_res$ma_count,
          pch=21,bg=cols,col=outliers_color,xlab="Coverage (DP)",ylab="Number of ALT reads (AO)",
-         main=plot_title, ylim=c(0,2*yi1), xlim=c(0,xi))
-    mtext("zoom on 99% confidence interval")
+         main=plot_title, ylim=c(0,ylim_zoom), xlim=c(0,max(rob_nb_res$coverage)))
+    contour(xgrid, ygrid, matgrid, levels=qlevels , col = rev(rainbow(length(qlevels),start=0, end=4/6)), add=T, lwd = 1.3, labcex = 0.8, lty=3)
+    mtext(paste("zoom on maximum q-value =",max_qvalue))
     #### labeling outliers
     if(!is.null(names) & plot_labels & length(names[which(rob_nb_res$qvalues<=qthreshold)]) > 0) {
       text(rob_nb_res$coverage[which(rob_nb_res$qvalues<=qthreshold)], rob_nb_res$ma_count[which(rob_nb_res$qvalues<=qthreshold)],
@@ -291,13 +321,13 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
     abline(v=log10(qthreshold),col="red",lwd=2)
     plot_palette(topright = TRUE)
     
-    plot(logqvals,rob_nb_res$ma_count/rob_nb_res$coverage,pch=21,bg=cols,col=outliers_color,ylab="Allelic fraction (AF)",xlab=bquote("log"[10] ~ "(q-value)"),main="Allelic fraction effect", ylim=c(0,(2*yi1)/xi))
-    mtext("zoom on 99% confidence interval")
+    plot(logqvals,rob_nb_res$ma_count/rob_nb_res$coverage,pch=21,bg=cols,col=outliers_color,ylab="Allelic fraction (AF)",xlab=bquote("log"[10] ~ "(q-value)"),main="Allelic fraction effect",
+         ylim=c(0,ylim_zoom/max(rob_nb_res$coverage)))
+    mtext(paste("zoom on maximum q-value =",max_qvalue))
     abline(v=log10(qthreshold),col="red",lwd=2)
     plot_palette(topright = TRUE)
-    
-    hist(rob_nb_res$pvalues,main="p-values distribution",ylab="Density",xlab="p-value",col="grey",freq=T,br=20,xlim=c(0,1))
-    hist(rob_nb_res$qvalues,main="q-values distribution",breaks=20,xlab="q-value",col="grey",freq=T,xlim=c(0,1))
+    #hist(rob_nb_res$pvalues,main="p-values distribution",ylab="Density",xlab="p-value",col="grey",freq=T,br=20,xlim=c(0,1))
+    #hist(rob_nb_res$qvalues,main="q-values distribution",breaks=20,xlab="q-value",col="grey",freq=T,xlim=c(0,1))
   }
 }
 
