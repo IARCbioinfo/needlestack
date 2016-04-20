@@ -268,6 +268,8 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
     max_nb_grid_pts = 1000
     min_ylength = 5
     max_qvalue=100
+    #here we compute the dimension of the qvalue grid (ylength*xlength), with min(ylength)=5 (this avoids a too "flat" grid)
+    #if needed to sampling (too large grid if dimension=max(AO)*max(DP)), we verify two equations: equality of ratios ylength/xlength before and after sampling and ylength*xlength=max_nb_grid_pts
     if(max(rob_nb_res$ma_count)*max(rob_nb_res$cov) < max_nb_grid_pts){
       xgrid = seq(0,max(rob_nb_res$coverage), by=1) 
       ygrid = seq(0,max(rob_nb_res$ma_count),by=1) #use by=1 to have integer, if not dnbinom not happy
@@ -278,16 +280,16 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
       xgrid = round(seq(0,max(rob_nb_res$coverage),length=xlength))
       ygrid = round(seq(0,max(rob_nb_res$ma_count),length=ylength))
     }
-    
+    # following function returns a qvalue for a new point by adding it in the set of observations, recomputing all qvalues and taking its corresponding value.
     toQvalue <- function(x,y){
       unlist(-10*log10(p.adjust((dnbinom(c(rob_nb_res$ma_count,y),size=1/rob_nb_res$coef[[1]],mu=rob_nb_res$coef[[2]]*c(rob_nb_res$coverage,x)) + 
                                           pnbinom(c(rob_nb_res$ma_count,y),size=1/rob_nb_res$coef[[1]],mu=rob_nb_res$coef[[2]]*c(rob_nb_res$coverage,x),lower.tail = F)))
                               [length(rob_nb_res$coverage)+1]))
     }
-    
+    #here we initiate the grid with values from 1 to ylength*xlength
     matgrid=matrix(1:(length(xgrid)*length(ygrid)),length(xgrid),length(ygrid))
+    #then we fill in the grid with qvalues for each pair of AO,DP taken from ygrid,xgrid vectors (we use initiated values to identify corresponding AO,DP). Finally we plot the contours.
     matgrid=matrix(sapply(matgrid,function(case) toQvalue(xgrid[row(matgrid)[matgrid==case]],ygrid[col(matgrid)[matgrid==case]])),length(xgrid),length(ygrid))
-    
     qlevels = c(10,30,50,70,100)
     contour(xgrid, ygrid, matgrid, levels=qlevels , col = rev(rainbow(length(qlevels),start=0, end=4/6)), add=T, lwd = 1.3, labcex = 0.8, lty=3)
     ##############################################
