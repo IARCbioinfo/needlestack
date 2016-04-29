@@ -471,7 +471,7 @@ write_out=function(...) {
 }
 write_out("##fileformat=VCFv4.1")
 write_out("##fileDate=",format(Sys.Date(), "%Y%m%d"))
-write_out("##source=needlestack v0.2")
+write_out("##source=needlestack v0.3")
 write_out("##reference=",fasta_ref)
 write_out("##phasing=none")
 write_out("##filter=\"QVAL > ",GQ_threshold," & ",SB_type,"_SNV < ",SB_threshold_SNV," & ",SB_type,"_INDEL < ",SB_threshold_indel," & min(AO) >= ",min_reads," & min(DP) >= ",min_coverage,"\"")

@@ -327,14 +327,31 @@ process collect_vcf_result {
 
 	shell:
 	'''
-	nb_vcf=$(find . -maxdepth 1 -name '*vcf' | wc -l)
-	if [ $nb_vcf -gt 1 ]; then
-		vcfoverlay *.vcf > !{out_vcf}
-	else
-		cp .vcf !{out_vcf}
-	fi
+	shopt -s dotglob
+	shopt -s extglob
+
+	# deal with the case of a single vcf (named .vcf instead of 1.vcf when multiple vcf are present)
+	grep '^#' @(|1).vcf > header.txt
+
 	# Add contigs in the VCF header
 	cat !{fasta_ref_fai} | cut -f1,2 | sed -e 's/^/##contig=<ID=/' -e 's/[	 ][	 ]*/,length=/' -e 's/$/>/' > contigs.txt
-	sed -i '/##reference=.*/ r contigs.txt' !{out_vcf}
+	sed -i '/##reference=.*/ r contigs.txt' header.txt
+
+	# Add version numbers in the VCF header
+	echo '##command=!{workflow.commandLine}' > versions.txt
+	echo '##repository=!{workflow.repository}' >> versions.txt
+	echo '##commitId=!{workflow.commitId}' >> versions.txt
+	echo '##revision=!{workflow.revision}' >> versions.txt
+	echo '##container=!{workflow.container}' >> versions.txt
+	echo '##nextflow=v!{workflow.nextflow.version}' >> versions.txt
+	echo '##samtools='$(samtools --version | tr '\n' ' ') >> versions.txt
+	echo '##bedtools='$(bedtools --version) >> versions.txt
+	echo '##Rscript='$(Rscript --version 2>&1) >> versions.txt
+	echo '##perl=v'$(perl -e 'print substr($^V, 1)') >> versions.txt
+	sed -i '/##source=.*/ r versions.txt' header.txt
+
+	# Add all VCF contents
+	grep --no-filename -v '^#' *.vcf >> header.txt
+	mv header.txt !{out_vcf}
 	'''
 }
