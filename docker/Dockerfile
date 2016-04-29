@@ -27,7 +27,7 @@ RUN apt-get clean && \
 	apt-utils && \
 
 	# Install bedtools specific version manually
-	wget https://github.com/arq5x/bedtools2/releases/download/v2.24.0/bedtools-2.25.0.tar.gz && \
+	wget https://github.com/arq5x/bedtools2/releases/download/v2.25.0/bedtools-2.25.0.tar.gz && \
 	tar -zxf bedtools-2.25.0.tar.gz && \
 	cd bedtools2 &&  \
 	make && \
