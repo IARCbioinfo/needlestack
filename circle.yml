@@ -11,8 +11,6 @@ test:
     - |
       cd ~/needlestack/docker
       docker build -t iarcbioinfo/needlestack .
-      cd ~/needlestack/docker_stable
-      docker build -t iarcbioinfo/needlestack:stable .
     - |
       cd ~/NGS_data_test/1000G_CEU_TP53/
       nextflow run ~/needlestack/needlestack.nf -with-docker iarcbioinfo/needlestack --bed TP53_all.bed --nsplit 4 --fasta_ref 17.fasta.gz --bam_folder BAM/ --min_dp 50 
