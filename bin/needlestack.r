@@ -221,7 +221,7 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
   temp_title = bquote(e==.(format(rob_nb_res$coef[[2]],digits = 2)) ~ "," ~ sigma==.(format(rob_nb_res$coef[[1]],digits = 2)))
   plot(rob_nb_res$coverage, rob_nb_res$ma_count,
        pch=21,bg=cols,col=outliers_color,xlab="Coverage (DP)",ylab="Number of ALT reads (AO)",
-       main=plot_title, xlim=c(0,max(rob_nb_res$coverage)))
+       main=plot_title, xlim=c(0,max(rob_nb_res$coverage)),ylim=c(0,max(rob_nb_res$ma_count)))
   mtext(temp_title)
   #### labeling outliers
   if(!is.null(names) & plot_labels & length(names[which(rob_nb_res$qvalues<=qthreshold)]) > 0) {
@@ -471,7 +471,7 @@ write_out=function(...) {
 }
 write_out("##fileformat=VCFv4.1")
 write_out("##fileDate=",format(Sys.Date(), "%Y%m%d"))
-write_out("##source=needlestack v0.2")
+write_out("##source=needlestack v0.3")
 write_out("##reference=",fasta_ref)
 write_out("##phasing=none")
 write_out("##filter=\"QVAL > ",GQ_threshold," & ",SB_type,"_SNV < ",SB_threshold_SNV," & ",SB_type,"_INDEL < ",SB_threshold_indel," & min(AO) >= ",min_reads," & min(DP) >= ",min_coverage,"\"")
