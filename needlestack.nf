@@ -41,7 +41,8 @@ params.all_SNVs = false //  output all sites, even when no variant is detected
 params.no_plots = false  // do not produce pdf plots of regressions
 params.out_folder = params.bam_folder // if not provided, outputs will be held on the input bam folder
 params.no_indels = false // do not skip indels
-params.no_labels = false // do not label outliers
+params.no_labels = false // label outliers
+params.no_contours = false // add contours to the plots and plot min(AF)~DP
 
 /* If --help in parameters, print software usage */
 
@@ -78,6 +79,7 @@ if (params.help) {
     log.info '    --no_plots                                Do not output PDF regression plots.'
     log.info '    --no_labels                               Do not add labels to outliers in regression plots.'
     log.info '    --no_indels                               Do not call indels.'
+    log.info '    --no_contours                             Do not add contours to plots and do not plot min(AF)~DP.'
     log.info '    --out_folder     OUTPUT FOLDER            Output directory, by default input bam folder.'
     log.info '    --bed            BED FILE                 A BED file for calling.'
     log.info '    --region         CHR:START-END            A region for calling.'
@@ -164,6 +166,7 @@ log.info "Sample names definition (--use_file_name)                       : ${sa
 log.info(params.all_SNVs == true ? "Output all SNVs (--all_SNVs)                                    : yes" : "Output all SNVs (--all_SNVs)                                    : no" )
 log.info(params.no_plots == true ? "PDF regression plots (--no_plots)                               : no"  : "PDF regression plots (--no_plots)                               : yes" )
 log.info(params.no_labels == true ? "Labeling outliers in regression plots (--no_labels)             : no"  : "Labeling outliers in regression plots (--no_labels)             : yes" )
+log.info(params.no_contours == true ? "Add contours in plots and plot min(AF)~DP (--no_contours)       : no"  : "Add contours in plots and plot min(AF)~DP (--no_contours)       : yes" )
 log.info(params.no_indels == true ? "Skip indels (--no_indels)                                       : yes" : "Skip indels (--no_indels)                                       : no" )
 log.info "output folder (--out_folder)                                    : ${params.out_folder}"
 log.info "\n"
@@ -299,7 +302,7 @@ process R_regression {
  	'''
  	# create a dummy empty pdf to avoid an error in the process when no variant is found
  	touch !{region_tag}_empty.pdf
-	needlestack.r --out_file=!{region_tag}.vcf --fasta_ref=!{fasta_ref} --GQ_threshold=!{params.min_qval} --min_coverage=!{params.min_dp} --min_reads=!{params.min_ao} --SB_type=!{params.sb_type} --SB_threshold_SNV=!{params.sb_snv} --SB_threshold_indel=!{params.sb_indel} --output_all_SNVs=!{params.all_SNVs} --do_plots=!{!params.no_plots} --plot_labels=!{!params.no_labels}
+	needlestack.r --out_file=!{region_tag}.vcf --fasta_ref=!{fasta_ref} --GQ_threshold=!{params.min_qval} --min_coverage=!{params.min_dp} --min_reads=!{params.min_ao} --SB_type=!{params.sb_type} --SB_threshold_SNV=!{params.sb_snv} --SB_threshold_indel=!{params.sb_indel} --output_all_SNVs=!{params.all_SNVs} --do_plots=!{!params.no_plots} --plot_labels=!{!params.no_labels} --add_contours=!{!params.no_contours}
 	'''
 }
 //PDF.flatten().filter { it.size() == 0 }.subscribe { it.delete() }
