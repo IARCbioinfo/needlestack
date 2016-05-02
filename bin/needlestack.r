@@ -255,7 +255,7 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
       }
     }
     if(topright) {
-      text(x=(xright+(xright-xleft))*0.8, y = keep_labels_pos, labels = keep_labels,adj = c(1,0.5), cex = 0.8)   
+      text(x=xright+1.5*tick_width, y = keep_labels_pos, labels = keep_labels,adj = c(1,0.5), cex = 0.8)   
     } else {
       text(x=(xright-(xright-xleft))*0.3, y = keep_labels_pos, labels = keep_labels,adj = c(1,0.5), cex = 0.8)   
     }
@@ -264,50 +264,81 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
   ####
    
   if (!is.na(rob_nb_res$coef["slope"])) {
-    ############## ADD CONTOURS ################
-    max_nb_grid_pts = 1000
-    min_ylength = 5
+    ################### ADD CONTOURS ##################
+    max_nb_grid_pts = 2500
     max_qvalue=100
-    #here we compute the dimension of the qvalue grid (ylength*xlength), with min(ylength)=5 (this avoids a too "flat" grid)
-    #if needed to sampling (too large grid if dimension=max(AO)*max(DP)), we verify two equations: equality of ratios ylength/xlength before and after sampling and ylength*xlength=max_nb_grid_pts
-    if(max(rob_nb_res$ma_count)*max(rob_nb_res$cov) < max_nb_grid_pts){
-      xgrid = seq(0,max(rob_nb_res$coverage), by=1) 
-      ygrid = seq(0,max(rob_nb_res$ma_count),by=1) #use by=1 to have integer, if not dnbinom not happy
-    } else {
-      ylength = round(sqrt(max_nb_grid_pts*max(rob_nb_res$ma_count)/max(rob_nb_res$coverage)))
-      if(ylength<min_ylength) ylength=min_ylength
-      xlength = round(max_nb_grid_pts/ylength)
-      xgrid = round(seq(0,max(rob_nb_res$coverage),length=xlength))
-      ygrid = round(seq(0,max(rob_nb_res$ma_count),length=ylength))
-    }
+    qlevels = c(10,30,50,70,100)
     # following function returns a qvalue for a new point by adding it in the set of observations, recomputing all qvalues and taking its corresponding value.
     toQvalue <- function(x,y){
       unlist(-10*log10(p.adjust((dnbinom(c(rob_nb_res$ma_count,y),size=1/rob_nb_res$coef[[1]],mu=rob_nb_res$coef[[2]]*c(rob_nb_res$coverage,x)) + 
-                                          pnbinom(c(rob_nb_res$ma_count,y),size=1/rob_nb_res$coef[[1]],mu=rob_nb_res$coef[[2]]*c(rob_nb_res$coverage,x),lower.tail = F)))
-                              [length(rob_nb_res$coverage)+1]))
+                                   pnbinom(c(rob_nb_res$ma_count,y),size=1/rob_nb_res$coef[[1]],mu=rob_nb_res$coef[[2]]*c(rob_nb_res$coverage,x),lower.tail = F)))
+                       [length(rob_nb_res$coverage)+1]))
     }
-    #here we initiate the grid with values from 1 to ylength*xlength
-    matgrid=matrix(1:(length(xgrid)*length(ygrid)),length(xgrid),length(ygrid))
-    #then we fill in the grid with qvalues for each pair of AO,DP taken from ygrid,xgrid vectors (we use initiated values to identify corresponding AO,DP). Finally we plot the contours.
-    matgrid=matrix(sapply(matgrid,function(case) toQvalue(xgrid[row(matgrid)[matgrid==case]],ygrid[col(matgrid)[matgrid==case]])),length(xgrid),length(ygrid))
-    qlevels = c(10,30,50,70,100)
-    contour(xgrid, ygrid, matgrid, levels=qlevels , col = rev(rainbow(length(qlevels),start=0, end=4/6)), add=T, lwd = 1.3, labcex = 0.8, lty=3)
-    ##############################################
+    #here we compute the dimension of the qvalue grid (ylength*xlength), with min(ylength)=5 (this avoids a too "flat" grid)
+    #if needed to sampling (too large grid if dimension=max(AO)*max(DP)), we verify two equations: equality of ratios ylength/xlength before and after sampling and ylength*xlength=max_nb_grid_pts
+    #### compute zoom y limit
+    nb_pts_zoom_computation=1000
+    if(max(rob_nb_res$coverage) > nb_pts_zoom_computation){
+      maxDP_AO = unique(sort(c(round(max(rob_nb_res$coverage)*rbeta(nb_pts_zoom_computation,1,100)),runif(100,1,max(rob_nb_res$coverage)))))      
+    } else {
+      maxDP_AO = seq(1,max(rob_nb_res$coverage),by=1)
+    }
+    maxDP_qvals = unlist(lapply(maxDP_AO,function(AO){ toQvalue(x=max(rob_nb_res$coverage),y=AO) }))
+    af_min_lim = log10(maxDP_AO[which(maxDP_qvals>=qlevels[1])[1]]/max(rob_nb_res$coverage))
+    ylim_zoom = maxDP_AO[which(maxDP_qvals>=max_qvalue)[1]]
+    ylim_zoom_cor=ifelse(is.na(ylim_zoom),max(rob_nb_res$ma_count),ylim_zoom)
+    if(!is.na(ylim_zoom)){ #ylim_zoom is na iff we found at least one qvalue >= max_qvalue (if error rate closed to 1, only qvalues closed to 0)
+      #### compute dim of the qvalue grid
+      if(ylim_zoom*max(rob_nb_res$coverage) <= max_nb_grid_pts){
+        xgrid = seq(0,max(rob_nb_res$coverage), by=1) 
+        ygrid = seq(0,ylim_zoom,by=1) #use by=1 to have integer, if not dnbinom not happy
+      } else {
+        if(ylim_zoom<=50){
+          ygrid=seq(0,ylim_zoom,by=1)
+          xlength = round(max_nb_grid_pts/length(ygrid))
+          xgrid = round(seq(0,max(rob_nb_res$coverage),length=xlength))
+        } else {
+          ylength = 50
+          xlength = round(max_nb_grid_pts/ylength)
+          xgrid = round(seq(0,max(rob_nb_res$coverage),length=xlength))
+          ygrid = round(seq(0,ylim_zoom,length=ylength))    
+        }
+      }
+      #here we initiate the grid with each case containing list=(DP,AO) from xgrid, ygrid
+      matgrid = array(as.list(as.data.frame(t(expand.grid(xgrid,ygrid)))),dim=c(length(xgrid),length(ygrid)))
+      #then we fill in the grid with qvalues for each pair of AO,DP taken from ygrid,xgrid vectors (we use initiated values to identify corresponding AO,DP). Finally we plot the contours.
+      matgrid=matrix(sapply(matgrid,function(case) toQvalue(unlist(case)[1],unlist(case)[2])), length(xgrid),length(ygrid))
+      #### plot the contour "by hands"
+      for(qvalue in qlevels) {
+        lines(xgrid, unlist(lapply(xgrid,function(DP,ygrid,xgrid){
+          qval=min(matgrid[match(DP,xgrid),which(matgrid[match(DP,xgrid),]>=qvalue)])
+          AO=min(ygrid[which(matgrid[match(DP,xgrid),]==qval)]) 
+          AO },ygrid,xgrid)),col=rev(rainbow(length(qlevels),start=0, end=4/6))[match(qvalue,qlevels)],lwd=1.3,lty=3)
+      }
+    }
+    #### plot confidence interval + error rate
     xi=max(rob_nb_res$coverage)
     yi1=qnbinom(p=0.99, size=1/rob_nb_res$coef[[1]], mu=rob_nb_res$coef[[2]]*xi)
     yi2=qnbinom(p=0.01, size=1/rob_nb_res$coef[[1]], mu=rob_nb_res$coef[[2]]*xi)
     abline(a=0, b=yi1/xi, lwd=2, lty=3, col="blue")
     abline(a=0, b=yi2/xi, lwd=2, lty=3, col="blue")
     abline(a=0, b=rob_nb_res$coef[[2]], col="blue")
-    
-    #### plot zoom on max_qvalue and add contours
-    ylim_zoom=ifelse(sum(matgrid[length(xgrid),]>=max_qvalue)>0,ygrid[which(matgrid[length(xgrid),]>=max_qvalue)[1]],ygrid[match(max(matgrid[length(xgrid),]),matgrid[length(xgrid),])])
+    #### plot zoom on max qvalue
     plot(rob_nb_res$coverage, rob_nb_res$ma_count,
          pch=21,bg=cols,col=outliers_color,xlab="Coverage (DP)",ylab="Number of ALT reads (AO)",
-         main=plot_title, ylim=c(0,ylim_zoom), xlim=c(0,max(rob_nb_res$coverage)))
-    contour(xgrid, ygrid, matgrid, levels=qlevels , col = rev(rainbow(length(qlevels),start=0, end=4/6)), add=T, lwd = 1.3, labcex = 0.8, lty=3)
+         main=plot_title, ylim=c(0,ylim_zoom_cor), xlim=c(0,max(rob_nb_res$coverage)))
+    #### plot the contour "by hands"
+    if(!is.na(ylim_zoom)){
+      for(qvalue in qlevels) {
+        lines(xgrid, unlist(lapply(xgrid,function(DP,ygrid,xgrid){
+          qval=min(matgrid[match(DP,xgrid),which(matgrid[match(DP,xgrid),]>=qvalue)])
+          AO=min(ygrid[which(matgrid[match(DP,xgrid),]==qval)]) 
+          AO },ygrid,xgrid)),col=rev(rainbow(length(qlevels),start=0, end=4/6))[match(qvalue,qlevels)],lwd=1.3,lty=3)
+      }
+    }
+    #contour(xgrid, ygrid, matgrid, levels=qlevels , col = rev(rainbow(length(qlevels),start=0, end=4/6)), add=T, lwd = 1.3, labcex = 0.8, lty=3)
     mtext(paste("zoom on maximum q-value =",max_qvalue))
-    #### labeling outliers
+    #### labeling outliers and plot confidence interval + error rate
     if(!is.null(names) & plot_labels & length(names[which(rob_nb_res$qvalues<=qthreshold)]) > 0) {
       text(rob_nb_res$coverage[which(rob_nb_res$qvalues<=qthreshold)], rob_nb_res$ma_count[which(rob_nb_res$qvalues<=qthreshold)],
          labels=names[which(rob_nb_res$qvalues<=qthreshold)], cex= 0.6, pos=1)
@@ -324,12 +355,24 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
     plot_palette(topright = TRUE)
     
     plot(logqvals,rob_nb_res$ma_count/rob_nb_res$coverage,pch=21,bg=cols,col=outliers_color,ylab="Allelic fraction (AF)",xlab=bquote("log"[10] ~ "(q-value)"),main="Allelic fraction effect",
-         ylim=c(0,ylim_zoom/max(rob_nb_res$coverage)))
+         ylim=c(0,ylim_zoom_cor/max(rob_nb_res$coverage)))
     mtext(paste("zoom on maximum q-value =",max_qvalue))
     abline(v=log10(qthreshold),col="red",lwd=2)
     plot_palette(topright = TRUE)
-    #hist(rob_nb_res$pvalues,main="p-values distribution",ylab="Density",xlab="p-value",col="grey",freq=T,br=20,xlim=c(0,1))
-    #hist(rob_nb_res$qvalues,main="q-values distribution",breaks=20,xlab="q-value",col="grey",freq=T,xlim=c(0,1))
+    if(!is.na(ylim_zoom)){
+      #### plot min(af) ~ DP
+      plot(1,type='n', ylim=c(1.1*af_min_lim,0), xlim=range(xgrid), xlab="DP", ylab=bquote("log"[10] ~ "[min(AF)]"))
+      for(qvalue in qlevels) {
+        lines(xgrid, unlist(lapply(xgrid,function(DP,ygrid,xgrid){
+          qval=min(matgrid[match(DP,xgrid),which(matgrid[match(DP,xgrid),]>=qvalue)])
+          af=min(ygrid[which(matgrid[match(DP,xgrid),]==qval)]) / DP
+          if(DP==0 || af>1) { af=1 } #af>1 if min(...)>DP
+          log10(af) },ygrid,xgrid)),col=rev(rainbow(length(qlevels),start=0, end=4/6))[match(qvalue,qlevels)])
+      }
+      plot_palette(topright = TRUE)
+      #hist(rob_nb_res$pvalues,main="p-values distribution",ylab="Density",xlab="p-value",col="grey",freq=T,br=20,xlim=c(0,1))
+      #hist(rob_nb_res$qvalues,main="q-values distribution",breaks=20,xlab="q-value",col="grey",freq=T,xlim=c(0,1))
+    }
   }
 }
 
