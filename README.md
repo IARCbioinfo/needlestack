@@ -13,10 +13,10 @@ Contact: follm@iarc.fr
 
 ## Description
 
-Needlestack is an ultr-sensitive multi-sample variant caller for Next Generation Sequencing (NGS) data. It is based on the idea that analysing several samples together can help estimate the distribution of sequencing errors to accurately identify variants. It has been initially developed for somatic variant calling using very deep NGS data from circulating free DNA, but is also applicable to lower coverage data like Whole Exome Sequencing (WES) or even Whole Genome Sequencing (WGS). It is a highly scalable and reproducible pipeline thanks to the use of [nextflow](http://www.nextflow.io/) and [docker](https://www.docker.com) technologies. 
+Needlestack is an ultra-sensitive multi-sample variant caller for Next Generation Sequencing (NGS) data. It is based on the idea that analysing several samples together can help estimate the distribution of sequencing errors to accurately identify variants. It has been initially developed for somatic variant calling using very deep NGS data from circulating free DNA, but is also applicable to lower coverage data like Whole Exome Sequencing (WES) or even Whole Genome Sequencing (WGS). It is a highly scalable and reproducible pipeline thanks to the use of [nextflow](http://www.nextflow.io/) and [docker](https://www.docker.com) technologies. 
 
 Here is a summary of the method:
-- At each position and for each candidate variant, we model sequencing errors using a negative binomial regression with a linear link and a zero intercept. The data is exctracted from the BAM files using [samtools](http://www.htslib.org).
+- At each position and for each candidate variant, we model sequencing errors using a negative binomial regression with a linear link and a zero intercept. The data is extracted from the BAM files using [samtools](http://www.htslib.org).
 - Genetic variants are detected as being outliers from the error model. To avoid these outliers biasing the regression we use robust estimator for the negative binomial regression (published [here](http://www.ncbi.nlm.nih.gov/pubmed/25156188) with code available [here](https://github.com/williamaeberhard/glmrob.nb)).
 - We calculate for each sample a p-value for being a variant (outlier from the regression) that we further transform into q-values to account for multiple testing.
 
@@ -100,12 +100,10 @@ The exact same pipeline can be run on your computer or on a HPC cluster, by addi
 process.executor = 'sge'
 ```
 
-Other popular schedulers such as LSF, SLURM, PBS, TORQUE etc. are also compatible. See the nextflow documentation [here](http://www.nextflow.io/docs/latest/executor.html) for more details. Also have a look at the [other parameters for the executors](http://www.nextflow.io/docs/latest/config.html#scope-executor), in particular `queueSize` that defines the number of tasks the executor will handle in a parallel manner. Parallelism in needlsestack is managed by splitting the genomic regions in pieces of equal sizes (`--nsplit`). Note that dealing with very large regions can take a large amount of memory, therefore splitting more is more memory-efficient. In nextflow the default number of tasks the executor will handle in a parallel is 100, which is certainly too high if you are executing it on your local machine (as if you use `--nsplit 100` the 100 pieces will run in parallel). In this case a good idea is to set it to the number of computing cores your local machine has. You can add this as an option at run time, by adding for example `-queue-size 4`  in the `nextflow run` command if you have a machine with four cores. You can also permanently set it in the config file, here is a way to automatically obtain and add this information (works on Linux and Mac OS X):
+Other popular schedulers such as LSF, SLURM, PBS, TORQUE etc. are also compatible. See the nextflow documentation [here](http://www.nextflow.io/docs/latest/executor.html) for more details. Also have a look at the [other parameters for the executors](http://www.nextflow.io/docs/latest/config.html#scope-executor), in particular `queueSize` that defines the number of tasks the executor will handle in a parallel manner. Parallelism in needlestack is managed by splitting the genomic regions in pieces of equal sizes (`--nsplit`). Note that dealing with very large regions can take a large amount of memory, therefore splitting more is more memory-efficient. In nextflow the default number of tasks the executor will handle in a parallel is 100, which is certainly too high if you are executing it on your local machine (as if you use `--nsplit 100` the 100 pieces will run in parallel). In this case a good idea is to set it to the number of computing cores your local machine has. You can add this as an option at run time, by adding for example `-queue-size 4`  in the `nextflow run` command if you have a machine with four cores. You can also permanently set it in the config file, here is a way to automatically obtain and add this information (works on Linux and Mac OS X):
 ```bash
 echo "executor.\$local.queueSize = "`getconf _NPROCESSORS_ONLN` >> ~/.nextflow/config
 ```
-
-Parallelism in needlsestack is managed by splitting  
 
 `--bam_folder` and `--fasta_ref` are compulsary. The optional parameters with default values are:
 
