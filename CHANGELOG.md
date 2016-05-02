@@ -1,7 +1,7 @@
 # Change Log
 
-## [v0.3b](https://github.com/IARCbioinfo/needlestack/tree/v0.3b) (2016-05-02)
-[Full Changelog](https://github.com/IARCbioinfo/needlestack/compare/v0.2...v0.3b)
+## [v0.3](https://github.com/IARCbioinfo/needlestack/tree/v0.3) (2016-05-02)
+[Full Changelog](https://github.com/IARCbioinfo/needlestack/compare/v0.2...v0.3)
 
 **Implemented enhancements:**
 
