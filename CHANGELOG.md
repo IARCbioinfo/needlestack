@@ -11,6 +11,7 @@
 - Add an option to directly input a region for calling in the command line [\#71](https://github.com/IARCbioinfo/needlestack/issues/71)
 - Change the way we publish new version [\#69](https://github.com/IARCbioinfo/needlestack/issues/69)
 - Make the stable docker file more stable [\#68](https://github.com/IARCbioinfo/needlestack/issues/68)
+- Add more tests in CircleCI [\#55](https://github.com/IARCbioinfo/needlestack/issues/55)
 - Remove unnecessary intermediate outputs [\#51](https://github.com/IARCbioinfo/needlestack/issues/51)
 - Improve the bed split method [\#47](https://github.com/IARCbioinfo/needlestack/issues/47)
 - In the absence of a bed file the pipeline should run on the full reference genome [\#39](https://github.com/IARCbioinfo/needlestack/issues/39)
