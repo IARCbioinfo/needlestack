@@ -32,7 +32,7 @@ test:
       mkdir -p results/$CIRCLE_BRANCH/PDF/test3
       cp BAM/PDF/*.pdf results/$CIRCLE_BRANCH/PDF/test3/
       rm -rf work/ .nextflow.* BAM/all_variants.vcf BAM/PDF/
-    - | #test --min_AO 0 and --all_SNVs on a null coverage position 
+    - | #test --min_AO 0 and --all_SNVs on a null AO position 
       cd ~/NGS_data_test/1000G_CEU_TP53/
       nextflow run ~/needlestack/needlestack.nf -with-docker iarcbioinfo/needlestack --region 17:7572816-7572816 --fasta_ref 17.fasta.gz --bam_folder BAM/ --min_AO 0 --all_SNVs 
       cp BAM/all_variants.vcf results/$CIRCLE_BRANCH/test4.vcf 
@@ -46,6 +46,13 @@ test:
       mkdir -p results/$CIRCLE_BRANCH/PDF/test5
       cp BAM/PDF/*.pdf results/$CIRCLE_BRANCH/PDF/test5/
       rm -rf work/ .nextflow.* BAM/all_variants.vcf BAM/PDF/
+    - | #test on a null coverage region
+      cd ~/NGS_data_test/1000G_CEU_TP53/
+      nextflow run ~/needlestack/needlestack.nf -with-docker iarcbioinfo/needlestack --region 7580000-7580004--nsplit 4 --fasta_ref 17.fasta.gz --bam_folder BAM/ 
+      cp BAM/all_variants.vcf results/$CIRCLE_BRANCH/test6.vcf 
+      mkdir -p results/$CIRCLE_BRANCH/PDF/test6
+      cp BAM/PDF/*.pdf results/$CIRCLE_BRANCH/PDF/test6/
+      rm -rf work/ .nextflow.* BAM/all_variants.vcf BAM/PDF/ 
 deployment:
   git:
     branch: [master, dev]
