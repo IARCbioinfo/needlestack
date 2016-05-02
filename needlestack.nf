@@ -16,9 +16,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-// run using for ex.:
-// needlestack.nf --bed my_bed_file.bed --nsplit 20 --fasta_ref reference.fasta --bam_folder BAM/
-
 // requirement:
 // - bedtools
 // - samtools
@@ -26,7 +23,6 @@
 // - bed_cut.r (in bin folder)
 // - needlestack.r (in bin folder)
 // - pileup2baseindel.pl (in bin folder) (+ perl)
-// - vcfoverlay from vcflib
 
 params.min_dp = 50 // minimum coverage in at least one sample to consider a site
 params.min_ao = 5 // minimum number of non-ref reads in at least one sample to consider a site
@@ -45,23 +41,24 @@ params.all_SNVs = false //  output all sites, even when no variant is detected
 params.no_plots = false  // do not produce pdf plots of regressions
 params.out_folder = params.bam_folder // if not provided, outputs will be held on the input bam folder
 params.no_indels = false // do not skip indels
-params.no_labels = false // do not label outliers
+params.no_labels = false // label outliers
+params.no_contours = false // add contours to the plots and plot min(AF)~DP
 
 /* If --help in parameters, print software usage */
 
 if (params.help) {
     log.info ''
-    log.info '--------------------------------------------------'
-    log.info 'NEEDLESTACK: A MULTI-SAMPLE SOMATIC VARIANT CALLER'
-    log.info '--------------------------------------------------'
+    log.info '-------------------------------------------------------'
+    log.info 'NEEDLESTACK v0.3: A MULTI-SAMPLE SOMATIC VARIANT CALLER'
+    log.info '-------------------------------------------------------'
     log.info 'Copyright (C) 2015 Matthieu Foll and Tiffany Delhomme'
     log.info 'This program comes with ABSOLUTELY NO WARRANTY; for details see LICENSE.txt'
     log.info 'This is free software, and you are welcome to redistribute it'
     log.info 'under certain conditions; see LICENSE.txt for details.'
-    log.info '--------------------------------------------------'
+    log.info '-------------------------------------------------------'
     log.info ''
     log.info 'Usage: '
-    log.info '    nextflow run iarcbioinfo/needlestack -with-docker iarcbioinfo/needlestack --bed bedfile.bed --bam_folder BAM/ --fasta_ref reference.fasta [other options]'
+    log.info '    nextflow run iarcbioinfo/needlestack [-with-docker] --bed bedfile.bed --bam_folder BAM/ --fasta_ref reference.fasta [other options]'
     log.info ''
     log.info 'Mandatory arguments:'
     log.info '    --bam_folder     BAM_DIR                  BAM files directory.'
@@ -82,6 +79,7 @@ if (params.help) {
     log.info '    --no_plots                                Do not output PDF regression plots.'
     log.info '    --no_labels                               Do not add labels to outliers in regression plots.'
     log.info '    --no_indels                               Do not call indels.'
+    log.info '    --no_contours                             Do not add contours to plots and do not plot min(AF)~DP.'
     log.info '    --out_folder     OUTPUT FOLDER            Output directory, by default input bam folder.'
     log.info '    --bed            BED FILE                 A BED file for calling.'
     log.info '    --region         CHR:START-END            A region for calling.'
@@ -142,17 +140,17 @@ if(params.region){
 /* Software information */
 
 log.info ''
-log.info '--------------------------------------------------'
-log.info 'NEEDLESTACK: A MULTI-SAMPLE SOMATIC VARIANT CALLER'
-log.info '--------------------------------------------------'
+log.info '-------------------------------------------------------'
+log.info 'NEEDLESTACK v0.3: A MULTI-SAMPLE SOMATIC VARIANT CALLER'
+log.info '-------------------------------------------------------'
 log.info 'Copyright (C) 2015 Matthieu Foll and Tiffany Delhomme'
 log.info 'This program comes with ABSOLUTELY NO WARRANTY; for details see LICENSE.txt'
 log.info 'This is free software, and you are welcome to redistribute it'
 log.info 'under certain conditions; see LICENSE.txt for details.'
-log.info '--------------------------------------------------'
+log.info '-------------------------------------------------------'
 log.info "Input BAM folder (--bam_folder)                                 : ${params.bam_folder}"
 log.info "Reference in fasta format (--fasta_ref)                         : ${params.fasta_ref}"
-log.info "Intervals for calling                                           : ${input_region}"
+log.info "Intervals for calling (--bed)                                   : ${input_region}"
 log.info "Number of regions to split (--nsplit)                           : ${params.nsplit}"
 log.info "To consider a site for calling:"
 log.info "     minimum coverage (--min_dp)                                : ${params.min_dp}"
@@ -168,6 +166,7 @@ log.info "Sample names definition (--use_file_name)                       : ${sa
 log.info(params.all_SNVs == true ? "Output all SNVs (--all_SNVs)                                    : yes" : "Output all SNVs (--all_SNVs)                                    : no" )
 log.info(params.no_plots == true ? "PDF regression plots (--no_plots)                               : no"  : "PDF regression plots (--no_plots)                               : yes" )
 log.info(params.no_labels == true ? "Labeling outliers in regression plots (--no_labels)             : no"  : "Labeling outliers in regression plots (--no_labels)             : yes" )
+log.info(params.no_contours == true ? "Add contours in plots and plot min(AF)~DP (--no_contours)       : no"  : "Add contours in plots and plot min(AF)~DP (--no_contours)       : yes" )
 log.info(params.no_indels == true ? "Skip indels (--no_indels)                                       : yes" : "Skip indels (--no_indels)                                       : no" )
 log.info "output folder (--out_folder)                                    : ${params.out_folder}"
 log.info "\n"
@@ -303,7 +302,7 @@ process R_regression {
  	'''
  	# create a dummy empty pdf to avoid an error in the process when no variant is found
  	touch !{region_tag}_empty.pdf
-	needlestack.r --out_file=!{region_tag}.vcf --fasta_ref=!{fasta_ref} --GQ_threshold=!{params.min_qval} --min_coverage=!{params.min_dp} --min_reads=!{params.min_ao} --SB_type=!{params.sb_type} --SB_threshold_SNV=!{params.sb_snv} --SB_threshold_indel=!{params.sb_indel} --output_all_SNVs=!{params.all_SNVs} --do_plots=!{!params.no_plots} --plot_labels=!{!params.no_labels}
+	needlestack.r --out_file=!{region_tag}.vcf --fasta_ref=!{fasta_ref} --GQ_threshold=!{params.min_qval} --min_coverage=!{params.min_dp} --min_reads=!{params.min_ao} --SB_type=!{params.sb_type} --SB_threshold_SNV=!{params.sb_snv} --SB_threshold_indel=!{params.sb_indel} --output_all_SNVs=!{params.all_SNVs} --do_plots=!{!params.no_plots} --plot_labels=!{!params.no_labels} --add_contours=!{!params.no_contours}
 	'''
 }
 //PDF.flatten().filter { it.size() == 0 }.subscribe { it.delete() }
