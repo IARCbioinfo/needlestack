@@ -75,8 +75,6 @@ Needlestack works under most Linux distributions and Apple OS X.
 	needlestack --bed TP53_all.bed --bam_folder BAM/ --fasta_ref 17.fasta.gz
 	```
 	
-	See below for a more complete alias we recommend using.
-	
 6. Update the pipeline
 
 	You can update the nextflow sofware and the pipeline itself simply using:
@@ -102,15 +100,12 @@ The exact same pipeline can be run on your computer or on a HPC cluster, by addi
 process.executor = 'sge'
 ```
 
-Other popular schedulers such as LSF, SLURM, PBS, TORQUE etc. are also compatible. See the nextflow documentation [here](http://www.nextflow.io/docs/latest/executor.html) for more details. Also have a look at the [other parameters for the executors](http://www.nextflow.io/docs/latest/config.html#scope-executor), in particular `queueSize` that defines the number of tasks the executor will handle in a parallel manner.  
-
-The default number of tasks the executor will handle in a parallel is 100, which is certainly too high if you are executing it on your local machine. In this case a good idea is to set it to the number of computing cores your local machine has. Following is an example to create a config file with this information automatically (works on Linux and Mac OS X):
+Other popular schedulers such as LSF, SLURM, PBS, TORQUE etc. are also compatible. See the nextflow documentation [here](http://www.nextflow.io/docs/latest/executor.html) for more details. Also have a look at the [other parameters for the executors](http://www.nextflow.io/docs/latest/config.html#scope-executor), in particular `queueSize` that defines the number of tasks the executor will handle in a parallel manner. Parallelism in needlsestack is managed by splitting the genomic regions in pieces of equal sizes (`--nsplit`). Note that dealing with very large regions can take a large amount of memory, therefore splitting more is more memory-efficient. In nextflow the default number of tasks the executor will handle in a parallel is 100, which is certainly too high if you are executing it on your local machine (as if you use `--nsplit 100` the 100 pieces will run in parallel). In this case a good idea is to set it to the number of computing cores your local machine has. You can add this as an option at run time, by adding for example `-queue-size 4`  in the `nextflow run` command if you have a machine with four cores. You can also permanently set it in the config file, here is a way to automatically obtain and add this information (works on Linux and Mac OS X):
 ```bash
-echo "executor.\$local.queueSize = "`getconf _NPROCESSORS_ONLN` > ~/.nextflow/config
+echo "executor.\$local.queueSize = "`getconf _NPROCESSORS_ONLN` >> ~/.nextflow/config
 ```
 
-Replace `>` by `>>` if you want to add the argument line to an existing nextflow config file.
-
+Parallelism in needlsestack is managed by splitting  
 
 `--bam_folder` and `--fasta_ref` are compulsary. The optional parameters with default values are:
 
@@ -143,9 +138,4 @@ Simply add the parameters you want in the command line like `--min_dp 1000` for 
 
 [Recommended values](http://gatkforums.broadinstitute.org/discussion/5533/strandoddsratio-computation) for SOR strand bias are SOR < 4 for SNVs and < 10 for indels. For RVSB, a good starting point is to filter out variant with RVSB>0.85. There is no hard filter by default as this is easy to do afterward using [bcftools filter](http://samtools.github.io/bcftools/bcftools.html#filter) command.
 
-A good practice is to keep (and publish) the `.nextflow.log` file create during the pipeline process, as it contains useful information for reproducibility (full command line, software versions etc.). You should also add the option `-with-trace` in the `nextflow run` command line that will create an additional `trace.csv` file containing even more information to keep for records. The option `-with-timeline` also creates a nice processes execution timeline file (a web page).
-
-All in all, our recommended alias for the full command line to run needlestack is:
-```bash
-alias needlestack='nextflow run iarcbioinfo/needlestack -with-docker -latest -with-trace --with-timeline'
-```
+A good practice is to keep (and publish) the `.nextflow.log` file create during the pipeline process, as it contains useful information for reproducibility (and for debugging in case of problem). You should keep the `trace.txt` file containing even more information to keep for records. Nextflow also creates a nice processes execution timeline file (a web page) in `timeline.html`.
