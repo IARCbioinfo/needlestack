@@ -9,7 +9,7 @@ git push origin master
 
 gem install github_changelog_generator
 cd ~/needlestack
-github_changelog_generator IARCbioinfo/needlestack --token aebf895df4bda2d9cb235385c698f0171747f956 --bug-labels bug,"minor bug" --no-pull-requests --future-release v0.3b
+github_changelog_generator IARCbioinfo/needlestack --bug-labels bug,"minor bug" --no-pull-requests --future-release v0.3b
 git config --global user.email "follm@iarc.fr"
 git config --global user.name "Circle CI_$CIRCLE_PROJECT_REPONAME_$CIRCLE_BRANCH"
 git add .
