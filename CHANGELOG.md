@@ -6,6 +6,7 @@
 **Implemented enhancements:**
 
 - Add contour lines for a set of qvalues in the plot [\#100](https://github.com/IARCbioinfo/needlestack/issues/100)
+- color points by qvalues in regression plot [\#85](https://github.com/IARCbioinfo/needlestack/issues/85)
 - Add an option to choose output VCF file name \(--out\_vcf?\) [\#81](https://github.com/IARCbioinfo/needlestack/issues/81)
 - Add an option to directly input a region for calling in the command line [\#71](https://github.com/IARCbioinfo/needlestack/issues/71)
 - Change the way we publish new version [\#69](https://github.com/IARCbioinfo/needlestack/issues/69)
@@ -13,9 +14,12 @@
 - Add more tests in CircleCI [\#55](https://github.com/IARCbioinfo/needlestack/issues/55)
 - Remove unnecessary intermediate outputs [\#51](https://github.com/IARCbioinfo/needlestack/issues/51)
 - Improve the bed split method [\#47](https://github.com/IARCbioinfo/needlestack/issues/47)
+- In the absence of a bed file the pipeline should run on the full reference genome [\#39](https://github.com/IARCbioinfo/needlestack/issues/39)
+- Add version numbers in VCF output [\#20](https://github.com/IARCbioinfo/needlestack/issues/20)
 
 **Fixed bugs:**
 
+- error when coverage is null for every bam file [\#99](https://github.com/IARCbioinfo/needlestack/issues/99)
 - Calling doesn't work when a region contains only T in the reference [\#96](https://github.com/IARCbioinfo/needlestack/issues/96)
 - Check that BAM folder contains bam files  [\#66](https://github.com/IARCbioinfo/needlestack/issues/66)
 - Check if the gzi is present if the ref is gz [\#65](https://github.com/IARCbioinfo/needlestack/issues/65)
