@@ -16,8 +16,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#library(qvalue)
-#library(discreteMTP)
 glmrob.nb <- function(y,x,bounding.func='T/T',c.tukey.beta=5,c.tukey.sig=3,c.by.beta=4,weights.on.x='none',
                       minsig=1e-3,maxsig=10,minmu=1e-10,maxmu=1e5,maxit=30,maxit.sig=50,sig.prec=1e-8,tol=1e-6,
                       n_ai.sig.tukey=100,n_xout=10^4,min_coverage=1,min_reads=1,size_min=10,...){
@@ -187,20 +185,9 @@ glmrob.nb <- function(y,x,bounding.func='T/T',c.tukey.beta=5,c.tukey.sig=3,c.by.
     res$coverage <- x
     res$ma_count <- y
     res$coef <- c(sigma=sig,slope=exp(beta1[[1]]))
-    #res$pvalues_bad <- 1-(pnbinom(y,size=1/res$coef[[1]],mu=res$coef[[2]]*x))
-    #res$pvalues_bad[which((y-x*res$coef["slope"])<0)] <- 1
-    #res$qvalues <- qvalue(res$pvalues_bad)$qvalues
     res$pvalues <- dnbinom(y,size=1/res$coef[[1]],mu=res$coef[[2]]*x) + pnbinom(y,size=1/res$coef[[1]],mu=res$coef[[2]]*x,lower.tail = F)
     res$qvalues=p.adjust(res$pvalues,method="BH")
     res$GQ=-log10(res$qvalues)*10
-#     pCDFlist=list()
-#     for (i in 1:length(x)) {
-#       all_y=round(seq(min(min(y),qnbinom(10^-3,mu=x[i]*res$coef[[2]],size=1/res$coef[[1]])),max(max(y),qnbinom(-10^-9,mu=x[i]*res$coef[[2]],size=1/res$coef[[1]],log.p=T)),l=1000))
-#       pCDFlist[[i]]=dnbinom(all_y,mu=x[i]*res$coef[[2]],size=1/res$coef[[1]])+pnbinom(all_y,mu=x[i]*res$coef[[2]],size=1/res$coef[[1]],lower.tail=F)
-#       pCDFlist[[i]]=unique(rev(pCDFlist[[i]]))
-#     }
-#     res$qvalues_DBH=p.discrete.adjust(res$pvalues,pCDFlist,method="DBH")
-#     res$qvalues_DBL=p.discrete.adjust(res$pvalues,pCDFlist,method="DBL")
   } else {stop('Available bounding.func is "T/T"')}
   return(res)
 }
@@ -448,6 +435,8 @@ add_contours=args$add_contours
 
 ############################################################
 
+options("scipen"=100)
+
 indiv_run=read.table("names.txt",stringsAsFactors=F,colClasses = "character")
 indiv_run[,2]=make.unique(indiv_run[,2],sep="_")
 
@@ -528,20 +517,20 @@ write_out("##reference=",fasta_ref)
 write_out("##phasing=none")
 write_out("##filter=\"QVAL > ",GQ_threshold," & ",SB_type,"_SNV < ",SB_threshold_SNV," & ",SB_type,"_INDEL < ",SB_threshold_indel," & min(AO) >= ",min_reads," & min(DP) >= ",min_coverage,"\"")
 
-write_out("##INFO=<ID=TYPE,Number=A,Type=String,Description=\"The type of allele, either snp, ins or del\">")
+write_out("##INFO=<ID=TYPE,Number=1,Type=String,Description=\"The type of allele, either snp, ins or del\">")
 write_out("##INFO=<ID=NS,Number=1,Type=Integer,Description=\"Number of samples with data\">")
 write_out("##INFO=<ID=DP,Number=1,Type=Integer,Description=\"Total read depth\">")
 write_out("##INFO=<ID=RO,Number=1,Type=Integer,Description=\"Total reference allele observation count\">")
-write_out("##INFO=<ID=AO,Number=A,Type=Integer,Description=\"Total alternate allele observation count\">")
-write_out("##INFO=<ID=AF,Number=A,Type=Float,Description=\"Estimated allele frequency in the range [0,1]\">")
+write_out("##INFO=<ID=AO,Number=1,Type=Integer,Description=\"Total alternate allele observation count\">")
+write_out("##INFO=<ID=AF,Number=1,Type=Float,Description=\"Estimated allele frequency in the range [0,1]\">")
 write_out("##INFO=<ID=SRF,Number=1,Type=Integer,Description=\"Total number of reference observations on the forward strand\">")
 write_out("##INFO=<ID=SRR,Number=1,Type=Integer,Description=\"Total number of reference observations on the reverse strand\">")
-write_out("##INFO=<ID=SAF,Number=A,Type=Integer,Description=\"Total number of alternate observations on the forward strand\">")
-write_out("##INFO=<ID=SAR,Number=A,Type=Integer,Description=\"Total number of alternate observations on the reverse strand\">")
+write_out("##INFO=<ID=SAF,Number=1,Type=Integer,Description=\"Total number of alternate observations on the forward strand\">")
+write_out("##INFO=<ID=SAR,Number=1,Type=Integer,Description=\"Total number of alternate observations on the reverse strand\">")
 write_out("##INFO=<ID=SOR,Number=1,Type=Float,Description=\"Total Symmetric Odds Ratio of 2x2 contingency table to detect strand bias\">")
 write_out("##INFO=<ID=RVSB,Number=1,Type=Float,Description=\"Total Relative Variant Strand Bias\">")
-write_out("##INFO=<ID=ERR,Number=A,Type=Float,Description=\"Estimated error rate for the alternate allele\">")
-write_out("##INFO=<ID=SIG,Number=A,Type=Float,Description=\"Estimated overdispersion for the alternate allele\">")
+write_out("##INFO=<ID=ERR,Number=1,Type=Float,Description=\"Estimated error rate for the alternate allele\">")
+write_out("##INFO=<ID=SIG,Number=1,Type=Float,Description=\"Estimated overdispersion for the alternate allele\">")
 write_out("##INFO=<ID=CONT,Number=1,Type=String,Description=\"Context of the reference sequence\">")
 
 write_out("##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">")
@@ -550,7 +539,7 @@ write_out("##FORMAT=<ID=DP,Number=1,Type=Integer,Description=\"Read Depth\">")
 write_out("##FORMAT=<ID=RO,Number=1,Type=Integer,Description=\"Reference allele observation count\">")
 write_out("##FORMAT=<ID=AO,Number=1,Type=Integer,Description=\"Alternate allele observation count\">")
 write_out("##FORMAT=<ID=AF,Number=1,Type=Float,Description=\"Allele fraction of the alternate allele with regard to reference\">")
-write_out("##FORMAT=<ID=SB,Number=4,Type=Integer,Description=\"Per-sample component statistics wto detect strand bias as SRF,SRR,SAF,SAR\">")
+write_out("##FORMAT=<ID=SB,Number=4,Type=Integer,Description=\"Per-sample component statistics to detect strand bias as SRF,SRR,SAF,SAR\">")
 write_out("##FORMAT=<ID=SOR,Number=1,Type=Float,Description=\"Symmetric Odds Ratio of 2x2 contingency table to detect strand bias\">")
 write_out("##FORMAT=<ID=RVSB,Number=1,Type=Float,Description=\"Relative Variant Strand Bias\">")
 

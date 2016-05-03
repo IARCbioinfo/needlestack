@@ -349,8 +349,16 @@ process collect_vcf_result {
 	echo '##perl=v'$(perl -e 'print substr($^V, 1)') >> versions.txt
 	sed -i '/##source=.*/ r versions.txt' header.txt
 
-	# Add all VCF contents
-	grep --no-filename -v '^#' *.vcf >> header.txt
+	# Check if sort command allows sorting in natural order (chr1 chr2 chr10 instead of chr1 chr10 chr2)
+	good_sort_version=$(sort --help | grep 'version-sort' | wc -l)
+	if [ `sort --help | grep -c 'version-sort' ` == 0 ]
+     then
+        sort_ops="-k1,1d"
+     else
+        sort_ops="-k1,1V"
+     fi
+    	# Add all VCF contents and sort
+	grep --no-filename -v '^#' *.vcf | LC_ALL=C sort -t '	' $sort_ops -k2,2n >> header.txt
 	mv header.txt !{out_vcf}
 	'''
 }
