@@ -48,7 +48,7 @@ test:
       rm -rf work/ .nextflow.* trace.txt* timeline.html* BAM/all_variants.vcf BAM/PDF/
     - | #test on a null coverage region
       cd ~/NGS_data_test/1000G_CEU_TP53/
-      nextflow run ~/needlestack/needlestack.nf -with-docker iarcbioinfo/needlestack --region 7580000-7580004--nsplit 4 --fasta_ref 17.fasta.gz --bam_folder BAM/ 
+      nextflow run ~/needlestack/needlestack.nf -with-docker iarcbioinfo/needlestack --region 17:7580000-7580004--nsplit 4 --fasta_ref 17.fasta.gz --bam_folder BAM/ 
       cp BAM/all_variants.vcf results/$CIRCLE_BRANCH/test6.vcf 
       mkdir -p results/$CIRCLE_BRANCH/PDF/test6
       cp BAM/PDF/*.pdf results/$CIRCLE_BRANCH/PDF/test6/
