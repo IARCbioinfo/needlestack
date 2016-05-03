@@ -20,6 +20,7 @@
 
 **Fixed bugs:**
 
+- VCF files have to be sorted [\#110](https://github.com/IARCbioinfo/needlestack/issues/110)
 - Sometimes large number in VCF files are written in scientific notations [\#109](https://github.com/IARCbioinfo/needlestack/issues/109)
 - error when coverage is null for every bam file [\#99](https://github.com/IARCbioinfo/needlestack/issues/99)
 - Calling doesn't work when a region contains only T in the reference [\#96](https://github.com/IARCbioinfo/needlestack/issues/96)
