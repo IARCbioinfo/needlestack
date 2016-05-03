@@ -48,14 +48,14 @@ params.no_contours = false // add contours to the plots and plot min(AF)~DP
 
 if (params.help) {
     log.info ''
-    log.info '-------------------------------------------------------'
-    log.info 'NEEDLESTACK v0.3: A MULTI-SAMPLE SOMATIC VARIANT CALLER'
-    log.info '-------------------------------------------------------'
+    log.info '--------------------------------------------------------'
+    log.info 'NEEDLESTACK v1.0b: A MULTI-SAMPLE SOMATIC VARIANT CALLER'
+    log.info '--------------------------------------------------------'
     log.info 'Copyright (C) 2015 Matthieu Foll and Tiffany Delhomme'
     log.info 'This program comes with ABSOLUTELY NO WARRANTY; for details see LICENSE.txt'
     log.info 'This is free software, and you are welcome to redistribute it'
     log.info 'under certain conditions; see LICENSE.txt for details.'
-    log.info '-------------------------------------------------------'
+    log.info '--------------------------------------------------------'
     log.info ''
     log.info 'Usage: '
     log.info '    nextflow run iarcbioinfo/needlestack [-with-docker] --bed bedfile.bed --bam_folder BAM/ --fasta_ref reference.fasta [other options]'
@@ -140,14 +140,14 @@ if(params.region){
 /* Software information */
 
 log.info ''
-log.info '-------------------------------------------------------'
-log.info 'NEEDLESTACK v0.3: A MULTI-SAMPLE SOMATIC VARIANT CALLER'
-log.info '-------------------------------------------------------'
+log.info '--------------------------------------------------------'
+log.info 'NEEDLESTACK v1.0b: A MULTI-SAMPLE SOMATIC VARIANT CALLER'
+log.info '--------------------------------------------------------'
 log.info 'Copyright (C) 2015 Matthieu Foll and Tiffany Delhomme'
 log.info 'This program comes with ABSOLUTELY NO WARRANTY; for details see LICENSE.txt'
 log.info 'This is free software, and you are welcome to redistribute it'
 log.info 'under certain conditions; see LICENSE.txt for details.'
-log.info '-------------------------------------------------------'
+log.info '--------------------------------------------------------'
 log.info "Input BAM folder (--bam_folder)                                 : ${params.bam_folder}"
 log.info "Reference in fasta format (--fasta_ref)                         : ${params.fasta_ref}"
 log.info "Intervals for calling (--bed)                                   : ${input_region}"
