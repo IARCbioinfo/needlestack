@@ -120,13 +120,13 @@ echo "executor.\$local.queueSize = "`getconf _NPROCESSORS_ONLN` >> ~/.nextflow/c
 | base_qual | 20 | Min base quality (passed to samtools) |
 | max_DP | 30000 | Downsample coverage per sample (passed to samtools) |
 | use_file_name |   | Put this argument to use the bam file names as sample names. By default the sample name is extracted from the bam file SM tag. |
-| all_SNVs |   | Put this argument to output all SNVs, even when no variant is detected |
+| all_SNVs |   | Put this argument to output all SNVs, even when no variant is detected. Note that positions with zero coverage for all samples might still be missing depending on how the region split is performed |
 | no_plots |   | Put this argument to remove pdf plots of regressions from the output |
 | no_labels |   | Put this argument for not labeling the outliers on regression plots |
 | no_indels |   | Put this argument to do not perform the variant calling on insertions and deletions |
-| no_contours |   | Put this argument to do not plot qvalues contours (for qvalue threshold={10,30,50,70,100} by default) and do not plot minimum detectable allelic fraction in function of coverage. |
+| no_contours |   | Put this argument to do not plot qvalues contours (for qvalue threshold={10,30,50,70,100} by default) and do not plot minimum detectable allelic fraction in function of coverage |
 | out_folder | --bam_folder | Output folder, by default equals to the input bam folder |
-| out_vcf | all_variants.vcf | File name of final VFC. |
+| out_vcf | all_variants.vcf | File name of final VCF |
 | bed |   | BED file containing a list of regions (or positions) where needlestack should be run |
 | region |   | A region in format CHR:START-END where calling should be done |
 
