@@ -5,6 +5,7 @@
 
 **Implemented enhancements:**
 
+- Change the number of entry in the INFO and FORMAT VCF fields [\#108](https://github.com/IARCbioinfo/needlestack/issues/108)
 - Add contour lines for a set of qvalues in the plot [\#100](https://github.com/IARCbioinfo/needlestack/issues/100)
 - color points by qvalues in regression plot [\#85](https://github.com/IARCbioinfo/needlestack/issues/85)
 - Add an option to choose output VCF file name \(--out\_vcf?\) [\#81](https://github.com/IARCbioinfo/needlestack/issues/81)
@@ -19,6 +20,7 @@
 
 **Fixed bugs:**
 
+- Sometimes large number in VCF files are written in scientific notations [\#109](https://github.com/IARCbioinfo/needlestack/issues/109)
 - error when coverage is null for every bam file [\#99](https://github.com/IARCbioinfo/needlestack/issues/99)
 - Calling doesn't work when a region contains only T in the reference [\#96](https://github.com/IARCbioinfo/needlestack/issues/96)
 - Check that BAM folder contains bam files  [\#66](https://github.com/IARCbioinfo/needlestack/issues/66)
