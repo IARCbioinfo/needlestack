@@ -22,38 +22,29 @@ RUN apt-get clean && \
 	libncurses5-dev \
 	ca-certificates \
 	dialog \
+	wget \
+	bzip2 \
 	apt-utils && \
 
-	# Install bedtools 
-	git clone https://github.com/arq5x/bedtools2.git && \
+	# Install bedtools specific version manually
+	wget https://github.com/arq5x/bedtools2/releases/download/v2.25.0/bedtools-2.25.0.tar.gz && \
+	tar -zxf bedtools-2.25.0.tar.gz && \
 	cd bedtools2 &&  \
 	make && \
 	make install && \
 	cd .. && \
-	rm -rf bedtools2 && \
+	rm -rf bedtools2 bedtools-2.25.0.tar.gz && \
 	
-	# Install vcflib 
-	git clone --recursive git://github.com/ekg/vcflib.git && \
-	cd vcflib &&  \
-	make && \
-	cp bin/vcfoverlay /usr/local/bin/ && \
-	cd .. && \
-	rm -rf vcflib && \
-
-	# Install samtools from github repos (htslib needed first)
-	git clone git://github.com/samtools/htslib.git && \
-	cd htslib && \
+	# Install samtools specific version manually
+	wget https://github.com/samtools/samtools/releases/download/1.3.1/samtools-1.3.1.tar.bz2 && \
+	tar -jxf samtools-1.3.1.tar.bz2 && \
+	cd samtools-1.3.1 && \
 	make && \
 	make install && \
 	cd .. && \
-	git clone git://github.com/samtools/samtools.git && \
-	cd samtools && \
-	make && \
-	make install && \
-	cd .. && \
-	rm -rf htslib samtools && \
+	rm -rf samtools-1.3.1 samtools-1.3.1.tar.bz2 && \
 
-	# Install R and package qvalue from bioconductor 
+	# Install R 
 	DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y r-base && \
 
 	# Remove unnecessary dependences
@@ -66,6 +57,8 @@ RUN apt-get clean && \
 	libncurses5-dev \
 	dialog \
 	apt-utils \
+	wget \
+	bzip2 \
 	software-properties-common && \
 
 	# Clean

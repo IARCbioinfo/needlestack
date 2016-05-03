@@ -23,14 +23,6 @@ RUN 	apk --update add g++ make git python perl zlib-dev ncurses-dev ca-certifica
 	make install && \
 	cd .. && \
 	rm -rf bedtools2 && \
-	
-	# Install vcflib 
-	git clone --recursive git://github.com/ekg/vcflib.git && \
-	cd vcflib &&  \
-	make CXX='g++ -D__off64_t=off64_t' &&  \
-	cp bin/vcfoverlay /usr/local/bin/ && \
-	cd .. && \
-	rm -rf vcflib && \
 
 	# Install samtools from github repos (htslib needed first)
 	git clone git://github.com/samtools/htslib.git && \
