@@ -16,8 +16,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#library(qvalue)
-#library(discreteMTP)
 glmrob.nb <- function(y,x,bounding.func='T/T',c.tukey.beta=5,c.tukey.sig=3,c.by.beta=4,weights.on.x='none',
                       minsig=1e-3,maxsig=10,minmu=1e-10,maxmu=1e5,maxit=30,maxit.sig=50,sig.prec=1e-8,tol=1e-6,
                       n_ai.sig.tukey=100,n_xout=10^4,min_coverage=1,min_reads=1,size_min=10,...){
@@ -187,20 +185,9 @@ glmrob.nb <- function(y,x,bounding.func='T/T',c.tukey.beta=5,c.tukey.sig=3,c.by.
     res$coverage <- x
     res$ma_count <- y
     res$coef <- c(sigma=sig,slope=exp(beta1[[1]]))
-    #res$pvalues_bad <- 1-(pnbinom(y,size=1/res$coef[[1]],mu=res$coef[[2]]*x))
-    #res$pvalues_bad[which((y-x*res$coef["slope"])<0)] <- 1
-    #res$qvalues <- qvalue(res$pvalues_bad)$qvalues
     res$pvalues <- dnbinom(y,size=1/res$coef[[1]],mu=res$coef[[2]]*x) + pnbinom(y,size=1/res$coef[[1]],mu=res$coef[[2]]*x,lower.tail = F)
     res$qvalues=p.adjust(res$pvalues,method="BH")
     res$GQ=-log10(res$qvalues)*10
-#     pCDFlist=list()
-#     for (i in 1:length(x)) {
-#       all_y=round(seq(min(min(y),qnbinom(10^-3,mu=x[i]*res$coef[[2]],size=1/res$coef[[1]])),max(max(y),qnbinom(-10^-9,mu=x[i]*res$coef[[2]],size=1/res$coef[[1]],log.p=T)),l=1000))
-#       pCDFlist[[i]]=dnbinom(all_y,mu=x[i]*res$coef[[2]],size=1/res$coef[[1]])+pnbinom(all_y,mu=x[i]*res$coef[[2]],size=1/res$coef[[1]],lower.tail=F)
-#       pCDFlist[[i]]=unique(rev(pCDFlist[[i]]))
-#     }
-#     res$qvalues_DBH=p.discrete.adjust(res$pvalues,pCDFlist,method="DBH")
-#     res$qvalues_DBL=p.discrete.adjust(res$pvalues,pCDFlist,method="DBL")
   } else {stop('Available bounding.func is "T/T"')}
   return(res)
 }
@@ -447,6 +434,8 @@ plot_labels=args$plot_labels
 add_contours=args$add_contours
 
 ############################################################
+
+options("scipen"=100)
 
 indiv_run=read.table("names.txt",stringsAsFactors=F,colClasses = "character")
 indiv_run[,2]=make.unique(indiv_run[,2],sep="_")
