@@ -309,9 +309,10 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
     xi=max(rob_nb_res$coverage)
     yi1=qnbinom(p=0.99, size=1/rob_nb_res$coef[[1]], mu=rob_nb_res$coef[[2]]*xi)
     yi2=qnbinom(p=0.01, size=1/rob_nb_res$coef[[1]], mu=rob_nb_res$coef[[2]]*xi)
-    abline(a=0, b=yi1/xi, lwd=2, lty=3, col="blue")
-    abline(a=0, b=yi2/xi, lwd=2, lty=3, col="blue")
-    abline(a=0, b=rob_nb_res$coef[[2]], col="blue")
+    if(max(rob_nb_res$coverage)>1000) { DP_for_IC = round(seq(0,max(rob_nb_res$coverage),length=1000)) } else { DP_for_IC = seq(0,max(rob_nb_res$coverage),by=1) }
+    lines(DP_for_IC,qnbinom(p=0.99, size=1/rob_nb_res$coef[[1]], mu=rob_nb_res$coef[[2]]*DP_for_IC),col="black",lty=3,lwd=2)
+    lines(DP_for_IC,qnbinom(p=0.01, size=1/rob_nb_res$coef[[1]], mu=rob_nb_res$coef[[2]]*DP_for_IC),col="black",lty=3,lwd=2)
+    abline(a=0, b=rob_nb_res$coef[[2]], col="black")
     #### plot zoom on max qvalue if add_contours, otherwise on 2*IC
     if(!add_contours) ylim_zoom_cor = 2*yi1
     plot(rob_nb_res$coverage, rob_nb_res$ma_count,
@@ -335,9 +336,9 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
       text(rob_nb_res$coverage[which(rob_nb_res$qvalues<=qthreshold)], rob_nb_res$ma_count[which(rob_nb_res$qvalues<=qthreshold)],
          labels=names[which(rob_nb_res$qvalues<=qthreshold)], cex= 0.6, pos=1)
     }
-    abline(a=0, b=yi1/xi, lwd=2, lty=3, col="blue")
-    abline(a=0, b=yi2/xi, lwd=2, lty=3, col="blue")
-    abline(a=0, b=rob_nb_res$coef[[2]], col="blue")
+    lines(DP_for_IC,qnbinom(p=0.99, size=1/rob_nb_res$coef[[1]], mu=rob_nb_res$coef[[2]]*DP_for_IC),col="black",lty=3,lwd=2)
+    lines(DP_for_IC,qnbinom(p=0.01, size=1/rob_nb_res$coef[[1]], mu=rob_nb_res$coef[[2]]*DP_for_IC),col="black",lty=3,lwd=2)
+    abline(a=0, b=rob_nb_res$coef[[2]], col="black")
     plot_palette()  
     
     logqvals=log10(rob_nb_res$qvalues)
