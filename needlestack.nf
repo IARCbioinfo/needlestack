@@ -116,13 +116,13 @@ if (file(params.bam_folder).exists()) {
 }
 assert (params.min_dp > 0) : "minimum coverage must be higher than 0 (--min_dp)"
 assert (params.max_DP > 1) : "maximum coverage before downsampling must be higher than 1 (--max_DP)"
-assert (params.min_ao >= 0) : "minimum alternative reads must be higher or equals to 0 (--min_ao)"
+assert (params.min_ao >= 0) : "minimum alternative reads must be higher than or equal to 0 (--min_ao)"
 assert (params.nsplit > 0) : "number of regions to split must be higher than 0 (--nsplit)"
-assert (params.min_qval > 0) : "minimum Phred-scale qvalue must be higher than 0 (--min_qval)"
+assert (params.min_qval >= 0) : "minimum Phred-scale qvalue must be higher than or equal to 0 (--min_qval)"
 assert (params.sb_snv > 0 && params.sb_snv < 101) : "strand bias for SNVs must be in [0,100]"
 assert (params.sb_indel > 0 && params.sb_indel < 101) : "strand bias for indels must be in [0,100]"
-assert (params.map_qual >= 0) : "minimum mapping quality (samtools) must be higher than or equals to 0"
-assert (params.base_qual >= 0) : "minimum base quality (samtools) must be higher than or equals to 0"
+assert (params.map_qual >= 0) : "minimum mapping quality (samtools) must be higher than or equal to 0"
+assert (params.base_qual >= 0) : "minimum base quality (samtools) must be higher than or equal to 0"
 
 sample_names = params.use_file_name ? "FILE" : "BAM"
 out_vcf = params.out_vcf ? params.out_vcf : "all_variants.vcf"
