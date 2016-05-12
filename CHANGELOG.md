@@ -1,10 +1,11 @@
 # Change Log
 
-## [v1.0](https://github.com/IARCbioinfo/needlestack/tree/v1.0) (2016-05-10)
+## [v1.0](https://github.com/IARCbioinfo/needlestack/tree/v1.0) (2016-05-12)
 [Full Changelog](https://github.com/IARCbioinfo/needlestack/compare/v0.3...v1.0)
 
 **Fixed bugs:**
 
+- Let min\_qval be equal to 0 [\#119](https://github.com/IARCbioinfo/needlestack/issues/119)
 - plot improved error rate confidence interval  [\#117](https://github.com/IARCbioinfo/needlestack/issues/117)
 
 ## [v0.3](https://github.com/IARCbioinfo/needlestack/tree/v0.3) (2016-05-03)
