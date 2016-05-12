@@ -305,17 +305,15 @@ process R_regression {
 	needlestack.r --out_file=!{region_tag}.vcf --fasta_ref=!{fasta_ref} --GQ_threshold=!{params.min_qval} --min_coverage=!{params.min_dp} --min_reads=!{params.min_ao} --SB_type=!{params.sb_type} --SB_threshold_SNV=!{params.sb_snv} --SB_threshold_indel=!{params.sb_indel} --output_all_SNVs=!{params.all_SNVs} --do_plots=!{!params.no_plots} --plot_labels=!{!params.no_labels} --add_contours=!{!params.no_contours}
 	'''
 }
-//PDF.flatten().filter { it.size() == 0 }.subscribe { it.delete() }
 
 // merge all vcf files in one big file
-vcf_list = vcf.toList()
 process collect_vcf_result {
 
 	publishDir  params.out_folder, mode: 'move'
 
 	input:
 	val out_vcf
-	file '*.vcf' from vcf_list
+	file '*.vcf' from vcf.toList()
         file fasta_ref_fai        
  
         when:
