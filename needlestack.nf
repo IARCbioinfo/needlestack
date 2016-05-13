@@ -28,8 +28,6 @@ params.min_dp = 50 // minimum coverage in at least one sample to consider a site
 params.min_ao = 5 // minimum number of non-ref reads in at least one sample to consider a site
 params.nsplit = 1 // split the positions for calling in nsplit pieces and run in parallel
 params.min_qval = 50 // qvalue in Phred scale to consider a variant
-// http://gatkforums.broadinstitute.org/discussion/5533/strandoddsratio-computation filter out SOR > 4 for SNVs and > 10 for indels
-// filter out RVSB > 0.85 (maybe less stringent for SNVs)
 params.sb_type = "SOR" // strand bias measure to be used: "SOR" or "RVSB"
 params.sb_snv = 100 // strand bias threshold for snv
 params.sb_indel = 100 // strand bias threshold for indels
@@ -108,11 +106,11 @@ if (fasta_ref.exists() && params.fasta_ref.tokenize('.')[-1] == 'gz') {assert fa
 try { assert file(params.bam_folder).exists() : "\n WARNING : input BAM folder not located in execution directory" } catch (AssertionError e) { println e.getMessage() }
 assert file(params.bam_folder).listFiles().findAll { it.name ==~ /.*bam/ }.size() > 0 : "BAM folder contains no BAM"
 if (file(params.bam_folder).exists()) {
-  if (file(params.bam_folder).listFiles().findAll { it.name ==~ /.*bam/ }.size() < 10) {println "\n ERROR : BAM folder contains less than 10 BAM, exit."; System.exit(0)}
-    else if (file(params.bam_folder).listFiles().findAll { it.name ==~ /.*bam/ }.size() < 20) {println "\n WARNING : BAM folder contains less than 20 BAM, method accuracy not warranted."}
-  bamID = file(params.bam_folder).listFiles().findAll { it.name ==~ /.*bam/ }.collect { it.getName() }.collect { it.replace('.bam','') }
-  baiID = file(params.bam_folder).listFiles().findAll { it.name ==~ /.*bam.bai/ }.collect { it.getName() }.collect { it.replace('.bam.bai','') }
-  assert baiID.containsAll(bamID) : "check that every bam file has an index (.bam.bai)"
+    if (file(params.bam_folder).listFiles().findAll { it.name ==~ /.*bam/ }.size() < 10) { println "\n ERROR : BAM folder contains less than 10 BAM, exit."; System.exit(0) }
+    else if (file(params.bam_folder).listFiles().findAll { it.name ==~ /.*bam/ }.size() < 20) { println "\n WARNING : BAM folder contains less than 20 BAM, method accuracy not warranted." }
+    bamID = file(params.bam_folder).listFiles().findAll { it.name ==~ /.*bam/ }.collect { it.getName() }.collect { it.replace('.bam','') }
+    baiID = file(params.bam_folder).listFiles().findAll { it.name ==~ /.*bam.bai/ }.collect { it.getName() }.collect { it.replace('.bam.bai','') }
+    assert baiID.containsAll(bamID) : "check that every bam file has an index (.bam.bai)"
 }
 assert (params.min_dp > 0) : "minimum coverage must be higher than 0 (--min_dp)"
 assert (params.max_DP > 1) : "maximum coverage before downsampling must be higher than 1 (--max_DP)"
@@ -128,17 +126,16 @@ sample_names = params.use_file_name ? "FILE" : "BAM"
 out_vcf = params.out_vcf ? params.out_vcf : "all_variants.vcf"
 
 /* manage input positions to call (bed or region or whole-genome) */
-if(params.region){
+if (params.region) {
     input_region = 'region'
-  } else if (params.bed){
+} else if (params.bed) {
     input_region = 'bed'
     bed = file(params.bed)
-  } else {
+} else {
     input_region = 'whole_genome'
-  }
+}
 
 /* Software information */
-
 log.info ''
 log.info '--------------------------------------------------------'
 log.info 'NEEDLESTACK v1.0b: A MULTI-SAMPLE SOMATIC VARIANT CALLER'
@@ -176,40 +173,40 @@ bai = Channel.fromPath( params.bam_folder+'/*.bam.bai' ).toList()
 
 /* Building the bed file where calling would be done */
 process bed {
-  output:
-  file "temp.bed" into outbed
+    output:
+    file "temp.bed" into outbed
 
-  script:
-  if (input_region == 'region')
-  """
-  echo $params.region | sed -e 's/[:|-]/\t/g' > temp.bed
-  """
+    script:
+    if (input_region == 'region')
+    """
+    echo $params.region | sed -e 's/[:|-]/\t/g' > temp.bed
+    """
 
-  else if (input_region == 'bed')
-  """
-  ln -s $bed temp.bed
-  """
+    else if (input_region == 'bed')
+    """
+    ln -s $bed temp.bed
+    """
 
-  else if (input_region == 'whole_genome')
-  """
-  cat $fasta_ref_fai | awk '{print \$1"\t"0"\t"\$2 }' > temp.bed
-  """
+    else if (input_region == 'whole_genome')
+    """
+    cat $fasta_ref_fai | awk '{print \$1"\t"0"\t"\$2 }' > temp.bed
+    """
 }
 
 
 /* split bed file into nsplit regions */
 process split_bed {
 
-  input:
-  file bed from outbed
+    input:
+    file bed from outbed
 
-	output:
-	file '*_regions' into split_bed mode flatten
+    output:
+    file '*_regions' into split_bed mode flatten
 
-	shell:
-	'''
-	grep -v '^track' !{bed} | sort -k1,1 -k2,2n | bedtools merge -i stdin | awk '{print $1" "$2" "$3}' | bed_cut.r !{params.nsplit}
-	'''
+    shell:
+    '''
+    grep -v '^track' !{bed} | sort -k1,1 -k2,2n | bedtools merge -i stdin | awk '{print $1" "$2" "$3}' | bed_cut.r !{params.nsplit}
+    '''
 }
 
 // create mpileup file + sed to have "*" when there is no coverage (otherwise pileup2baseindel.pl is unhappy)
@@ -217,142 +214,142 @@ process samtools_mpileup {
 
      tag { region_tag }
 
-     input:
-     file split_bed
-	file bam
-	file bai
-	file fasta_ref
-	file fasta_ref_fai
-	file fasta_ref_gzi
+    input:
+    file split_bed
+    file bam
+    file bai
+    file fasta_ref
+    file fasta_ref_fai
+    file fasta_ref_gzi
 
-     output:
-     set val(region_tag), file("${region_tag}.pileup") into pileup
+    output:
+    set val(region_tag), file("${region_tag}.pileup") into pileup
 
- 	shell:
- 	region_tag = split_bed.baseName
-	'''
-	while read bed_line; do
-		samtools mpileup --fasta-ref !{fasta_ref} --region $bed_line --ignore-RG --min-BQ !{params.base_qual} --min-MQ !{params.map_qual} --max-idepth 1000000 --max-depth !{params.max_DP} !{bam} | sed 's/		/	*	*/g' >> !{region_tag}.pileup
-	done < !{split_bed}
-	'''
+    shell:
+    region_tag = split_bed.baseName
+    '''
+    while read bed_line; do
+        samtools mpileup --fasta-ref !{fasta_ref} --region $bed_line --ignore-RG --min-BQ !{params.base_qual} --min-MQ !{params.map_qual} --max-idepth 1000000 --max-depth !{params.max_DP} !{bam} | sed 's/		/	*	*/g' >> !{region_tag}.pileup
+    done < !{split_bed}
+    '''
 }
 
 // split mpileup file and convert to table
 process mpileup2table {
 
-     tag { region_tag }
+    tag { region_tag }
 
-     input:
-     set val(region_tag), file("${region_tag}.pileup") from pileup.filter { tag, file -> !file.isEmpty() }
-     file bam
-     val sample_names
+    input:
+    set val(region_tag), file("${region_tag}.pileup") from pileup.filter { tag, file -> !file.isEmpty() }
+    file bam
+    val sample_names
 
-     output:
-     set val(region_tag), file('sample*.txt'), file('names.txt') into table
+    output:
+    set val(region_tag), file('sample*.txt'), file('names.txt') into table
 
- 	shell:
-	if ( params.no_indels ) {
-		indel_par = "-no-indels"
-	} else {
-    		indel_par = " "
-	}
- 	'''
- 	nb_pos=$(wc -l < !{region_tag}.pileup)
-	if [ $nb_pos -gt 0 ]; then
-		# split and convert pileup file
-		pileup2baseindel.pl -i !{region_tag}.pileup !{indel_par}
-		# rename the output (the converter call files sample{i}.txt)
-		i=1
-		for cur_bam in !{bam}
-		do
-			if [ "!{sample_names}" == "FILE" ]; then
-				# use bam file name as sample name
-				bam_file_name="${cur_bam%.*}"
-				# remove whitespaces from name
-				SM="$(echo -e "${bam_file_name}" | tr -d '[[:space:]]')"
-			else
-				# extract sample name from bam file read group info field
-				SM=$(samtools view -H $cur_bam | grep @RG | head -1 | sed "s/.*SM:\\([^\\t]*\\).*/\\1/" | tr -d '[:space:]')
-			fi
-			printf "sample$i\\t$SM\\n" >> names.txt
-			i=$((i+1))
-		done
-	fi
-	'''
+    shell:
+    if ( params.no_indels ) {
+        indel_par = "-no-indels"
+    } else {
+        indel_par = " "
+    }
+    '''
+    nb_pos=$(wc -l < !{region_tag}.pileup)
+    if [ $nb_pos -gt 0 ]; then
+        # split and convert pileup file
+        pileup2baseindel.pl -i !{region_tag}.pileup !{indel_par}
+        # rename the output (the converter call files sample{i}.txt)
+        i=1
+        for cur_bam in !{bam}
+        do
+            if [ "!{sample_names}" == "FILE" ]; then
+                # use bam file name as sample name
+                bam_file_name="${cur_bam%.*}"
+                # remove whitespaces from name
+                SM="$(echo -e "${bam_file_name}" | tr -d '[[:space:]]')"
+            else
+                # extract sample name from bam file read group info field
+                SM=$(samtools view -H $cur_bam | grep @RG | head -1 | sed "s/.*SM:\\([^\\t]*\\).*/\\1/" | tr -d '[:space:]')
+            fi
+            printf "sample$i\\t$SM\\n" >> names.txt
+            i=$((i+1))
+        done
+    fi
+    '''
 }
 
 // perform regression in R
 process R_regression {
 
-     publishDir  params.out_folder+'/PDF/', mode: 'move', pattern: "*[ATCG-].pdf"
+    publishDir  params.out_folder+'/PDF/', mode: 'move', pattern: "*[ATCG-].pdf"
 
-     tag { region_tag }
+    tag { region_tag }
 
-     input:
-     set val(region_tag), file(table_file), file('names.txt') from table
-     file fasta_ref
-     file fasta_ref_fai
-     file fasta_ref_gzi
+    input:
+    set val(region_tag), file(table_file), file('names.txt') from table
+    file fasta_ref
+    file fasta_ref_fai
+    file fasta_ref_gzi
 
-     output:
-     file "${region_tag}.vcf" into vcf
-     file '*.pdf' into PDF
+    output:
+    file "${region_tag}.vcf" into vcf
+    file '*.pdf' into PDF
 
- 	shell:
- 	'''
- 	# create a dummy empty pdf to avoid an error in the process when no variant is found
- 	touch !{region_tag}_empty.pdf
-	needlestack.r --out_file=!{region_tag}.vcf --fasta_ref=!{fasta_ref} --GQ_threshold=!{params.min_qval} --min_coverage=!{params.min_dp} --min_reads=!{params.min_ao} --SB_type=!{params.sb_type} --SB_threshold_SNV=!{params.sb_snv} --SB_threshold_indel=!{params.sb_indel} --output_all_SNVs=!{params.all_SNVs} --do_plots=!{!params.no_plots} --plot_labels=!{!params.no_labels} --add_contours=!{!params.no_contours}
-	'''
+    shell:
+    '''
+    # create a dummy empty pdf to avoid an error in the process when no variant is found
+    touch !{region_tag}_empty.pdf
+    needlestack.r --out_file=!{region_tag}.vcf --fasta_ref=!{fasta_ref} --GQ_threshold=!{params.min_qval} --min_coverage=!{params.min_dp} --min_reads=!{params.min_ao} --SB_type=!{params.sb_type} --SB_threshold_SNV=!{params.sb_snv} --SB_threshold_indel=!{params.sb_indel} --output_all_SNVs=!{params.all_SNVs} --do_plots=!{!params.no_plots} --plot_labels=!{!params.no_labels} --add_contours=!{!params.no_contours}
+    '''
 }
 
 // merge all vcf files in one big file
 process collect_vcf_result {
 
-	publishDir  params.out_folder, mode: 'move'
+    publishDir  params.out_folder, mode: 'move'
 
-	input:
-	val out_vcf
-	file all_vcf from vcf.toList()
-        file fasta_ref_fai        
+    input:
+    val out_vcf
+    file all_vcf from vcf.toList()
+    file fasta_ref_fai        
 
-	output:
-	file "$out_vcf" into big_vcf
+    output:
+    file "$out_vcf" into big_vcf
 
-	when:
- 	all_vcf.size()>0
+    when:
+    all_vcf.size()>0
 
-	shell:
-	'''
-	# Extract the header from the first VCF
-	grep '^#' !{all_vcf[0]} > header.txt
+    shell:
+    '''
+    # Extract the header from the first VCF
+    grep '^#' !{all_vcf[0]} > header.txt
 
-	# Add contigs in the VCF header
-	cat !{fasta_ref_fai} | cut -f1,2 | sed -e 's/^/##contig=<ID=/' -e 's/[	 ][	 ]*/,length=/' -e 's/$/>/' > contigs.txt
-	sed -i '/##reference=.*/ r contigs.txt' header.txt
+    # Add contigs in the VCF header
+    cat !{fasta_ref_fai} | cut -f1,2 | sed -e 's/^/##contig=<ID=/' -e 's/[	 ][	 ]*/,length=/' -e 's/$/>/' > contigs.txt
+    sed -i '/##reference=.*/ r contigs.txt' header.txt
 
-	# Add version numbers in the VCF header
-	echo '##command=!{workflow.commandLine}' > versions.txt
-	echo '##repository=!{workflow.repository}' >> versions.txt
-	echo '##commitId=!{workflow.commitId}' >> versions.txt
-	echo '##revision=!{workflow.revision}' >> versions.txt
-	echo '##container=!{workflow.container}' >> versions.txt
-	echo '##nextflow=v!{workflow.nextflow.version}' >> versions.txt
-	echo '##samtools='$(samtools --version | tr '\n' ' ') >> versions.txt
-	echo '##bedtools='$(bedtools --version) >> versions.txt
-	echo '##Rscript='$(Rscript --version 2>&1) >> versions.txt
-	echo '##perl=v'$(perl -e 'print substr($^V, 1)') >> versions.txt
-	sed -i '/##source=.*/ r versions.txt' header.txt
+    # Add version numbers in the VCF header
+    echo '##command=!{workflow.commandLine}' > versions.txt
+    echo '##repository=!{workflow.repository}' >> versions.txt
+    echo '##commitId=!{workflow.commitId}' >> versions.txt
+    echo '##revision=!{workflow.revision}' >> versions.txt
+    echo '##container=!{workflow.container}' >> versions.txt
+    echo '##nextflow=v!{workflow.nextflow.version}' >> versions.txt
+    echo '##samtools='$(samtools --version | tr '\n' ' ') >> versions.txt
+    echo '##bedtools='$(bedtools --version) >> versions.txt
+    echo '##Rscript='$(Rscript --version 2>&1) >> versions.txt
+    echo '##perl=v'$(perl -e 'print substr($^V, 1)') >> versions.txt
+    sed -i '/##source=.*/ r versions.txt' header.txt
 
-	# Check if sort command allows sorting in natural order (chr1 chr2 chr10 instead of chr1 chr10 chr2)
-	if [ `sort --help | grep -c 'version-sort' ` == 0 ]
-     then
+    # Check if sort command allows sorting in natural order (chr1 chr2 chr10 instead of chr1 chr10 chr2)
+    if [ `sort --help | grep -c 'version-sort' ` == 0 ]
+    then
         sort_ops="-k1,1d"
-     else
+    else
         sort_ops="-k1,1V"
-     fi
-    	# Add all VCF contents and sort
-	grep --no-filename -v '^#' !{all_vcf} | LC_ALL=C sort -t '	' $sort_ops -k2,2n >> header.txt
-	mv header.txt !{out_vcf}
-	'''
+    fi
+    # Add all VCF contents and sort
+    grep --no-filename -v '^#' !{all_vcf} | LC_ALL=C sort -t '	' $sort_ops -k2,2n >> header.txt
+    mv header.txt !{out_vcf}
+    '''
 }
