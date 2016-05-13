@@ -323,8 +323,10 @@ process collect_vcf_result {
 
     shell:
     '''
+     mkdir VCF
+    mv *.vcf VCF
     # Extract the header from the first VCF
-    grep '^#' !{all_vcf[0]} > header.txt
+    grep '^#' VCF/!{all_vcf[0]} > header.txt
 
     # Add contigs in the VCF header
     cat !{fasta_ref_fai} | cut -f1,2 | sed -e 's/^/##contig=<ID=/' -e 's/[	 ][	 ]*/,length=/' -e 's/$/>/' > contigs.txt
@@ -351,7 +353,7 @@ process collect_vcf_result {
         sort_ops="-k1,1V"
     fi
     # Add all VCF contents and sort
-    grep --no-filename -v '^#' !{all_vcf} | LC_ALL=C sort -t '	' $sort_ops -k2,2n >> header.txt
+    grep --no-filename -v '^#' VCF/*.vcf | LC_ALL=C sort -t '	' $sort_ops -k2,2n >> header.txt
     mv header.txt !{out_vcf}
     '''
 }
