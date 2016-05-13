@@ -176,21 +176,21 @@ process bed {
     output:
     file "temp.bed" into outbed
 
-    script:
+    shell:
     if (input_region == 'region')
-    """
-    echo $params.region | sed -e 's/[:|-]/\t/g' > temp.bed
-    """
+    '''
+    echo !{params.region} | sed -e 's/[:|-]/	/g' > temp.bed
+    '''
 
     else if (input_region == 'bed')
-    """
-    ln -s $bed temp.bed
-    """
+    '''
+    ln -s !{bed} temp.bed
+    '''
 
     else if (input_region == 'whole_genome')
-    """
-    cat $fasta_ref_fai | awk '{print \$1"\t"0"\t"\$2 }' > temp.bed
-    """
+    '''
+    cat !{fasta_ref_fai} | awk '{print $1"	"0"	"$2 }' > temp.bed
+    '''
 }
 
 
@@ -269,9 +269,9 @@ process mpileup2table {
                 SM="$(echo -e "${bam_file_name}" | tr -d '[[:space:]]')"
             else
                 # extract sample name from bam file read group info field
-                SM=$(samtools view -H $cur_bam | grep @RG | head -1 | sed "s/.*SM:\\([^\\t]*\\).*/\\1/" | tr -d '[:space:]')
+                SM=$(samtools view -H $cur_bam | grep @RG | head -1 | sed "s/.*SM:\\([^	]*\\).*/\\1/" | tr -d '[:space:]')
             fi
-            printf "sample$i\\t$SM\\n" >> names.txt
+            printf "sample$i	$SM\\n" >> names.txt
             i=$((i+1))
         done
     fi
