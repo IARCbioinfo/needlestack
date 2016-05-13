@@ -228,6 +228,7 @@ process samtools_mpileup {
     shell:
     region_tag = split_bed.baseName
     '''
+    set -o pipefail
     while read bed_line; do
         samtools mpileup --fasta-ref !{fasta_ref} --region $bed_line --ignore-RG --min-BQ !{params.base_qual} --min-MQ !{params.map_qual} --max-idepth 1000000 --max-depth !{params.max_DP} BAM/*.bam | sed 's/		/	*	*/g' >> !{region_tag}.pileup
     done < !{split_bed}
