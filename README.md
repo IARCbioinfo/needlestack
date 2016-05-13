@@ -138,3 +138,6 @@ Simply add the parameters you want in the command line like `--min_dp 1000` for 
 [Recommended values](http://gatkforums.broadinstitute.org/discussion/5533/strandoddsratio-computation) for SOR strand bias are SOR < 4 for SNVs and < 10 for indels. For RVSB, a good starting point is to filter out variant with RVSB>0.85. There is no hard filter by default as this is easy to do afterward using [bcftools filter](http://samtools.github.io/bcftools/bcftools.html#filter) command.
 
 A good practice is to keep (and publish) the `.nextflow.log` file create during the pipeline process, as it contains useful information for reproducibility (and for debugging in case of problem). You should keep the `trace.txt` file containing even more information to keep for records. Nextflow also creates a nice processes execution timeline file (a web page) in `timeline.html`.
+
+## Pipeline execution DAG
+<img align="center" src="https://cloud.githubusercontent.com/assets/3366818/15250619/eb6afcea-1925-11e6-9f91-e1d6ceecbe19.jpg" width="600">
