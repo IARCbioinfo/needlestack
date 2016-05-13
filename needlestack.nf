@@ -212,12 +212,12 @@ process split_bed {
 // create mpileup file + sed to have "*" when there is no coverage (otherwise pileup2baseindel.pl is unhappy)
 process samtools_mpileup {
 
-     tag { region_tag }
+    tag { region_tag }
 
     input:
     file split_bed
-    file bam
-    file bai
+    file 'BAM/*' from bam
+    file 'BAM/*' from bai
     file fasta_ref
     file fasta_ref_fai
     file fasta_ref_gzi
@@ -229,7 +229,7 @@ process samtools_mpileup {
     region_tag = split_bed.baseName
     '''
     while read bed_line; do
-        samtools mpileup --fasta-ref !{fasta_ref} --region $bed_line --ignore-RG --min-BQ !{params.base_qual} --min-MQ !{params.map_qual} --max-idepth 1000000 --max-depth !{params.max_DP} !{bam} | sed 's/		/	*	*/g' >> !{region_tag}.pileup
+        samtools mpileup --fasta-ref !{fasta_ref} --region $bed_line --ignore-RG --min-BQ !{params.base_qual} --min-MQ !{params.map_qual} --max-idepth 1000000 --max-depth !{params.max_DP} BAM/*.bam | sed 's/		/	*	*/g' >> !{region_tag}.pileup
     done < !{split_bed}
     '''
 }
@@ -241,11 +241,11 @@ process mpileup2table {
 
     input:
     set val(region_tag), file("${region_tag}.pileup") from pileup.filter { tag, file -> !file.isEmpty() }
-    file bam
+    file 'BAM/*' from bam
     val sample_names
 
     output:
-    set val(region_tag), file('sample*.txt'), file('names.txt') into table
+    set val(region_tag), file('TABLE/sample*.txt'), file('names.txt') into table
 
     shell:
     if ( params.no_indels ) {
@@ -258,9 +258,10 @@ process mpileup2table {
     if [ $nb_pos -gt 0 ]; then
         # split and convert pileup file
         pileup2baseindel.pl -i !{region_tag}.pileup !{indel_par}
-        # rename the output (the converter call files sample{i}.txt)
+        mkdir TABLE
+        mv sample*.txt TABLE
         i=1
-        for cur_bam in !{bam}
+        for cur_bam in BAM/*.bam
         do
             if [ "!{sample_names}" == "FILE" ]; then
                 # use bam file name as sample name
@@ -281,12 +282,12 @@ process mpileup2table {
 // perform regression in R
 process R_regression {
 
-    publishDir  params.out_folder+'/PDF/', mode: 'move', pattern: "*[ATCG-].pdf"
+    publishDir params.out_folder+'/PDF/', mode: 'move', pattern: "*[ATCG-].pdf"
 
     tag { region_tag }
 
     input:
-    set val(region_tag), file(table_file), file('names.txt') from table
+    set val(region_tag), file('TABLE/*'), file('names.txt') from table
     file fasta_ref
     file fasta_ref_fai
     file fasta_ref_gzi
@@ -306,7 +307,7 @@ process R_regression {
 // merge all vcf files in one big file
 process collect_vcf_result {
 
-    publishDir  params.out_folder, mode: 'move'
+    publishDir params.out_folder, mode: 'move'
 
     input:
     val out_vcf
@@ -317,7 +318,7 @@ process collect_vcf_result {
     file "$out_vcf" into big_vcf
 
     when:
-    all_vcf.size()>0
+    !all_vcf.empty
 
     shell:
     '''
