@@ -441,7 +441,7 @@ options("scipen"=100)
 indiv_run=read.table("names.txt",stringsAsFactors=F,colClasses = "character")
 indiv_run[,2]=make.unique(indiv_run[,2],sep="_")
 
-pileups_files=paste(indiv_run[,1],".txt",sep="")
+pileups_files=paste("TABLE/",indiv_run[,1],".txt",sep="")
 nindiv=nrow(indiv_run)
 
 npos=length(readLines(pileups_files[1]))-1
