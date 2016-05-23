@@ -341,17 +341,17 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
     abline(a=0, b=rob_nb_res$coef[[2]], col="black")
     plot_palette()  
     
-    logqvals=log10(rob_nb_res$qvalues)
-    logqvals[logqvals<=-9]=-9
-    plot(logqvals,rob_nb_res$ma_count/rob_nb_res$coverage,pch=21,bg=cols,col=outliers_color,ylab="Allelic fraction (AF)",xlab=bquote("log"[10] ~ "(q-value)"),main="Allelic fraction effect")
-    abline(v=log10(qthreshold),col="red",lwd=2)
-    plot_palette(topright = TRUE)
+    phqvals=-10*log10(rob_nb_res$qvalues)
+    phqvals[phqvals>100]=100
+    plot(phqvals,rob_nb_res$ma_count/rob_nb_res$coverage,pch=21,bg=cols,col=outliers_color,ylab="Allelic fraction (AF)",xlab="Phred q-value",main="Allelic fraction effect")
+    abline(v=-10*log10(qthreshold),col="red",lwd=2)
+    plot_palette()
     ylim_zoom_af = ifelse(add_contours, ylim_zoom_cor/max(rob_nb_res$coverage), (2*yi1)/xi)
-    plot(logqvals,rob_nb_res$ma_count/rob_nb_res$coverage,pch=21,bg=cols,col=outliers_color,ylab="Allelic fraction (AF)",xlab=bquote("log"[10] ~ "(q-value)"),main="Allelic fraction effect",
+    plot(phqvals,rob_nb_res$ma_count/rob_nb_res$coverage,pch=21,bg=cols,col=outliers_color,ylab="Allelic fraction (AF)",xlab="Phred q-value",main="Allelic fraction effect",
          ylim=c(0,ylim_zoom_af))
     if(add_contours) { mtext(paste("zoom on maximum q-value =",max_qvalue)) } else { mtext("zoom on 99% confidence interval") }
-    abline(v=log10(qthreshold),col="red",lwd=2)
-    plot_palette(topright = TRUE)
+    abline(v=-10*log10(qthreshold),col="red",lwd=2)
+    plot_palette()
     if(add_contours){
       if(!is.na(ylim_zoom)){
         #### plot min(af) ~ DP
