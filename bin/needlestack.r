@@ -7,12 +7,12 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -21,7 +21,7 @@ glmrob.nb <- function(y,x,bounding.func='T/T',c.tukey.beta=5,c.tukey.sig=3,c.by.
                       n_ai.sig.tukey=100,n_xout=10^4,min_coverage=1,min_reads=1,size_min=10,...){
 
   if (max(x)<min_coverage | max(y)<min_reads) return(res=list("coverage"=x, "ma_count"=y, "coef"=c(sigma=NA,slope=NA), "pvalues"=rep(1,l=length(y)), "qvalues"=rep(1,l=length(y)),"GQ"=rep(0,l=length(y))))
-    
+
   ### Written by William H. Aeberhard, February 2014
   ## Disclaimer: Users of these routines are cautioned that, while due care has been taken and they are
   ## believed accurate, they have not been rigorously tested and their use and results are
@@ -114,7 +114,7 @@ glmrob.nb <- function(y,x,bounding.func='T/T',c.tukey.beta=5,c.tukey.sig=3,c.by.
         }
       }
     }
-    ai.sig.tukey <- function(mui,sig,c.tukey){  
+    ai.sig.tukey <- function(mui,sig,c.tukey){
       psi.sig.ML.mod <- function(j,mui,invsig){
         digamma(j+invsig)-digamma(invsig)-log(mui/invsig+1)-(j-mui)/(mui+invsig)
       }
@@ -148,7 +148,7 @@ glmrob.nb <- function(y,x,bounding.func='T/T',c.tukey.beta=5,c.tukey.sig=3,c.by.
       sig0 <- sig
       beta00 <- beta11
       # estimate sigma given mu
-      sig=tryCatch( { 
+      sig=tryCatch( {
         uniroot(f=sig.rob.tukey,interval=c(minsig,maxsig),tol=sig.prec,maxiter=maxit.sig,mu=mu,y=y,c.tukey=c.tukey.sig)$root
       },error=function(cond){ return(NA) } )
       if (is.na(sig)){sig <- minsig}
@@ -195,7 +195,7 @@ glmrob.nb <- function(y,x,bounding.func='T/T',c.tukey.beta=5,c.tukey.sig=3,c.by.
 plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_threshold=Inf,names=NULL,plot_labels=FALSE,add_contours=FALSE){
   n=sum(rob_nb_res$qvalue>qthreshold)
   m=sum(rob_nb_res$qvalue<=qthreshold)
-  
+
   cut_max_qvals=100
   cols=rep("black",length(rob_nb_res$coverage))
   palette=rev(rainbow(cut_max_qvals+1,start=0, end=4/6))
@@ -204,7 +204,7 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
   cols=palette[col_indices]
   outliers_color=cols
   outliers_color[which(sbs>SB_threshold)]="black"
-  
+
   temp_title = bquote(e==.(format(rob_nb_res$coef[[2]],digits = 2)) ~ "," ~ sigma==.(format(rob_nb_res$coef[[1]],digits = 2)))
   plot(rob_nb_res$coverage, rob_nb_res$ma_count,
        pch=21,bg=cols,col=outliers_color,xlab="Coverage (DP)",ylab="Number of ALT reads (AO)",
@@ -215,7 +215,7 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
     text(rob_nb_res$coverage[which(rob_nb_res$qvalues<=qthreshold)], rob_nb_res$ma_count[which(rob_nb_res$qvalues<=qthreshold)],
          labels=names[which(rob_nb_res$qvalues<=qthreshold)], cex= 0.6, pos=1)
   }
-  
+
   #### plot the color palette
   plot_palette <- function(topright=FALSE) {
     xmin <- par("usr")[1]
@@ -227,29 +227,29 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
     if(topright){xright=xmin+(xmax-xmin)*0.9;xleft=xmin+(xmax-xmin)*0.94}
     ybottom=ymin+(ymax-ymin)*0.72
     ytop=ymin+(ymax-ymin)*0.94
-    
-    rasterImage(as.raster(matrix(rev(palette), ncol=1)),xright ,ybottom ,xleft,ytop )    
-    rect(xright ,ybottom ,xleft,ytop )    
-    text(x=(xright+xleft)/2, y = ytop+(ytop-ybottom)*0.1, labels = "QVAL", cex=0.8) 
+
+    rasterImage(as.raster(matrix(rev(palette), ncol=1)),xright ,ybottom ,xleft,ytop )
+    rect(xright ,ybottom ,xleft,ytop )
+    text(x=(xright+xleft)/2, y = ytop+(ytop-ybottom)*0.1, labels = "QVAL", cex=0.8)
     keep_labels=seq(0,cut_max_qvals,by=20)
     keep_labels_pos=seq(ybottom,ytop,l=length(keep_labels))
-    tick_width=-(xleft-xright)/5    
+    tick_width=-(xleft-xright)/5
     for (i in 1:length(keep_labels)) {
       if (topright) {
         lines(c(xright,xright+tick_width),c(keep_labels_pos[i],keep_labels_pos[i]))
       } else {
-        lines(c(xleft,xleft-tick_width),c(keep_labels_pos[i],keep_labels_pos[i]))      
+        lines(c(xleft,xleft-tick_width),c(keep_labels_pos[i],keep_labels_pos[i]))
       }
     }
     if(topright) {
-      text(x=xright+1.5*tick_width, y = keep_labels_pos, labels = keep_labels,adj = c(1,0.5), cex = 0.8)   
+      text(x=xright+1.5*tick_width, y = keep_labels_pos, labels = keep_labels,adj = c(1,0.5), cex = 0.8)
     } else {
-      text(x=(xright-(xright-xleft))*0.3, y = keep_labels_pos, labels = keep_labels,adj = c(1,0.5), cex = 0.8)   
+      text(x=(xright-(xright-xleft))*0.3, y = keep_labels_pos, labels = keep_labels,adj = c(1,0.5), cex = 0.8)
     }
   }
-  plot_palette()  
+  plot_palette()
   ####
-   
+
   if (!is.na(rob_nb_res$coef["slope"])) {
     ################### ADD CONTOURS ##################
     max_nb_grid_pts = 2500
@@ -257,7 +257,7 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
     qlevels = c(10,30,50,70,100)
     # following function returns a qvalue for a new point by adding it in the set of observations, recomputing all qvalues and taking its corresponding value.
     toQvalue <- function(x,y){
-      unlist(-10*log10(p.adjust((dnbinom(c(rob_nb_res$ma_count,y),size=1/rob_nb_res$coef[[1]],mu=rob_nb_res$coef[[2]]*c(rob_nb_res$coverage,x)) + 
+      unlist(-10*log10(p.adjust((dnbinom(c(rob_nb_res$ma_count,y),size=1/rob_nb_res$coef[[1]],mu=rob_nb_res$coef[[2]]*c(rob_nb_res$coverage,x)) +
                                    pnbinom(c(rob_nb_res$ma_count,y),size=1/rob_nb_res$coef[[1]],mu=rob_nb_res$coef[[2]]*c(rob_nb_res$coverage,x),lower.tail = F)))
                        [length(rob_nb_res$coverage)+1]))
     }
@@ -267,7 +267,7 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
     if(add_contours){
       nb_pts_zoom_computation=1000
       if(max(rob_nb_res$coverage) > nb_pts_zoom_computation){
-        maxDP_AO = unique(sort(c(round(max(rob_nb_res$coverage)*rbeta(nb_pts_zoom_computation,1,100)),runif(100,1,max(rob_nb_res$coverage)))))      
+        maxDP_AO = unique(sort(c(round(max(rob_nb_res$coverage)*rbeta(nb_pts_zoom_computation,1,100)),runif(100,1,max(rob_nb_res$coverage)))))
       } else {
         maxDP_AO = seq(1,max(rob_nb_res$coverage),by=1)
       }
@@ -278,7 +278,7 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
       if(!is.na(ylim_zoom)){ #ylim_zoom is na iff we found at least one qvalue >= max_qvalue (if error rate closed to 1, only qvalues closed to 0)
         #### compute dim of the qvalue grid
         if(ylim_zoom*max(rob_nb_res$coverage) <= max_nb_grid_pts){
-          xgrid = seq(0,max(rob_nb_res$coverage), by=1) 
+          xgrid = seq(0,max(rob_nb_res$coverage), by=1)
           ygrid = seq(0,ylim_zoom,by=1) #use by=1 to have integer, if not dnbinom not happy
         } else {
           if(ylim_zoom<=50){
@@ -289,7 +289,7 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
             ylength = 50
             xlength = round(max_nb_grid_pts/ylength)
             xgrid = round(seq(0,max(rob_nb_res$coverage),length=xlength))
-            ygrid = round(seq(0,ylim_zoom,length=ylength))    
+            ygrid = round(seq(0,ylim_zoom,length=ylength))
           }
         }
         #here we initiate the grid with each case containing list=(DP,AO) from xgrid, ygrid
@@ -300,11 +300,11 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
         for(qvalue in qlevels) {
           lines(xgrid, unlist(lapply(xgrid,function(DP,ygrid,xgrid){
             qval=min(matgrid[match(DP,xgrid),which(matgrid[match(DP,xgrid),]>=qvalue)])
-            AO=min(ygrid[which(matgrid[match(DP,xgrid),]==qval)]) 
+            AO=min(ygrid[which(matgrid[match(DP,xgrid),]==qval)])
             AO },ygrid,xgrid)),col=rev(rainbow(length(qlevels),start=0, end=4/6))[match(qvalue,qlevels)],lwd=1.3,lty=3)
         }
       }
-    }    
+    }
     #### plot confidence interval + error rate
     xi=max(rob_nb_res$coverage)
     yi1=qnbinom(p=0.99, size=1/rob_nb_res$coef[[1]], mu=rob_nb_res$coef[[2]]*xi)
@@ -324,7 +324,7 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
         for(qvalue in qlevels) {
           lines(xgrid, unlist(lapply(xgrid,function(DP,ygrid,xgrid){
             qval=min(matgrid[match(DP,xgrid),which(matgrid[match(DP,xgrid),]>=qvalue)])
-            AO=min(ygrid[which(matgrid[match(DP,xgrid),]==qval)]) 
+            AO=min(ygrid[which(matgrid[match(DP,xgrid),]==qval)])
             AO },ygrid,xgrid)),col=rev(rainbow(length(qlevels),start=0, end=4/6))[match(qvalue,qlevels)],lwd=1.3,lty=3)
         }
       }
@@ -339,16 +339,15 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
     lines(DP_for_IC,qnbinom(p=0.99, size=1/rob_nb_res$coef[[1]], mu=rob_nb_res$coef[[2]]*DP_for_IC),col="black",lty=3,lwd=2)
     lines(DP_for_IC,qnbinom(p=0.01, size=1/rob_nb_res$coef[[1]], mu=rob_nb_res$coef[[2]]*DP_for_IC),col="black",lty=3,lwd=2)
     abline(a=0, b=rob_nb_res$coef[[2]], col="black")
-    plot_palette()  
-    
+    plot_palette()
+
     phqvals=-10*log10(rob_nb_res$qvalues)
-    phqvals[phqvals>100]=100
-    plot(phqvals,rob_nb_res$ma_count/rob_nb_res$coverage,pch=21,bg=cols,col=outliers_color,ylab="Allelic fraction (AF)",xlab="Phred q-value",main="Allelic fraction effect")
+    plot(phqvals,log10(rob_nb_res$ma_count/rob_nb_res$coverage),pch=21,bg=cols,col=outliers_color,ylab=bquote("log"[10] ~ "[Allelic Fraction (AF)]"),xlab="QVAL",main="Allelic fraction effect")
     abline(v=-10*log10(qthreshold),col="red",lwd=2)
     plot_palette()
     ylim_zoom_af = ifelse(add_contours, ylim_zoom_cor/max(rob_nb_res$coverage), (2*yi1)/xi)
-    plot(phqvals,rob_nb_res$ma_count/rob_nb_res$coverage,pch=21,bg=cols,col=outliers_color,ylab="Allelic fraction (AF)",xlab="Phred q-value",main="Allelic fraction effect",
-         ylim=c(0,ylim_zoom_af))
+    plot(phqvals,log10(rob_nb_res$ma_count/rob_nb_res$coverage),pch=21,bg=cols,col=outliers_color,ylab=bquote("log"[10] ~ "[Allelic Fraction (AF)]"),xlab="QVAL",main="Allelic fraction effect",
+         ylim=c(min(log10(rob_nb_res$ma_count/rob_nb_res$coverage)[is.finite(log10(rob_nb_res$ma_count/rob_nb_res$coverage))]),log10(ylim_zoom_af)), xlim=c(0,100))
     if(add_contours) { mtext(paste("zoom on maximum q-value =",max_qvalue)) } else { mtext("zoom on 99% confidence interval") }
     abline(v=-10*log10(qthreshold),col="red",lwd=2)
     plot_palette()
@@ -381,12 +380,12 @@ args <- argsL;rm(argsL)
 if("--help" %in% args | is.null(args$out_file) | is.null(args$fasta_ref)) {
   cat("
       The R Script arguments_section.R
-      
+
       Mandatory arguments:
       --out_file=file_name           - name of output vcf
       --fasta_ref=path               - path of fasta ref
       --help                         - print this text
-      
+
       Optionnal arguments:
       --samtools=path                - path of samtools, default=samtools
       --SB_type=SOR or RVSB      - strand bias measure, default=SOR
@@ -397,17 +396,17 @@ if("--help" %in% args | is.null(args$out_file) | is.null(args$fasta_ref)) {
       --GQ_threshold=value           - phred scale qvalue threshold for variants, default=50
       --output_all_SNVs=boolean     - output all SNVs, even when no variant is detected, default=FALSE
       --do_plots=boolean              - output regression plots, default=TRUE
-      
+
       WARNING : by default samtools has to be in your path
-      
+
       Example:
       pileup_nbrr_caller_vcf.r --out_file=test.vcf --fasta_ref=~/Documents/References/ \n\n")
-  
+
   q(save="no")
 }
 
 if(is.null(args$samtools)) {args$samtools="samtools"}
-if(is.null(args$SB_type)) {args$SB_type="SOR"} 
+if(is.null(args$SB_type)) {args$SB_type="SOR"}
 if(is.null(args$SB_threshold_SNV)) {args$SB_threshold_SNV=100} else {args$SB_threshold_SNV=as.numeric(args$SB_threshold_SNV)}
 if(is.null(args$SB_threshold_indel)) {args$SB_threshold_indel=100} else {args$SB_threshold_indel=as.numeric(args$SB_threshold_indel)}
 if(is.null(args$min_coverage)) {args$min_coverage=50} else {args$min_coverage=as.numeric(args$min_coverage)}
@@ -503,11 +502,11 @@ common_annot=function() {
   all_sor<<-SOR(sum(Rp),sum(Vp),sum(Rm),sum(Vm))
   if (is.na(all_sor)) all_sor<<- (-1)
   if (is.infinite(all_sor)) all_sor<<- 99
-  #FisherStrand<<-fisher.test(matrix(c(Vp,Vm,Rp,Rm),nrow=2))$p.value 
+  #FisherStrand<<-fisher.test(matrix(c(Vp,Vm,Rp,Rm),nrow=2))$p.value
   all_RO<<-sum(Rp+Rm)
 }
 
-if(file.exists(out_file)) file.remove(out_file) 
+if(file.exists(out_file)) file.remove(out_file)
 write_out=function(...) {
   cat(paste(...,sep=""),"\n",file=out_file,sep="",append=T)
 }
@@ -535,8 +534,8 @@ write_out("##INFO=<ID=SIG,Number=1,Type=Float,Description=\"Estimated overdisper
 write_out("##INFO=<ID=CONT,Number=1,Type=String,Description=\"Context of the reference sequence\">")
 
 write_out("##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">")
-write_out("##FORMAT=<ID=QVAL,Number=1,Type=Float,Description=\"Phred-scaled qvalue for not being an error\">") 
-write_out("##FORMAT=<ID=DP,Number=1,Type=Integer,Description=\"Read Depth\">") 
+write_out("##FORMAT=<ID=QVAL,Number=1,Type=Float,Description=\"Phred-scaled qvalue for not being an error\">")
+write_out("##FORMAT=<ID=DP,Number=1,Type=Integer,Description=\"Read Depth\">")
 write_out("##FORMAT=<ID=RO,Number=1,Type=Integer,Description=\"Reference allele observation count\">")
 write_out("##FORMAT=<ID=AO,Number=1,Type=Integer,Description=\"Alternate allele observation count\">")
 write_out("##FORMAT=<ID=AF,Number=1,Type=Float,Description=\"Allele fraction of the alternate allele with regard to reference\">")
@@ -547,7 +546,7 @@ write_out("##FORMAT=<ID=RVSB,Number=1,Type=Float,Description=\"Relative Variant 
 write_out("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t",paste(indiv_run[,2],collapse = "\t"))
 
 for (i in 1:npos) {
-  if (is.element(pos_ref[i,"ref"],c("A","T","C","G"))) {  
+  if (is.element(pos_ref[i,"ref"],c("A","T","C","G"))) {
     # SNV
     for (alt in non_ref_bases(pos_ref[i,"ref"])) {
       Vp=atcg_matrix[i,eval(as.name(paste(alt,"_cols",sep="")))]
@@ -606,7 +605,7 @@ for (i in 1:npos) {
         ma_p_cur_del=unlist(lapply(all_cur_del_p,function(x) {as.numeric(gsub(paste("([0-9]+):",cur_del,"$",sep=""),"\\1",x,ignore.case = T))}))
         ma_m_cur_del=unlist(lapply(all_cur_del_m,function(x) {as.numeric(gsub(paste("([0-9]+):",cur_del,"$",sep=""),"\\1",x,ignore.case = T))}))
         Vp[names(ma_p_cur_del)]=ma_p_cur_del
-        Vm[names(ma_m_cur_del)]=ma_m_cur_del   
+        Vm[names(ma_m_cur_del)]=ma_m_cur_del
         ma_count=Vp+Vm
         DP=coverage_matrix[i,]+ma_count
         reg_res=glmrob.nb(x=DP,y=ma_count,min_coverage=min_coverage,min_reads=min_reads)
@@ -648,13 +647,13 @@ for (i in 1:npos) {
         }
      }
    }
-    
+
     # INS
     all_ins=ins[i,!is.na(ins[i,])]
     if (length(all_ins)>0) {
       all_ins=as.data.frame(strsplit(unlist(strsplit(paste(all_ins),split = "|",fixed=T)),split = ":",fixed=T),stringsAsFactors=F,)
       uniq_ins=unique(toupper(as.character(all_ins[2,])))
-      coverage_all_ins=sum(as.numeric(all_ins[1,])) 
+      coverage_all_ins=sum(as.numeric(all_ins[1,]))
       for (cur_ins in uniq_ins) {
         Vp=rep(0,nindiv)
         names(Vp)=indiv_run[,1]
@@ -665,7 +664,7 @@ for (i in 1:npos) {
         ma_p_cur_ins=unlist(lapply(all_cur_ins_p,function(x) {as.numeric(gsub(paste("([0-9]+):",cur_ins,"$",sep=""),"\\1",x,ignore.case = T))}))
         ma_m_cur_ins=unlist(lapply(all_cur_ins_m,function(x) {as.numeric(gsub(paste("([0-9]+):",cur_ins,"$",sep=""),"\\1",x,ignore.case = T))}))
         Vp[names(ma_p_cur_ins)]=ma_p_cur_ins
-        Vm[names(ma_m_cur_ins)]=ma_m_cur_ins   
+        Vm[names(ma_m_cur_ins)]=ma_m_cur_ins
         ma_count=Vp+Vm
         DP=coverage_matrix[i,]+ma_count[]
         reg_res=glmrob.nb(x=DP,y=ma_count,min_coverage=min_coverage,min_reads=min_reads)
