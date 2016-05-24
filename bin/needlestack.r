@@ -188,7 +188,7 @@ glmrob.nb <- function(y,x,bounding.func='T/T',c.tukey.beta=5,c.tukey.sig=3,c.by.
     res$pvalues <- dnbinom(y,size=1/res$coef[[1]],mu=res$coef[[2]]*x) + pnbinom(y,size=1/res$coef[[1]],mu=res$coef[[2]]*x,lower.tail = F)
     res$qvalues=p.adjust(res$pvalues,method="BH")
     res$GQ=-log10(res$qvalues)*10
-    res$GQ>1000=1000 #here also manage qvalues=Inf
+    res$GQ[res$GQ>1000]=1000 #here also manage qvalues=Inf
   } else {stop('Available bounding.func is "T/T"')}
   return(res)
 }
