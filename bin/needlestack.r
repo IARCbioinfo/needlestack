@@ -188,6 +188,7 @@ glmrob.nb <- function(y,x,bounding.func='T/T',c.tukey.beta=5,c.tukey.sig=3,c.by.
     res$pvalues <- dnbinom(y,size=1/res$coef[[1]],mu=res$coef[[2]]*x) + pnbinom(y,size=1/res$coef[[1]],mu=res$coef[[2]]*x,lower.tail = F)
     res$qvalues=p.adjust(res$pvalues,method="BH")
     res$GQ=-log10(res$qvalues)*10
+    res$GQ[!is.finite(res$GQ)]=1000
   } else {stop('Available bounding.func is "T/T"')}
   return(res)
 }
@@ -341,12 +342,11 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
     abline(a=0, b=rob_nb_res$coef[[2]], col="black")
     plot_palette()
 
-    phqvals=-10*log10(rob_nb_res$qvalues)
-    plot(phqvals,log10(rob_nb_res$ma_count/rob_nb_res$coverage),pch=21,bg=cols,col=outliers_color,ylab=bquote("log"[10] ~ "[Allelic Fraction (AF)]"),xlab="QVAL",main="Allelic fraction effect")
+    plot(rob_nb_res$GQ,log10(rob_nb_res$ma_count/rob_nb_res$coverage),pch=21,bg=cols,col=outliers_color,ylab=bquote("log"[10] ~ "[Allelic Fraction (AF)]"),xlab="QVAL",main="Allelic fraction effect")
     abline(v=-10*log10(qthreshold),col="red",lwd=2)
     plot_palette()
     ylim_zoom_af = ifelse(add_contours, ylim_zoom_cor/max(rob_nb_res$coverage), (2*yi1)/xi)
-    plot(phqvals,log10(rob_nb_res$ma_count/rob_nb_res$coverage),pch=21,bg=cols,col=outliers_color,ylab=bquote("log"[10] ~ "[Allelic Fraction (AF)]"),xlab="QVAL",main="Allelic fraction effect",
+    plot(rob_nb_res$GQ,log10(rob_nb_res$ma_count/rob_nb_res$coverage),pch=21,bg=cols,col=outliers_color,ylab=bquote("log"[10] ~ "[Allelic Fraction (AF)]"),xlab="QVAL",main="Allelic fraction effect",
          ylim=c(min(log10(rob_nb_res$ma_count/rob_nb_res$coverage)[is.finite(log10(rob_nb_res$ma_count/rob_nb_res$coverage))]),log10(ylim_zoom_af)), xlim=c(0,100))
     if(add_contours) { mtext(paste("zoom on maximum q-value =",max_qvalue)) } else { mtext("zoom on 99% confidence interval") }
     abline(v=-10*log10(qthreshold),col="red",lwd=2)
