@@ -266,7 +266,7 @@ process mpileup2table {
         do
             if [ "!{sample_names}" == "FILE" ]; then
                 # use bam file name as sample name
-                bam_file_name="${cur_bam%.*}"
+                bam_file_name=$(basename "${cur_bam%.*}")
                 # remove whitespaces from name
                 SM="$(echo -e "${bam_file_name}" | tr -d '[[:space:]]')"
             else
@@ -313,7 +313,7 @@ process collect_vcf_result {
     input:
     val out_vcf
     file all_vcf from vcf.toList()
-    file fasta_ref_fai        
+    file fasta_ref_fai
 
     output:
     file "$out_vcf" into big_vcf
