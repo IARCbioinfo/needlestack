@@ -259,7 +259,7 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
     # following function returns a qvalue for a new point by adding it in the set of observations, recomputing all qvalues and taking its corresponding value.
     toQvalue <- function(x,y){
       unlist(-10*log10(p.adjust((dnbinom(c(rob_nb_res$ma_count,y),size=1/rob_nb_res$coef[[1]],mu=rob_nb_res$coef[[2]]*c(rob_nb_res$coverage,x)) +
-                                   pnbinom(c(rob_nb_res$ma_count,y),size=1/rob_nb_res$coef[[1]],mu=rob_nb_res$coef[[2]]*c(rob_nb_res$coverage,x),lower.tail = F)))
+                                   pnbinom(c(rob_nb_res$ma_count,y),size=1/rob_nb_res$coef[[1]],mu=rob_nb_res$coef[[2]]*c(rob_nb_res$coverage,x),lower.tail = F)), method="BH)
                        [length(rob_nb_res$coverage)+1]))
     }
     #here we compute the dimension of the qvalue grid (ylength*xlength), with min(ylength)=5 (this avoids a too "flat" grid)
