@@ -302,7 +302,7 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
           lines(xgrid, unlist(lapply(xgrid,function(DP,ygrid,xgrid){
             qval=min(matgrid[match(DP,xgrid),which(matgrid[match(DP,xgrid),]>=qvalue)])
             AO=min(ygrid[which(matgrid[match(DP,xgrid),]==qval)])
-            AO },ygrid,xgrid)),col=rev(rainbow(length(qlevels),start=0, end=4/6))[match(qvalue,qlevels)],lwd=1.3,lty=3)
+            AO },ygrid,xgrid)),col=palette[min(qvalue,cut_max_qvals)+1],lwd=1.3,lty=3)
         }
       }
     }
@@ -326,7 +326,7 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
           lines(xgrid, unlist(lapply(xgrid,function(DP,ygrid,xgrid){
             qval=min(matgrid[match(DP,xgrid),which(matgrid[match(DP,xgrid),]>=qvalue)])
             AO=min(ygrid[which(matgrid[match(DP,xgrid),]==qval)])
-            AO },ygrid,xgrid)),col=rev(rainbow(length(qlevels),start=0, end=4/6))[match(qvalue,qlevels)],lwd=1.3,lty=3)
+            AO },ygrid,xgrid)),col=palette[min(qvalue,cut_max_qvals)+1],lwd=1.3,lty=3)
         }
       }
     }
@@ -360,7 +360,7 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
             qval=min(matgrid[match(DP,xgrid),which(matgrid[match(DP,xgrid),]>=qvalue)])
             af=min(ygrid[which(matgrid[match(DP,xgrid),]==qval)]) / DP
             if(DP==0 || af>1) { af=1 } #af>1 if min(...)>DP
-            log10(af) },ygrid,xgrid)),col=rev(rainbow(length(qlevels),start=0, end=4/6))[match(qvalue,qlevels)])
+            log10(af) },ygrid,xgrid)),col=palette[min(qvalue,cut_max_qvals)+1])
         }
         plot_palette(topright = TRUE)
         #hist(rob_nb_res$pvalues,main="p-values distribution",ylab="Density",xlab="p-value",col="grey",freq=T,br=20,xlim=c(0,1))
