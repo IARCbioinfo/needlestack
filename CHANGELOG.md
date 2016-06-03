@@ -1,15 +1,22 @@
 # Change Log
 
-## [v1.0](https://github.com/IARCbioinfo/needlestack/tree/v1.0) (2016-05-24)
+## [v1.0](https://github.com/IARCbioinfo/needlestack/tree/v1.0) (2016-06-03)
 [Full Changelog](https://github.com/IARCbioinfo/needlestack/compare/v0.3...v1.0)
+
+**Implemented enhancements:**
+
+- The graph showing AF vs log10\(qval\) should show phred-scaled qvalues [\#121](https://github.com/IARCbioinfo/needlestack/issues/121)
 
 **Fixed bugs:**
 
+- Contours seem to be incorrect [\#128](https://github.com/IARCbioinfo/needlestack/issues/128)
+- correct file name extraction for sample name [\#126](https://github.com/IARCbioinfo/needlestack/issues/126)
 - Let min\_qval be equal to 0 [\#119](https://github.com/IARCbioinfo/needlestack/issues/119)
 - plot improved error rate confidence interval  [\#117](https://github.com/IARCbioinfo/needlestack/issues/117)
 
 **Closed issues:**
 
+- QUAL should not be reported as Inf in VCF when q-value=0 [\#125](https://github.com/IARCbioinfo/needlestack/issues/125)
 - Add pipeline execution DAG in README [\#123](https://github.com/IARCbioinfo/needlestack/issues/123)
 
 ## [v0.3](https://github.com/IARCbioinfo/needlestack/tree/v0.3) (2016-05-03)

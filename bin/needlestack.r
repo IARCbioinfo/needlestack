@@ -258,9 +258,9 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
     qlevels = c(10,30,50,70,100)
     # following function returns a qvalue for a new point by adding it in the set of observations, recomputing all qvalues and taking its corresponding value.
     toQvalue <- function(x,y){
-      unlist(-10*log10(p.adjust((dnbinom(c(rob_nb_res$ma_count,y),size=1/rob_nb_res$coef[[1]],mu=rob_nb_res$coef[[2]]*c(rob_nb_res$coverage,x)) +
-                                   pnbinom(c(rob_nb_res$ma_count,y),size=1/rob_nb_res$coef[[1]],mu=rob_nb_res$coef[[2]]*c(rob_nb_res$coverage,x),lower.tail = F)))
-                       [length(rob_nb_res$coverage)+1]))
+      unlist(-10*log10(p.adjust((dnbinom(c(rob_nb_res$ma_count,y),size=1/rob_nb_res$coef[[1]],mu=rob_nb_res$coef[[2]]*c(rob_nb_res$coverage,x)) + 
+                               pnbinom(c(rob_nb_res$ma_count,y),size=1/rob_nb_res$coef[[1]],mu=rob_nb_res$coef[[2]]*c(rob_nb_res$coverage,x),lower.tail = F)),method="BH")
+                   [length(rob_nb_res$coverage)+1]))
     }
     #here we compute the dimension of the qvalue grid (ylength*xlength), with min(ylength)=5 (this avoids a too "flat" grid)
     #if needed to sampling (too large grid if dimension=max(AO)*max(DP)), we verify two equations: equality of ratios ylength/xlength before and after sampling and ylength*xlength=max_nb_grid_pts
@@ -302,7 +302,7 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
           lines(xgrid, unlist(lapply(xgrid,function(DP,ygrid,xgrid){
             qval=min(matgrid[match(DP,xgrid),which(matgrid[match(DP,xgrid),]>=qvalue)])
             AO=min(ygrid[which(matgrid[match(DP,xgrid),]==qval)])
-            AO },ygrid,xgrid)),col=rev(rainbow(length(qlevels),start=0, end=4/6))[match(qvalue,qlevels)],lwd=1.3,lty=3)
+            AO },ygrid,xgrid)),col=palette[min(qvalue,cut_max_qvals)+1],lwd=1.3,lty=3)
         }
       }
     }
@@ -326,7 +326,7 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
           lines(xgrid, unlist(lapply(xgrid,function(DP,ygrid,xgrid){
             qval=min(matgrid[match(DP,xgrid),which(matgrid[match(DP,xgrid),]>=qvalue)])
             AO=min(ygrid[which(matgrid[match(DP,xgrid),]==qval)])
-            AO },ygrid,xgrid)),col=rev(rainbow(length(qlevels),start=0, end=4/6))[match(qvalue,qlevels)],lwd=1.3,lty=3)
+            AO },ygrid,xgrid)),col=palette[min(qvalue,cut_max_qvals)+1],lwd=1.3,lty=3)
         }
       }
     }
@@ -360,7 +360,7 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
             qval=min(matgrid[match(DP,xgrid),which(matgrid[match(DP,xgrid),]>=qvalue)])
             af=min(ygrid[which(matgrid[match(DP,xgrid),]==qval)]) / DP
             if(DP==0 || af>1) { af=1 } #af>1 if min(...)>DP
-            log10(af) },ygrid,xgrid)),col=rev(rainbow(length(qlevels),start=0, end=4/6))[match(qvalue,qlevels)])
+            log10(af) },ygrid,xgrid)),col=palette[min(qvalue,cut_max_qvals)+1])
         }
         plot_palette(topright = TRUE)
         #hist(rob_nb_res$pvalues,main="p-values distribution",ylab="Density",xlab="p-value",col="grey",freq=T,br=20,xlim=c(0,1))
