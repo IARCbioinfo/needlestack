@@ -9,6 +9,7 @@
 
 **Fixed bugs:**
 
+- Contours seem to be incorrect [\#128](https://github.com/IARCbioinfo/needlestack/issues/128)
 - correct file name extraction for sample name [\#126](https://github.com/IARCbioinfo/needlestack/issues/126)
 - Let min\_qval be equal to 0 [\#119](https://github.com/IARCbioinfo/needlestack/issues/119)
 - plot improved error rate confidence interval  [\#117](https://github.com/IARCbioinfo/needlestack/issues/117)
