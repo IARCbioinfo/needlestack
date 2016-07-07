@@ -283,7 +283,7 @@ process mpileup2table {
 // perform regression in R
 process R_regression {
 
-    publishDir params.out_folder+'/PDF/', mode: 'move', pattern: "*[ATCG-].pdf"
+    publishDir params.out_folder+'/PDF/', mode: 'move', pattern: "*[ATCG-]*.pdf"
 
     tag { region_tag }
 
@@ -300,7 +300,7 @@ process R_regression {
     shell:
     '''
     # create a dummy empty pdf to avoid an error in the process when no variant is found
-    touch !{region_tag}_empty.pdf
+    touch empty.pdf
     needlestack.r --out_file=!{region_tag}.vcf --fasta_ref=!{fasta_ref} --GQ_threshold=!{params.min_qval} --min_coverage=!{params.min_dp} --min_reads=!{params.min_ao} --SB_type=!{params.sb_type} --SB_threshold_SNV=!{params.sb_snv} --SB_threshold_indel=!{params.sb_indel} --output_all_SNVs=!{params.all_SNVs} --do_plots=!{!params.no_plots} --plot_labels=!{!params.no_labels} --add_contours=!{!params.no_contours}
     '''
 }
