@@ -108,7 +108,7 @@ log.info(params.no_contours == true ? "Add contours in plots and plot min(AF)~DP
 if(params.input_vcf) {
 
   params.out_folder = "annotated_vcf"
-  params.chunk_size = 1000
+  params.chunk_size = 10000
   input_vcf = file(params.input_vcf)
   out_annotated_vcf = params.out_annotated_vcf ? params.out_annotated_vcf : "annotated.vcf"
 
