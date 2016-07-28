@@ -129,14 +129,16 @@ if(params.input_vcf) {
 
     shell:
     '''
-    ((nb_total_lines= $((`zcat !{input_vcf} | wc -l`)) ))
-    ((lines_per_file = ( $((`zcat !{input_vcf} | grep -v "^#" | wc -l`)) + !{params.nsplit} - 1) / !{params.nsplit}))
-    ((start=( $((`zcat !{input_vcf} | grep "^#"| wc -l`)) +1 ) ))
+    zcat !{input_vcf} | grep "^#" > header
+    ((core_lines = $((`zcat !{input_vcf} | grep -v "^#" | wc -l`)) ))
+    ((lines_per_file = ( $core_lines + !{params.nsplit} - 1) / !{params.nsplit}))
+    ((nb_total_lines= $((`cat header | wc -l`)) + $core_lines ))
+    ((start=( $((`cat header | wc -l`)) +1 ) ))
 
     for i in `seq 1 !{params.nsplit}`;
 	   do
       if ((start < nb_total_lines)); then
-        { zcat !{input_vcf} | grep "^#" && zcat !{input_vcf} | tail -n+$start  | head -n$lines_per_file ; } | bgzip > split${i}.vcf.bgz
+        { cat header && zcat !{input_vcf} | tail -n+$start  | head -n$lines_per_file ; } | bgzip > split${i}.vcf.bgz
         ((start=start+lines_per_file))
       fi
      done
