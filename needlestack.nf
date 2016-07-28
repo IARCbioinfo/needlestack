@@ -130,9 +130,9 @@ if(params.input_vcf) {
     shell:
     '''
     zcat !{input_vcf} | grep "^#" > header
-    ((core_lines = $((`zcat !{input_vcf} | grep -v "^#" | wc -l`)) ))
+    ((nb_total_lines= $((`zcat !{input_vcf} | wc -l`)) ))
+    ((core_lines = $nb_total_lines - $((`cat header | wc -l`)) ))
     ((lines_per_file = ( $core_lines + !{params.nsplit} - 1) / !{params.nsplit}))
-    ((nb_total_lines= $((`cat header | wc -l`)) + $core_lines ))
     ((start=( $((`cat header | wc -l`)) +1 ) ))
 
     for i in `seq 1 !{params.nsplit}`;
