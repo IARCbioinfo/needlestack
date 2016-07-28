@@ -1,7 +1,22 @@
+# Copyright (C) 2015 Matthieu Foll and Tiffany Delhomme
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_threshold=Inf,names=NULL,plot_labels=FALSE,add_contours=FALSE){
   n=sum(rob_nb_res$qvalue>qthreshold)
   m=sum(rob_nb_res$qvalue<=qthreshold)
-  
+
   cut_max_qvals=100
   cols=rep("black",length(rob_nb_res$coverage))
   palette=rev(rainbow(cut_max_qvals+1,start=0, end=4/6))
@@ -10,7 +25,7 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
   cols=palette[col_indices]
   outliers_color=cols
   outliers_color[which(sbs>SB_threshold)]="black"
-  
+
   temp_title = bquote(e==.(format(rob_nb_res$coef[[2]],digits = 2)) ~ "," ~ sigma==.(format(rob_nb_res$coef[[1]],digits = 2)))
   plot(rob_nb_res$coverage, rob_nb_res$ma_count,
        pch=21,bg=cols,col=outliers_color,xlab="Coverage (DP)",ylab="Number of ALT reads (AO)",
@@ -21,7 +36,7 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
     text(rob_nb_res$coverage[which(rob_nb_res$qvalues<=qthreshold)], rob_nb_res$ma_count[which(rob_nb_res$qvalues<=qthreshold)],
          labels=names[which(rob_nb_res$qvalues<=qthreshold)], cex= 0.6, pos=1)
   }
-  
+
   #### plot the color palette
   plot_palette <- function(topright=FALSE) {
     xmin <- par("usr")[1]
@@ -33,7 +48,7 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
     if(topright){xright=xmin+(xmax-xmin)*0.9;xleft=xmin+(xmax-xmin)*0.94}
     ybottom=ymin+(ymax-ymin)*0.72
     ytop=ymin+(ymax-ymin)*0.94
-    
+
     rasterImage(as.raster(matrix(rev(palette), ncol=1)),xright ,ybottom ,xleft,ytop )
     rect(xright ,ybottom ,xleft,ytop )
     text(x=(xright+xleft)/2, y = ytop+(ytop-ybottom)*0.1, labels = "QVAL", cex=0.8)
@@ -55,7 +70,7 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
   }
   plot_palette()
   ####
-  
+
   if (!is.na(rob_nb_res$coef["slope"])) {
     ################### ADD CONTOURS ##################
     max_nb_grid_pts = 2500
@@ -146,7 +161,7 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
     lines(DP_for_IC,qnbinom(p=0.01, size=1/rob_nb_res$coef[[1]], mu=rob_nb_res$coef[[2]]*DP_for_IC),col="black",lty=3,lwd=2)
     abline(a=0, b=rob_nb_res$coef[[2]], col="black")
     plot_palette()
-    
+
     plot(rob_nb_res$GQ,log10(rob_nb_res$ma_count/rob_nb_res$coverage),pch=21,bg=cols,col=outliers_color,ylab=bquote("log"[10] ~ "[Allelic Fraction (AF)]"),xlab="QVAL",main="Allelic fraction effect")
     abline(v=-10*log10(qthreshold),col="red",lwd=2)
     plot_palette()
