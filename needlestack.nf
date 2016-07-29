@@ -129,7 +129,7 @@ if(params.input_vcf) {
 
     shell:
     '''
-    zcat !{input_vcf} | grep "^#" > header
+    zcat !{input_vcf} | grep "^#" | grep -v "<redacted>" > header
     ((nb_total_lines= $((`zcat !{input_vcf} | wc -l`)) ))
     ((core_lines = $nb_total_lines - $((`cat header | wc -l`)) ))
     ((lines_per_file = ( $core_lines + !{params.nsplit} - 1) / !{params.nsplit}))
