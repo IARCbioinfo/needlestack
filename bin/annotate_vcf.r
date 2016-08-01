@@ -50,9 +50,11 @@ while(dim(vcf_chunk)[1] != 0) {
 
   #compute regressions and qvals,err,sig
   reg_list = lapply(1:dim(vcf_chunk)[1], function(var_line) { #for each line of the chunk return a list of reg for each AD
+    # replace NAs and integer(0) by correct number of 0 ADs
+    AD_matrix[var_line, which(is.na(AD_matrix[var_line,]))] = lapply(AD_matrix[var_line, which(is.na(AD_matrix[var_line,]))], function(x) x=as.vector(rep(0,max(lengths(AD_matrix[var_line,])))))
+    AD_matrix[var_line,] = lapply(AD_matrix[var_line,], function(x) {if(length(x)==0) { x=as.vector(rep(0, ifelse(max(lengths(AD_matrix[var_line,]),na.rm = T) >0, max(lengths(AD_matrix[var_line,]),na.rm = T), 2) )) } else {x=x} } )
     lapply(2:max(lengths(AD_matrix[var_line,])), function(AD_index) { #for each alternative
       DP=DP_matrix[var_line,]
-      AD_matrix[var_line, which(is.na(AD_matrix[var_line,]))] = lapply(AD_matrix[var_line, which(is.na(AD_matrix[var_line,]))], function(x) x=as.vector(rep(0,max(lengths(AD_matrix[var_line,])))))
       AO=unlist(lapply(AD_matrix[var_line,],"[[",AD_index)) #AD_matrix[var_line,] is a list of AD for each sample, here return list of ADs(i) for alt i
       reg_res=glmrob.nb(x=DP,y=AO,min_coverage=min_coverage,min_reads=min_reads)
       if (do_plots) {
