@@ -50,6 +50,7 @@ while(dim(vcf_chunk)[1] != 0) {
 
   #compute regressions and qvals,err,sig
   reg_list = lapply(1:dim(vcf_chunk)[1], function(var_line) { #for each line of the chunk return a list of reg for each AD
+    print(var_line)
     # replace NAs and integer(0) by correct number of 0 ADs
     AD_matrix[var_line, which(is.na(AD_matrix[var_line,]))] = lapply(AD_matrix[var_line, which(is.na(AD_matrix[var_line,]))], function(x) x=as.vector(rep(0,max(lengths(AD_matrix[var_line,])))))
     AD_matrix[var_line,] = lapply(AD_matrix[var_line,], function(x) {if(length(x)==0) { x=as.vector(rep(0, ifelse(max(lengths(AD_matrix[var_line,]),na.rm = T) >0, max(lengths(AD_matrix[var_line,]),na.rm = T), 2) )) } else {x=x} } )
@@ -64,7 +65,7 @@ while(dim(vcf_chunk)[1] != 0) {
         alt=alt(vcf_chunk)[[var_line]]
         sbs=rep(NA,dim(vcf_chunk)[2])
         pdf(paste(chr,"_",loc,"_",loc,"_",ref,"_",alt,".pdf",sep=""),7,6)
-        plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=paste(chr, " ", loc," (",ref," -> ",alt,")",sep=""), sbs=sbs, SB_threshold=SB_threshold,plot_labels=T,add_contours=T,names=samples(header(vcf_chunk)))
+        plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=paste(chr, " ", loc," (",ref," -> ",alt,")",AD_index-1,sep=""), sbs=sbs, SB_threshold=SB_threshold,plot_labels=T,add_contours=T,names=samples(header(vcf_chunk)))
         dev.off()
       }
       reg_res
