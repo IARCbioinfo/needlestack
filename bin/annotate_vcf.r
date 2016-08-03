@@ -51,6 +51,7 @@ while(dim(vcf_chunk)[1] != 0) {
   #compute regressions and qvals,err,sig
   reg_list = lapply(1:dim(vcf_chunk)[1], function(var_line) { #for each line of the chunk return a list of reg for each AD
     print(var_line)
+    print(start(ranges(rowRanges(vcf_chunk,"seqnames"))[var_line]))
     # replace NAs and integer(0) by correct number of 0 ADs
     AD_matrix[var_line, which(is.na(AD_matrix[var_line,]))] = lapply(AD_matrix[var_line, which(is.na(AD_matrix[var_line,]))], function(x) x=as.vector(rep(0,max(lengths(AD_matrix[var_line,])))))
     AD_matrix[var_line,] = lapply(AD_matrix[var_line,], function(x) {if(length(x)==0) { x=as.vector(rep(0, ifelse(max(lengths(AD_matrix[var_line,]),na.rm = T) >0, max(lengths(AD_matrix[var_line,]),na.rm = T), 2) )) } else {x=x} } )
