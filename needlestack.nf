@@ -147,7 +147,7 @@ if(params.input_vcf) {
 
   process annotate_vcf {
 
-    publishDir params.out_folder+'/PDF/', mode: 'move',  pattern: "*.pdf"
+    publishDir params.out_folder+'/PDF/', mode: 'move',  pattern: "*[ATCG-].pdf"
 
     input:
     file svcf from splitted_vcf
@@ -158,6 +158,7 @@ if(params.input_vcf) {
 
     shell:
     '''
+    touch empty.pdf
     tabix -p vcf !{svcf}
     Rscript !{baseDir}/bin/annotate_vcf.r --source_path=!{baseDir}/bin/ --input_vcf=!{svcf} --chunk_size=!{params.chunk_size} --do_plots=!{!params.no_plots} --plot_labels=!{!params.no_labels} --add_contours=!{!params.no_contours} --min_coverage=!{params.min_dp} --min_reads=!{params.min_ao} --GQ_threshold=!{params.min_qval}
     '''
