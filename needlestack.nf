@@ -129,7 +129,7 @@ if(params.input_vcf) {
 
     shell:
     '''
-    zcat !{input_vcf} | grep "^#" | grep -v "<redacted>" > header
+    zcat !{input_vcf} | sed '/^#CHROM/q' | grep -v "<redacted>" > header
     ((nb_total_lines= $((`zcat !{input_vcf} | wc -l`)) ))
     ((core_lines = $nb_total_lines - $((`cat header | wc -l`)) ))
     ((lines_per_file = ( $core_lines + !{params.nsplit} - 1) / !{params.nsplit}))
@@ -413,7 +413,7 @@ if(params.input_vcf) {
       mkdir VCF
       mv *.vcf VCF
       # Extract the header from the first VCF
-      grep '^#' VCF/!{all_vcf[0]} > header.txt
+      sed '/^#CHROM/q' VCF/!{all_vcf[0]} > header.txt
 
       # Add contigs in the VCF header
       cat !{fasta_ref_fai} | cut -f1,2 | sed -e 's/^/##contig=<ID=/' -e 's/[	 ][	 ]*/,length=/' -e 's/$/>/' > contigs.txt
