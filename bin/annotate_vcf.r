@@ -83,17 +83,13 @@ while(dim(vcf_chunk)[1] != 0) {
   })
 
   #annotate the header of the chunk
-  info(header(vcf_chunk))["ERR",]=list(1,"Integer","Error rate estimated by needlestack")
-  info(header(vcf_chunk))["SIG",]=list(1,"Integer","Dispertion parameter estimated by needlestack")
-  geno(header(vcf_chunk))["QVAL",]=list(1,"Integer","Phred q-values computed by needlestack")
+  info(header(vcf_chunk))["ERR",]=list("A","Integer","Error rate estimated by needlestack")
+  info(header(vcf_chunk))["SIG",]=list("A","Integer","Dispertion parameter estimated by needlestack")
+  geno(header(vcf_chunk))["QVAL",]=list("A","Integer","Phred q-values computed by needlestack")
 
   #annotate the chunk with computed values
-  info(vcf_chunk)$ERR = matrix(data = unlist(lapply(err, function(e) as.list(data.frame(mapply(c,e)))),recursive = FALSE),
-                               nrow = dim(vcf_chunk)[1],
-                               byrow = TRUE)
-  info(vcf_chunk)$SIG = matrix(data = unlist(lapply(sig, function(s) as.list(data.frame(mapply(c,s)))),recursive = FALSE),
-                               nrow = dim(vcf_chunk)[1],
-                               byrow = TRUE)
+  info(vcf_chunk)$ERR = NumericList(err)
+  info(vcf_chunk)$SIG = NumericList(sig)
   geno(vcf_chunk)$QVAL = matrix(data = unlist(lapply(qvals, function(q) as.list(data.frame(t(mapply(c,q))))),recursive = FALSE),
                                 nrow = dim(vcf_chunk)[1],
                                 byrow = TRUE)
