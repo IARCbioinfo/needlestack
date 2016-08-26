@@ -169,7 +169,6 @@ if(params.input_vcf) {
     publishDir params.out_folder, mode: 'move'
 
     input:
-    file input_vcf
     val out_annotated_vcf
     file all_vcf from annotated.toList()
 
@@ -178,15 +177,12 @@ if(params.input_vcf) {
 
     shell:
     '''
-    # Check if sort command allows sorting in natural order (1 2 10 instead of 1 10 2)
-    if [ `sort --help | grep -c 'version-sort' ` == 0 ]
-    then
-        sort_ops="-k1,1d"
-    else
-        sort_ops="-k1,1V"
-    fi
-
-    { zcat !{input_vcf} | grep '^#' && grep --no-filename -v "^#" split*.vcf | LC_ALL=C sort -t '	' $sort_ops -k2,2n ; } > !{out_annotated_vcf}
+    # Extract the header from the first VCF
+    grep '^#' !{all_vcf[0]} > !{out_annotated_vcf}
+    for i in `seq 1 !{params.nsplit}`;
+        do
+            grep -v '^#' split${i}_annotated_needlestack.vcf >> !{out_annotated_vcf}
+        done
     '''
   }
 
