@@ -63,10 +63,10 @@ while(dim(vcf_chunk)[1] != 0) {
         chr=as.character(seqnames(rowRanges(vcf_chunk,"seqnames"))[var_line])
         loc=start(ranges(rowRanges(vcf_chunk,"seqnames"))[var_line])
         ref=as.character(ref(vcf_chunk)[[var_line]])
-        alt=alt(vcf_chunk)[[var_line]]
+        alt=paste(as.character(alt(vcf_chunk)[[var_line]]),collapse = ",")
         sbs=rep(NA,dim(vcf_chunk)[2])
-        pdf(paste(chr,"_",loc,"_",loc,"_",ref,"_",alt,".pdf",sep=""),7,6)
-        plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=paste(chr, " ", loc," (",ref," -> ",alt,")",AD_index-1,sep=""), sbs=sbs, SB_threshold=SB_threshold,plot_labels=T,add_contours=T,names=samples(header(vcf_chunk)))
+        pdf(paste(chr,"_",loc,"_",loc,"_",ref,"_",alt,"_",AD_index-1,".pdf",sep=""),7,6)
+        plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(chr),":",.(loc)," (",.(ref) %->% .(alt),"[",.(AD_index-1),"]",")",sep="")), sbs=sbs, SB_threshold=SB_threshold,plot_labels=T,add_contours=T,names=samples(header(vcf_chunk)))
         dev.off()
       }
       reg_res
