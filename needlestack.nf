@@ -147,7 +147,7 @@ if(params.input_vcf) {
 
   process annotate_vcf {
 
-    publishDir params.out_folder+'/PDF/', mode: 'move',  pattern: "*[ATCG-].pdf"
+    publishDir params.out_folder+'/PDF/', mode: 'move',  pattern: "*[ATCG-]_[0-9]+.pdf"
 
     input:
     file svcf from splitted_vcf
