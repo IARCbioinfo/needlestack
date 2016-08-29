@@ -135,13 +135,17 @@ if(params.input_vcf) {
     ((lines_per_file = ( $core_lines + !{params.nsplit} - 1) / !{params.nsplit}))
     ((start=( $((`cat header | wc -l`)) +1 ) ))
 
-    for i in `seq 1 !{params.nsplit}`;
-	   do
-      if ((start < nb_total_lines)); then
-        { cat header && zcat !{input_vcf} | tail -n+$start  | head -n$lines_per_file ; } | bgzip > split${i}.vcf.bgz
-        ((start=start+lines_per_file))
-      fi
-     done
+    # this works only with split (coreutils) version > 8.13 but is much faster
+    zcat !{input_vcf} | tail -n+$start | split -l $lines_per_file -a 10 --filter='{ cat header; cat; } | bgzip > $FILE.gz' - split_
+
+    ## slower but does not require any specific version of split
+    #for i in `seq 1 !{params.nsplit}`;
+    #    do
+    #    if ((start < nb_total_lines)); then
+    #        { cat header && zcat !{input_vcf} | tail -n+$start  | head -n$lines_per_file ; } | bgzip > split${i}.vcf.gz
+    #        ((start=start+lines_per_file))
+    #    fi
+    #done
     '''
   }
 
@@ -179,10 +183,13 @@ if(params.input_vcf) {
     '''
     # Extract the header from the first VCF
     grep '^#' !{all_vcf[0]} > !{out_annotated_vcf}
-    for i in `seq 1 !{params.nsplit}`;
-        do
-            grep -v '^#' split${i}_annotated_needlestack.vcf >> !{out_annotated_vcf}
-        done
+    # this is only for the split_vcf process when using the split linux command that ensures files are in the right order
+    cat split_*.vcf >> !{out_annotated_vcf}
+    # this is for the slow version of the split_vcf process
+    #for i in `seq 1 !{params.nsplit}`;
+    #    do
+    #        grep -v '^#' split${i}_annotated_needlestack.vcf >> !{out_annotated_vcf}
+    #    done
     '''
   }
 
