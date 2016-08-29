@@ -184,7 +184,7 @@ if(params.input_vcf) {
     # Extract the header from the first VCF
     grep '^#' !{all_vcf[0]} > !{out_annotated_vcf}
     # this is only for the split_vcf process when using the split linux command that ensures files are in the right order
-    cat split_*.vcf >> !{out_annotated_vcf}
+    grep -h -v '^#' split_*.vcf >> !{out_annotated_vcf}
     # this is for the slow version of the split_vcf process
     #for i in `seq 1 !{params.nsplit}`;
     #    do
