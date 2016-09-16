@@ -205,7 +205,7 @@ if(params.input_vcf) {
 
   /* Verify user inputs are correct */
 
-  assert params.sb_type in ["SOR","RVSB","FISH"] : "--sb_type must be SOR, RVSB or FISH "
+  assert params.sb_type in ["SOR","RVSB","FS"] : "--sb_type must be SOR, RVSB or FS "
   assert params.all_SNVs in [true,false] : "do not assign a value to --all_SNVs"
   assert params.no_plots in [true,false] : "do not assign a value to --no_plots"
   assert params.no_indels in [true,false] : "do not assign a value to --no_indels"
