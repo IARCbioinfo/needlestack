@@ -152,7 +152,7 @@ common_annot=function() {
   all_sor<<-SOR(sum(Rp),sum(Vp),sum(Rm),sum(Vm))
   if (is.na(all_sor)) all_sor<<- (-1)
   if (is.infinite(all_sor)) all_sor<<- 99
-  FisherStrand<<-unlist(lapply(1:nindiv, function(indiv) fisher.test(matrix(c(Vp[indiv],Vm[indiv],Rp[indiv],Rm[indiv]), nrow=2))$p.value )) #col1=alt(V), col2=ref(R)
+  FisherStrand<<- -10*log10(unlist(lapply(1:nindiv, function(indiv) fisher.test(matrix(c(Vp[indiv],Vm[indiv],Rp[indiv],Rm[indiv]), nrow=2))$p.value ))) #col1=alt(V), col2=ref(R)
   FisherStrand_all<<--10*log10(fisher.test(matrix(c(sum(Vp),sum(Vm),sum(Rp),sum(Rm)), nrow=2))$p.value)
   all_RO<<-sum(Rp+Rm)
 }
