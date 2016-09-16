@@ -153,7 +153,9 @@ common_annot=function() {
   if (is.na(all_sor)) all_sor<<- (-1)
   if (is.infinite(all_sor)) all_sor<<- 99
   FisherStrand<<- -10*log10(unlist(lapply(1:nindiv, function(indiv) fisher.test(matrix(c(Vp[indiv],Vm[indiv],Rp[indiv],Rm[indiv]), nrow=2))$p.value ))) #col1=alt(V), col2=ref(R)
+  FisherStrand[which(FisherStrand>1000)] = 1000
   FisherStrand_all<<--10*log10(fisher.test(matrix(c(sum(Vp),sum(Vm),sum(Rp),sum(Rm)), nrow=2))$p.value)
+  if(FisherStrand_all>1000) FisherStrand_all=1000
   all_RO<<-sum(Rp+Rm)
 }
 
