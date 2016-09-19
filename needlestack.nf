@@ -29,8 +29,13 @@ params.min_ao = 5 // minimum number of non-ref reads in at least one sample to c
 params.nsplit = 1 // split the positions for calling in nsplit pieces and run in parallel
 params.min_qval = 50 // qvalue in Phred scale to consider a variant
 params.sb_type = "SOR" // strand bias measure to be used: "SOR" or "RVSB"
-params.sb_snv = 100 // strand bias threshold for snv
-params.sb_indel = 100 // strand bias threshold for indels
+if(params.sb_type in ["SOR", "RVSB"] ) {
+  params.sb_snv = 100 // strand bias threshold for snv
+  params.sb_indel = 100 // strand bias threshold for indels
+} else {
+  params.sb_snv = 1000 // strand bias threshold for snv
+  params.sb_indel = 1000 // strand bias threshold for indels
+}
 params.map_qual = 20 // min mapping quality (passed to samtools)
 params.base_qual = 20 // min base quality (passed to samtools)
 params.max_DP = 30000 // downsample coverage per sample (passed to samtools)
@@ -228,8 +233,14 @@ if(params.input_vcf) {
   assert (params.min_ao >= 0) : "minimum alternative reads must be higher than or equal to 0 (--min_ao)"
   assert (params.nsplit > 0) : "number of regions to split must be higher than 0 (--nsplit)"
   assert (params.min_qval >= 0) : "minimum Phred-scale qvalue must be higher than or equal to 0 (--min_qval)"
-  assert (params.sb_snv > 0 && params.sb_snv < 101) : "strand bias for SNVs must be in [0,100]"
-  assert (params.sb_indel > 0 && params.sb_indel < 101) : "strand bias for indels must be in [0,100]"
+  if(params.sb_type in ["SOR", "RVSB"] ) {
+  assert (params.sb_snv > 0 && params.sb_snv < 101) : "strand bias (SOR or RVSB) for SNVs must be in [0,100]"
+  assert (params.sb_indel > 0 && params.sb_indel < 101) : "strand bias (SOR or RVSB) for indels must be in [0,100]"
+  } else {
+  assert (params.sb_snv > 0 && params.sb_snv < 1001) : "strand bias (FS) for SNVs must be in [0,1000]"
+  assert (params.sb_indel > 0 && params.sb_indel < 1001) : "strand bias (FS) for indels must be in [0,1000]"
+  }
+
   assert (params.map_qual >= 0) : "minimum mapping quality (samtools) must be higher than or equal to 0"
   assert (params.base_qual >= 0) : "minimum base quality (samtools) must be higher than or equal to 0"
 
