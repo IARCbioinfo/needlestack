@@ -65,6 +65,7 @@ print "[",scalar(localtime),"] Begin parsing...\n";
 my $line = <FILE>;
 $line=~s/\r|\n//g;
 my ($chr,$loc,$ref,@dp_bases_bq) = split /\s+/, $line;
+$ref = uc $ref;
 my $n = int (scalar(@dp_bases_bq)/3); #determine how many samples, use int just in safe
 my %files;
 foreach my $i (1..$n){
@@ -85,6 +86,7 @@ foreach my $i (1..$n){
 while(<FILE>){
 	s/\r|\n//g;
 	my ($chr,$loc,$ref,@dp_bases_bq) = split /\s+/;
+	$ref = uc $ref;
 	my $n = int (scalar(@dp_bases_bq)/3); #determine how many samples, use int just in safe
 	foreach my $i (1..$n){
 		my $fh = $files{$i};
