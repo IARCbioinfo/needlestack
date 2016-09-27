@@ -83,9 +83,9 @@ while(dim(vcf_chunk)[1] != 0) {
   })
 
   #annotate the header of the chunk
-  info(header(vcf_chunk))["ERR",]=list("A","Integer","Error rate estimated by needlestack")
-  info(header(vcf_chunk))["SIG",]=list("A","Integer","Dispertion parameter estimated by needlestack")
-  geno(header(vcf_chunk))["QVAL",]=list("A","Integer","Phred q-values computed by needlestack")
+  info(header(vcf_chunk))["ERR",]=list("A","Float","Error rate estimated by needlestack")
+  info(header(vcf_chunk))["SIG",]=list("A","Float","Dispertion parameter estimated by needlestack")
+  geno(header(vcf_chunk))["QVAL",]=list("A","Float","Phred q-values computed by needlestack")
 
   #annotate the chunk with computed values
   info(vcf_chunk)$ERR = NumericList(err)
