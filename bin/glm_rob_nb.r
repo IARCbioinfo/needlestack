@@ -17,7 +17,7 @@ glmrob.nb <- function(y,x,bounding.func='T/T',c.tukey.beta=5,c.tukey.sig=3,c.by.
                       minsig=1e-3,maxsig=10,minmu=1e-10,maxmu=1e5,maxit=30,maxit.sig=50,sig.prec=1e-8,tol=1e-6,
                       n_ai.sig.tukey=100,n_xout=10^4,min_coverage=1,min_reads=1,size_min=10,...){
 
-  if (median(DP, na.rm=T)<min_coverage | sum(DP>min_coverage, na.rm=T)<size_min | max(y, na.rm = T)<min_reads | length(x[which(x>0)])<size_min ) {
+  if (median(x, na.rm=T)<min_coverage | sum(x>min_coverage, na.rm=T)<size_min | max(y, na.rm = T)<min_reads ) {
     return(res=list("coverage"=x, "ma_count"=y, "coef"=c(sigma=NA,slope=NA), "pvalues"=rep(1,l=length(y)), "qvalues"=rep(1,l=length(y)),"GQ"=rep(0,l=length(y))))
   }
   ### Written by William H. Aeberhard, February 2014
