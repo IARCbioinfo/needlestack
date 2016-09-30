@@ -179,14 +179,6 @@ glmrob.nb <- function(y,x,bounding.func='T/T',c.tukey.beta=5,c.tukey.sig=3,c.by.
     #build the result
     x <- xx
     y <- yy
-    if(!is.null(snps)) {
-      coverage = ma_count = rep(0,length(y)+length(snps$snp_pos))
-      ma_count[setdiff(1:(length(y)+length(snps$snp_pos)),snps$snp_pos)]=y
-      coverage[setdiff(1:(length(y)+length(snps$snp_pos)),snps$snp_pos)]=x
-      ma_count[snps$snp_pos]=snps$ma_count_snp
-      coverage[snps$snp_pos]=snps$DP_snp
-      y=ma_count; x=coverage
-    }
     res$coverage <- x
     res$ma_count <- y
     res$coef <- c(sigma=sig,slope=exp(beta1[[1]]))
