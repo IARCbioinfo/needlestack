@@ -15,18 +15,10 @@
 
 glmrob.nb <- function(y,x,bounding.func='T/T',c.tukey.beta=5,c.tukey.sig=3,c.by.beta=4,weights.on.x='none',
                       minsig=1e-3,maxsig=10,minmu=1e-10,maxmu=1e5,maxit=30,maxit.sig=50,sig.prec=1e-8,tol=1e-6,
-                      n_ai.sig.tukey=100,n_xout=10^4,min_coverage=1,min_reads=1,size_min=10,snps=NULL,...){
+                      n_ai.sig.tukey=100,n_xout=10^4,min_coverage=1,min_reads=1,size_min=10,...){
 
-  if (max(x,na.rm = T)<min_coverage | max(y, na.rm = T)<min_reads | length(x[which(x>0)])<size_min ) {
-    if(is.null(snps)) return(res=list("coverage"=x, "ma_count"=y, "coef"=c(sigma=NA,slope=NA), "pvalues"=rep(1,l=length(y)), "qvalues"=rep(1,l=length(y)),"GQ"=rep(0,l=length(y))))
-    if(!is.null(snps) & ( max(c(x,snps$DP_snp),na.rm=T)<min_coverage | max(c(y,snps$ma_count_snp),na.rm=T)<min_reads ) ) {
-      coverage = ma_count = rep(0,length(y)+length(snps$snp_pos))
-      ma_count[setdiff(1:(length(y)+length(snps$snp_pos)),snps$snp_pos)]=y
-      coverage[setdiff(1:(length(y)+length(snps$snp_pos)),snps$snp_pos)]=x
-      ma_count[snps$snp_pos]=snps$ma_count_snp
-      coverage[snps$snp_pos]=snps$DP_snp
-      return(res=list("coverage"=coverage, "ma_count"=ma_count, "coef"=c(sigma=NA,slope=NA), "pvalues"=rep(1,l=length(ma_count)), "qvalues"=rep(1,l=length(ma_count)),"GQ"=rep(0,l=length(ma_count))))
-    }
+  if (median(DP, na.rm=T)<min_coverage | sum(DP>min_coverage, na.rm=T)<size_min | max(y, na.rm = T)<min_reads | length(x[which(x>0)])<size_min ) {
+    return(res=list("coverage"=x, "ma_count"=y, "coef"=c(sigma=NA,slope=NA), "pvalues"=rep(1,l=length(y)), "qvalues"=rep(1,l=length(y)),"GQ"=rep(0,l=length(y))))
   }
   ### Written by William H. Aeberhard, February 2014
   ## Disclaimer: Users of these routines are cautioned that, while due care has been taken and they are
