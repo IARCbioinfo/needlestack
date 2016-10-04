@@ -15,7 +15,7 @@
 
 glmrob.nb <- function(y,x,bounding.func='T/T',c.tukey.beta=5,c.tukey.sig=3,c.by.beta=4,weights.on.x='none',
                       minsig=1e-3,maxsig=10,minmu=1e-10,maxmu=1e5,maxit=30,maxit.sig=50,sig.prec=1e-8,tol=1e-6,
-                      n_ai.sig.tukey=100,n_xout=10^4,min_coverage=1,min_reads=1,size_min=10,extra_rob=TRUE,min_af_extra_rob=0.2,min_prop_extra_rob=0.1,max_prop_extra_rob=0.25,...){
+                      n_ai.sig.tukey=100,n_xout=10^4,min_coverage=1,min_reads=1,size_min=10,extra_rob=TRUE,min_af_extra_rob=0.2,min_prop_extra_rob=0.1,max_prop_extra_rob=0.5,...){
 
   maxmu = max(x)                      
 
