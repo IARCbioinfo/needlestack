@@ -16,7 +16,9 @@
 glmrob.nb <- function(y,x,bounding.func='T/T',c.tukey.beta=5,c.tukey.sig=3,c.by.beta=4,weights.on.x='none',
                       minsig=1e-3,maxsig=10,minmu=1e-10,maxmu=1e5,maxit=30,maxit.sig=50,sig.prec=1e-8,tol=1e-6,
                       n_ai.sig.tukey=100,n_xout=10^4,min_coverage=1,min_reads=1,size_min=10,extra_rob=TRUE,min_af_extra_rob=0.2,min_prop_extra_rob=0.1,max_prop_extra_rob=0.25,...){
-  
+
+  maxmu = max(x)                      
+
   if(extra_rob & length(x[which( (y/x) > min_af_extra_rob)]) > min_prop_extra_rob*length(x) & length(x[which( (y/x) > min_af_extra_rob)]) < max_prop_extra_rob*length(x)){
     extra_rob_out = TRUE
     x_not_in_reg = x[which( (y/x) > min_af_extra_rob)]
@@ -24,7 +26,7 @@ glmrob.nb <- function(y,x,bounding.func='T/T',c.tukey.beta=5,c.tukey.sig=3,c.by.
     pos_not_in_reg = which( (y/x) > min_af_extra_rob)
     if(sum(!(1:length(x) %in% pos_not_in_reg))>size_min){ #if not enought samples after removing, do not perform extra-robust regression
       x = x[!(1:length(x) %in% pos_not_in_reg)]
-      y = y[!(1:length(y) %in% pos_not_in_reg)]      
+      y = y[!(1:length(y) %in% pos_not_in_reg)]
     } else {extra_rob_out = FALSE}
   } else {extra_rob_out = FALSE}
 
@@ -201,6 +203,7 @@ glmrob.nb <- function(y,x,bounding.func='T/T',c.tukey.beta=5,c.tukey.sig=3,c.by.
     res$coverage <- x
     res$ma_count <- y
     res$coef <- c(sigma=sig,slope=exp(beta1[[1]]))
+    if(res$coef[[2]] > 1) res$coef[[2]] = 1
     res$pvalues <- dnbinom(y,size=1/res$coef[[1]],mu=res$coef[[2]]*x) + pnbinom(y,size=1/res$coef[[1]],mu=res$coef[[2]]*x,lower.tail = F)
     res$qvalues=p.adjust(res$pvalues,method="BH")
     res$GQ=-log10(res$qvalues)*10
