@@ -41,6 +41,7 @@ params.base_qual = 20 // min base quality (passed to samtools)
 params.max_DP = 30000 // downsample coverage per sample (passed to samtools)
 params.use_file_name = false //put these argument to use the bam file names as sample names and do not to use the sample name filed from the bam files (SM tag)
 params.all_SNVs = false //  output all sites, even when no variant is detected
+params.extra_robust_gl = false //  perform an extra robust regression basically for germline variants
 params.no_plots = false  // do not produce pdf plots of regressions
 params.no_indels = false // do not skip indels
 params.no_labels = false // label outliers
@@ -80,6 +81,7 @@ if (params.help) {
     log.info '    --max_DP         INTEGER                  Samtools maximum coverage before downsampling.'
     log.info '    --use_file_name                           Sample names are taken from file names, otherwise extracted from the bam file SM tag.'
     log.info '    --all_SNVs                                Output all SNVs, even when no variant found.'
+    log.info '    --extra_robust_gl                         Perform an extra robust regression, basically for germline variants'
     log.info '    --no_plots                                Do not output PDF regression plots.'
     log.info '    --no_labels                               Do not add labels to outliers in regression plots.'
     log.info '    --no_indels                               Do not call indels.'
@@ -116,11 +118,13 @@ if(params.input_vcf) {
   params.chunk_size = 10000
   input_vcf = file(params.input_vcf)
   out_annotated_vcf = params.out_annotated_vcf ? params.out_annotated_vcf : "annotated.vcf"
+  assert params.extra_robust_gl in [true,false] : "do not assign a value to --extra_robust_gl"
 
   log.info "Number of vcf chunks for parallel computing (--nsplit)          : ${params.nsplit}"
   log.info "Size of read chunks by VariantAnnotation (--chunk_size)         : ${params.chunk_size}"
   log.info "Input vcf for annotation by needlestack (--input_vcf)           : ${params.input_vcf}"
   log.info "Output annotated file (--out_annotated_vcf)                     : ${out_annotated_vcf}"
+  log.info(params.extra_robust_gl == true ? "Perform an extra-robust regression (--extra_robust_gl)          : yes" : "Perform an extra-robust regression (--extra_robust_gl)          : no" )
   log.info "output folder (--out_folder)                                    : ${params.out_folder}"
   log.info "\n"
 
@@ -169,7 +173,7 @@ if(params.input_vcf) {
     '''
     touch empty.pdf
     tabix -p vcf !{svcf}
-    Rscript !{baseDir}/bin/annotate_vcf.r --source_path=!{baseDir}/bin/ --input_vcf=!{svcf} --chunk_size=!{params.chunk_size} --do_plots=!{!params.no_plots} --plot_labels=!{!params.no_labels} --add_contours=!{!params.no_contours} --min_coverage=!{params.min_dp} --min_reads=!{params.min_ao} --GQ_threshold=!{params.min_qval}
+    Rscript !{baseDir}/bin/annotate_vcf.r --source_path=!{baseDir}/bin/ --input_vcf=!{svcf} --chunk_size=!{params.chunk_size} --do_plots=!{!params.no_plots} --plot_labels=!{!params.no_labels} --add_contours=!{!params.no_contours} --min_coverage=!{params.min_dp} --min_reads=!{params.min_ao} --GQ_threshold=!{params.min_qval} --extra_rob=!{params.extra_robust_gl}
     '''
   }
 
@@ -212,6 +216,7 @@ if(params.input_vcf) {
 
   assert params.sb_type in ["SOR","RVSB","FS"] : "--sb_type must be SOR, RVSB or FS "
   assert params.all_SNVs in [true,false] : "do not assign a value to --all_SNVs"
+  assert params.extra_robust_gl in [true,false] : "do not assign a value to --extra_robust_gl"
   assert params.no_plots in [true,false] : "do not assign a value to --no_plots"
   assert params.no_indels in [true,false] : "do not assign a value to --no_indels"
   assert params.use_file_name in [true,false] : "do not assign a value to --use_file_name"
@@ -270,6 +275,7 @@ if(params.input_vcf) {
   log.info "Samtools maximum coverage before downsampling (--max_DP)        : ${params.max_DP}"
   log.info "Sample names definition (--use_file_name)                       : ${sample_names}"
   log.info(params.all_SNVs == true ? "Output all SNVs (--all_SNVs)                                    : yes" : "Output all SNVs (--all_SNVs)                                    : no" )
+  log.info(params.extra_robust_gl == true ? "Perform an extra-robust regression (--extra_robust_gl)          : yes" : "Perform an extra-robust regression (--extra_robust_gl)          : no" )
   log.info(params.no_indels == true ? "Skip indels (--no_indels)                                       : yes" : "Skip indels (--no_indels)                                       : no" )
   log.info "\n"
 
@@ -388,7 +394,7 @@ if(params.input_vcf) {
   // perform regression in R
   process R_regression {
 
-      publishDir params.out_folder+'/PDF/', mode: 'move', pattern: "*[ATCG-].pdf"
+      publishDir params.out_folder+'/PDF/', mode: 'move', pattern: "*[ATCG-]*.pdf"
 
       tag { region_tag }
 
@@ -405,8 +411,8 @@ if(params.input_vcf) {
       shell:
       '''
       # create a dummy empty pdf to avoid an error in the process when no variant is found
-      touch !{region_tag}_empty.pdf
-      needlestack.r --source_path=!{baseDir}/bin/ --out_file=!{region_tag}.vcf --fasta_ref=!{fasta_ref} --GQ_threshold=!{params.min_qval} --min_coverage=!{params.min_dp} --min_reads=!{params.min_ao} --SB_type=!{params.sb_type} --SB_threshold_SNV=!{params.sb_snv} --SB_threshold_indel=!{params.sb_indel} --output_all_SNVs=!{params.all_SNVs} --do_plots=!{!params.no_plots} --plot_labels=!{!params.no_labels} --add_contours=!{!params.no_contours}
+      touch empty.pdf
+      needlestack.r --source_path=!{baseDir}/bin/ --out_file=!{region_tag}.vcf --fasta_ref=!{fasta_ref} --GQ_threshold=!{params.min_qval} --min_coverage=!{params.min_dp} --min_reads=!{params.min_ao} --SB_type=!{params.sb_type} --SB_threshold_SNV=!{params.sb_snv} --SB_threshold_indel=!{params.sb_indel} --output_all_SNVs=!{params.all_SNVs} --do_plots=!{!params.no_plots} --plot_labels=!{!params.no_labels} --add_contours=!{!params.no_contours} --extra_rob=!{params.extra_robust_gl}
       '''
   }
 

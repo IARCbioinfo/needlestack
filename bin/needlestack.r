@@ -43,6 +43,7 @@ if("--help" %in% args | is.null(args$out_file) | is.null(args$fasta_ref) | is.nu
       --GQ_threshold=value           - phred scale qvalue threshold for variants, default=50
       --output_all_SNVs=boolean     - output all SNVs, even when no variant is detected, default=FALSE
       --do_plots=boolean              - output regression plots, default=TRUE
+      --extra_rob=boolean              - perform an extra-robust regression, default=FALSE
 
       WARNING : by default samtools has to be in your path
 
@@ -63,6 +64,7 @@ if(is.null(args$output_all_SNVs)) {args$output_all_SNVs=FALSE} else {args$output
 if(is.null(args$do_plots)) {args$do_plots=TRUE} else {args$do_plots=as.logical(args$do_plots)}
 if(is.null(args$plot_labels)) {args$plot_labels=FALSE} else {args$plot_labels=as.logical(args$plot_labels)}
 if(is.null(args$add_contours)) {args$add_contours=FALSE} else {args$add_contours=as.logical(args$add_contours)}
+if(is.null(args$extra_rob)) {args$extra_rob=FALSE} else {args$extra_rob=as.logical(args$extra_rob)}
 
 samtools=args$samtools
 out_file=args$out_file
@@ -79,6 +81,7 @@ output_all_SNVs=args$output_all_SNVs
 do_plots=args$do_plots
 plot_labels=args$plot_labels
 add_contours=args$add_contours
+extra_rob=args$extra_rob
 
 source(paste(args$source_path,"glm_rob_nb.r",sep=""))
 source(paste(args$source_path,"plot_rob_nb.r",sep=""))
@@ -186,6 +189,7 @@ write_out("##INFO=<ID=FS,Number=1,Type=Float,Description=\"Total Fisher Exact Te
 write_out("##INFO=<ID=ERR,Number=1,Type=Float,Description=\"Estimated error rate for the alternate allele\">")
 write_out("##INFO=<ID=SIG,Number=1,Type=Float,Description=\"Estimated overdispersion for the alternate allele\">")
 write_out("##INFO=<ID=CONT,Number=1,Type=String,Description=\"Context of the reference sequence\">")
+write_out("##INFO=<ID=WARN,Number=1,Type=String,Description=\"Warning message when position is processed specifically\">")
 
 write_out("##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">")
 write_out("##FORMAT=<ID=QVAL,Number=1,Type=Float,Description=\"Phred-scaled qvalue for not being an error\">")
@@ -208,7 +212,7 @@ for (i in 1:npos) {
       Vm=atcg_matrix[i,eval(as.name(paste(tolower(alt),"_cols",sep="")))]
       ma_count=Vp+Vm
       DP=coverage_matrix[i,]
-      reg_res=glmrob.nb(x=DP,y=ma_count,min_coverage=min_coverage,min_reads=min_reads)
+      reg_res=glmrob.nb(x=DP,y=ma_count,min_coverage=min_coverage,min_reads=min_reads,extra_rob=extra_rob)
       if (output_all_SNVs | (!is.na(reg_res$coef["slope"]) & sum(reg_res$GQ>=GQ_threshold,na.rm=TRUE)>0)) {
         all_AO=sum(ma_count)
         all_DP=sum(coverage_matrix[i,])
@@ -224,7 +228,7 @@ for (i in 1:npos) {
   		    close(con)
   		    cat(pos_ref[i,"chr"],"\t",pos_ref[i,"loc"],"\t",".","\t",pos_ref[i,"ref"],"\t",alt,"\t",max(reg_res$GQ),"\t",".",sep = "",file=out_file,append=T)
           # INFO field
-  		    cat("\t","TYPE=snv;NS=",sum(coverage_matrix[i,]>0),";AF=",sum(reg_res$GQ>=GQ_threshold)/sum(coverage_matrix[i,]>0),";DP=",all_DP,";RO=",all_RO,";AO=",all_AO,";SRF=",sum(Rp),";SRR=",sum(Rm),";SAF=",sum(Vp),";SAR=",sum(Vm),";SOR=",all_sor,";RVSB=",all_rvsb,";FS=",FisherStrand_all,";ERR=",reg_res$coef["slope"],";SIG=",reg_res$coef["sigma"],";CONT=",paste(before,after,sep="x"),sep="",file=out_file,append=T)
+  		    cat("\t","TYPE=snv;NS=",sum(coverage_matrix[i,]>0),";AF=",sum(reg_res$GQ>=GQ_threshold)/sum(coverage_matrix[i,]>0),";DP=",all_DP,";RO=",all_RO,";AO=",all_AO,";SRF=",sum(Rp),";SRR=",sum(Rm),";SAF=",sum(Vp),";SAR=",sum(Vm),";SOR=",all_sor,";RVSB=",all_rvsb,";FS=",FisherStrand_all,";ERR=",reg_res$coef["slope"],";SIG=",reg_res$coef["sigma"],";CONT=",paste(before,after,sep="x"),ifelse(reg_res$extra_rob,";WARN=EXTRA_ROBUST_GL",""),sep="",file=out_file,append=T)
   		    # FORMAT field
   		    cat("\t","GT:QVAL:DP:RO:AO:AF:SB:SOR:RVSB:FS",sep = "",file=out_file,append=T)
           # all samples
@@ -238,8 +242,8 @@ for (i in 1:npos) {
           }
   		    cat("\n",sep = "",file=out_file,append=T)
           if (do_plots) {
-            pdf(paste(pos_ref[i,"chr"],"_",pos_ref[i,"loc"],"_",pos_ref[i,"loc"],"_",pos_ref[i,"ref"],"_",alt,".pdf",sep=""),7,6)
-            plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(pos_ref[i,"chr"]),":",.(pos_ref[i,"loc"])," (",.(pos_ref[i,"ref"]) %->% .(alt),")",sep="")), sbs=sbs, SB_threshold=SB_threshold_SNV,plot_labels=plot_labels,add_contours=add_contours,names=indiv_run[,2])
+            pdf(paste(pos_ref[i,"chr"],"_",pos_ref[i,"loc"],"_",pos_ref[i,"loc"],"_",pos_ref[i,"ref"],"_",alt,ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),7,6)
+            plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(pos_ref[i,"chr"]),":",.(pos_ref[i,"loc"])," (",.(pos_ref[i,"ref"]) %->% .(alt),")",.(ifelse(reg_res$extra_rob," EXTRA ROBUST","")),sep="")), sbs=sbs, SB_threshold=SB_threshold_SNV,plot_labels=plot_labels,add_contours=add_contours,names=indiv_run[,2])
             dev.off()
           }
         }
@@ -265,7 +269,7 @@ for (i in 1:npos) {
         Vm[names(ma_m_cur_del)]=ma_m_cur_del
         ma_count=Vp+Vm
         DP=coverage_matrix[i,]+ma_count
-        reg_res=glmrob.nb(x=DP,y=ma_count,min_coverage=min_coverage,min_reads=min_reads)
+        reg_res=glmrob.nb(x=DP,y=ma_count,min_coverage=min_coverage,min_reads=min_reads,extra_rob=extra_rob)
         if (!is.na(reg_res$coef["slope"]) & sum(reg_res$GQ>=GQ_threshold,na.rm=TRUE)>0) {
           all_AO=sum(ma_count)
           all_DP=sum(coverage_matrix[i,])+sum(ma_count)
@@ -283,7 +287,7 @@ for (i in 1:npos) {
             next_bp=substr(after,1,1)
             cat(pos_ref[i,"chr"],"\t",pos_ref[i,"loc"],"\t",".","\t",paste(prev_bp,cur_del,sep=""),"\t",prev_bp,"\t",max(reg_res$GQ),"\t",".",sep = "",file=out_file,append=T)
             # INFO field
-            cat("\t","TYPE=del;NS=",sum(coverage_matrix[i,]>0),";AF=",sum(reg_res$GQ>=GQ_threshold)/sum(coverage_matrix[i,]>0),";DP=",all_DP,";RO=",all_RO,";AO=",all_AO,";SRF=",sum(Rp),";SRR=",sum(Rm),";SAF=",sum(Vp),";SAR=",sum(Vm),";SOR=",all_sor,";RVSB=",all_rvsb,";FS=",FisherStrand_all,";ERR=",reg_res$coef["slope"],";SIG=",reg_res$coef["sigma"],";CONT=",paste(before,after,sep="x"),sep="",file=out_file,append=T)
+            cat("\t","TYPE=del;NS=",sum(coverage_matrix[i,]>0),";AF=",sum(reg_res$GQ>=GQ_threshold)/sum(coverage_matrix[i,]>0),";DP=",all_DP,";RO=",all_RO,";AO=",all_AO,";SRF=",sum(Rp),";SRR=",sum(Rm),";SAF=",sum(Vp),";SAR=",sum(Vm),";SOR=",all_sor,";RVSB=",all_rvsb,";FS=",FisherStrand_all,";ERR=",reg_res$coef["slope"],";SIG=",reg_res$coef["sigma"],";CONT=",paste(before,after,sep="x"),ifelse(reg_res$extra_rob,";WARN=EXTRA_ROBUST_GL",""),sep="",file=out_file,append=T)
             # FORMAT field
             cat("\t","GT:QVAL:DP:RO:AO:AF:SB:SOR:RVSB:FS",sep = "",file=out_file,append=T)
             # all samples
@@ -298,8 +302,8 @@ for (i in 1:npos) {
             cat("\n",sep = "",file=out_file,append=T)
             if (do_plots) {
               # deletions are shifted in samtools mpileup by 1bp, so put them at the right place by adding + to pos_ref[i,"loc"] everywhere in what follows
-              pdf(paste(pos_ref[i,"chr"],"_",pos_ref[i,"loc"]+1,"_",pos_ref[i,"loc"]+1+nchar(cur_del)-1,"_",cur_del,"_","-",".pdf",sep=""),7,6)
-              plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(pos_ref[i,"chr"]),":",.(pos_ref[i,"loc"]+1)," (",.(cur_del) %->% .("-"),")",sep="")),sbs=sbs, SB_threshold=SB_threshold_indel,plot_labels=plot_labels,add_contours=add_contours,names=indiv_run[,2])
+              pdf(paste(pos_ref[i,"chr"],"_",pos_ref[i,"loc"]+1,"_",pos_ref[i,"loc"]+1+nchar(cur_del)-1,"_",cur_del,"_","-",ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),7,6)
+              plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(pos_ref[i,"chr"]),":",.(pos_ref[i,"loc"]+1)," (",.(cur_del) %->% .("-"),")",.(ifelse(reg_res$extra_rob," EXTRA ROBUST","")),sep="")),sbs=sbs, SB_threshold=SB_threshold_indel,plot_labels=plot_labels,add_contours=add_contours,names=indiv_run[,2])
               dev.off()
             }
           }
@@ -326,7 +330,7 @@ for (i in 1:npos) {
         Vm[names(ma_m_cur_ins)]=ma_m_cur_ins
         ma_count=Vp+Vm
         DP=coverage_matrix[i,]+ma_count[]
-        reg_res=glmrob.nb(x=DP,y=ma_count,min_coverage=min_coverage,min_reads=min_reads)
+        reg_res=glmrob.nb(x=DP,y=ma_count,min_coverage=min_coverage,min_reads=min_reads,extra_rob=extra_rob)
         if (!is.na(reg_res$coef["slope"]) & sum(reg_res$GQ>=GQ_threshold,na.rm=TRUE)>0) {
           all_AO=sum(ma_count)
           all_DP=sum(coverage_matrix[i,])+sum(ma_count)
@@ -343,7 +347,7 @@ for (i in 1:npos) {
             prev_bp=substr(before,3,3)
             cat(pos_ref[i,"chr"],"\t",pos_ref[i,"loc"],"\t",".","\t",prev_bp,"\t",paste(prev_bp,cur_ins,sep=""),"\t",max(reg_res$GQ),"\t",".",sep = "",file=out_file,append=T)
             # INFO field
-            cat("\t","TYPE=ins;NS=",sum(coverage_matrix[i,]>0),";AF=",sum(reg_res$GQ>=GQ_threshold)/sum(coverage_matrix[i,]>0),";DP=",all_DP,";RO=",all_RO,";AO=",all_AO,";SRF=",sum(Rp),";SRR=",sum(Rm),";SAF=",sum(Vp),";SAR=",sum(Vm),";SOR=",all_sor,";RVSB=",all_rvsb,";FS=",FisherStrand_all,";ERR=",reg_res$coef["slope"],";SIG=",reg_res$coef["sigma"],";CONT=",paste(before,after,sep="x"),sep="",file=out_file,append=T)
+            cat("\t","TYPE=ins;NS=",sum(coverage_matrix[i,]>0),";AF=",sum(reg_res$GQ>=GQ_threshold)/sum(coverage_matrix[i,]>0),";DP=",all_DP,";RO=",all_RO,";AO=",all_AO,";SRF=",sum(Rp),";SRR=",sum(Rm),";SAF=",sum(Vp),";SAR=",sum(Vm),";SOR=",all_sor,";RVSB=",all_rvsb,";FS=",FisherStrand_all,";ERR=",reg_res$coef["slope"],";SIG=",reg_res$coef["sigma"],";CONT=",paste(before,after,sep="x"),ifelse(reg_res$extra_rob,";WARN=EXTRA_ROBUST_GL",""),sep="",file=out_file,append=T)
             # FORMAT field
             cat("\t","GT:QVAL:DP:RO:AO:AF:SB:SOR:RVSB:FS",sep = "",file=out_file,append=T)
             # all samples
@@ -357,8 +361,8 @@ for (i in 1:npos) {
             }
             cat("\n",sep = "",file=out_file,append=T)
             if (do_plots) {
-              pdf(paste(pos_ref[i,"chr"],"_",pos_ref[i,"loc"],"_",pos_ref[i,"loc"],"_","-","_",cur_ins,".pdf",sep=""),7,6)
-              plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(pos_ref[i,"chr"]),":",.(pos_ref[i,"loc"])," (",.("-") %->% .(cur_ins),")",sep="")),sbs=sbs, SB_threshold=SB_threshold_indel,plot_labels=plot_labels,add_contours=add_contours,names=indiv_run[,2])
+              pdf(paste(pos_ref[i,"chr"],"_",pos_ref[i,"loc"],"_",pos_ref[i,"loc"],"_","-","_",cur_ins,ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),7,6)
+              plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(pos_ref[i,"chr"]),":",.(pos_ref[i,"loc"])," (",.("-") %->% .(cur_ins),")",.(ifelse(reg_res$extra_rob," EXTRA ROBUST","")),sep="")),sbs=sbs, SB_threshold=SB_threshold_indel,plot_labels=plot_labels,add_contours=add_contours,names=indiv_run[,2])
               dev.off()
             }
           }

@@ -15,10 +15,21 @@
 
 glmrob.nb <- function(y,x,bounding.func='T/T',c.tukey.beta=5,c.tukey.sig=3,c.by.beta=4,weights.on.x='none',
                       minsig=1e-3,maxsig=10,minmu=1e-10,maxmu=1e5,maxit=30,maxit.sig=50,sig.prec=1e-8,tol=1e-6,
-                      n_ai.sig.tukey=100,n_xout=10^4,min_coverage=1,min_reads=1,size_min=10,...){
+                      n_ai.sig.tukey=100,n_xout=10^4,min_coverage=1,min_reads=1,size_min=10,extra_rob=TRUE,min_af_extra_rob=0.2,min_prop_extra_rob=0.1,max_prop_extra_rob=0.25,...){
+  
+  if(extra_rob & length(x[which( (y/x) > min_af_extra_rob)]) > min_prop_extra_rob*length(x) & length(x[which( (y/x) > min_af_extra_rob)]) < max_prop_extra_rob*length(x)){
+    extra_rob_out = TRUE
+    x_not_in_reg = x[which( (y/x) > min_af_extra_rob)]
+    y_not_in_reg = y[which( (y/x) > min_af_extra_rob)]
+    pos_not_in_reg = which( (y/x) > min_af_extra_rob)
+    if(sum(!(1:length(x) %in% pos_not_in_reg))>size_min){ #if not enought samples after removing, do not perform extra-robust regression
+      x = x[!(1:length(x) %in% pos_not_in_reg)]
+      y = y[!(1:length(y) %in% pos_not_in_reg)]      
+    } else {extra_rob_out = FALSE}
+  } else {extra_rob_out = FALSE}
 
   if (median(x, na.rm=T)<min_coverage | sum(x>min_coverage, na.rm=T)<size_min | max(y, na.rm = T)<min_reads ) {
-    return(res=list("coverage"=x, "ma_count"=y, "coef"=c(sigma=NA,slope=NA), "pvalues"=rep(1,l=length(y)), "qvalues"=rep(1,l=length(y)),"GQ"=rep(0,l=length(y))))
+    return(res=list("coverage"=x, "ma_count"=y, "coef"=c(sigma=NA,slope=NA), "pvalues"=rep(1,l=length(y)), "qvalues"=rep(1,l=length(y)),"GQ"=rep(0,l=length(y)),"extra_rob"=extra_rob_out))
   }
   ### Written by William H. Aeberhard, February 2014
   ## Disclaimer: Users of these routines are cautioned that, while due care has been taken and they are
@@ -179,12 +190,12 @@ glmrob.nb <- function(y,x,bounding.func='T/T',c.tukey.beta=5,c.tukey.sig=3,c.by.
     #build the result
     x <- xx
     y <- yy
-    if(!is.null(snps)) {
-      coverage = ma_count = rep(0,length(y)+length(snps$snp_pos))
-      ma_count[setdiff(1:(length(y)+length(snps$snp_pos)),snps$snp_pos)]=y
-      coverage[setdiff(1:(length(y)+length(snps$snp_pos)),snps$snp_pos)]=x
-      ma_count[snps$snp_pos]=snps$ma_count_snp
-      coverage[snps$snp_pos]=snps$DP_snp
+    if(extra_rob_out) {
+      coverage = ma_count = rep(0,length(y)+length(pos_not_in_reg))
+      ma_count[setdiff(1:(length(y)+length(pos_not_in_reg)),pos_not_in_reg)]=y
+      coverage[setdiff(1:(length(x)+length(pos_not_in_reg)),pos_not_in_reg)]=x
+      ma_count[pos_not_in_reg]=y_not_in_reg
+      coverage[pos_not_in_reg]=x_not_in_reg
       y=ma_count; x=coverage
     }
     res$coverage <- x
@@ -194,6 +205,7 @@ glmrob.nb <- function(y,x,bounding.func='T/T',c.tukey.beta=5,c.tukey.sig=3,c.by.
     res$qvalues=p.adjust(res$pvalues,method="BH")
     res$GQ=-log10(res$qvalues)*10
     res$GQ[res$GQ>1000]=1000 #here also manage qvalues=Inf
+    res$extra_rob=extra_rob_out #did we exclude samples for fitting?
   } else {stop('Available bounding.func is "T/T"')}
   return(res)
 }

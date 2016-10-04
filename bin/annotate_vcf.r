@@ -32,6 +32,7 @@ if(is.null(args$min_coverage))         {min_coverage = 50} else {min_coverage = 
 if(is.null(args$min_reads))            {min_reads = 5} else {min_reads = as.numeric(args$min_reads)}
 if(is.null(args$GQ_threshold))         {GQ_threshold=50} else {GQ_threshold = as.numeric(args$GQ_threshold)}
 if(is.null(args$SB_threshold))         {SB_threshold=100} else {SB_threshold = as.numeric(args$SB_threshold)}
+if(is.null(args$extra_rob))            {extra_rob=FALSE} else {extra_rob=as.logical(args$extra_rob)}
 
 source(paste(args$source_path,"glm_rob_nb.r",sep=""))
 source(paste(args$source_path,"plot_rob_nb.r",sep=""))
@@ -58,15 +59,15 @@ while(dim(vcf_chunk)[1] != 0) {
     lapply(2:max(lengths(AD_matrix[var_line,])), function(AD_index) { #for each alternative
       DP=DP_matrix[var_line,]
       AO=unlist(lapply(AD_matrix[var_line,],"[[",AD_index)) #AD_matrix[var_line,] is a list of AD for each sample, here return list of ADs(i) for alt i
-      reg_res=glmrob.nb(x=DP,y=AO,min_coverage=min_coverage,min_reads=min_reads)
+      reg_res=glmrob.nb(x=DP,y=AO,min_coverage=min_coverage,min_reads=min_reads,extra_rob=extra_rob)
       if (do_plots) {
         chr=as.character(seqnames(rowRanges(vcf_chunk,"seqnames"))[var_line])
         loc=start(ranges(rowRanges(vcf_chunk,"seqnames"))[var_line])
         ref=as.character(ref(vcf_chunk)[[var_line]])
         alt=paste(as.character(alt(vcf_chunk)[[var_line]]),collapse = ",")
         sbs=rep(NA,dim(vcf_chunk)[2])
-        pdf(paste(chr,"_",loc,"_",loc,"_",ref,"_",alt,"_",AD_index-1,".pdf",sep=""),7,6)
-        plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(chr),":",.(loc)," (",.(ref) %->% .(alt),"[",.(AD_index-1),"]",")",sep="")), sbs=sbs, SB_threshold=SB_threshold,plot_labels=T,add_contours=T,names=samples(header(vcf_chunk)))
+        pdf(paste(chr,"_",loc,"_",loc,"_",ref,"_",alt,"_",AD_index-1,ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),7,6)
+        plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(chr),":",.(loc)," (",.(ref) %->% .(alt),"[",.(AD_index-1),"]",")",.(ifelse(reg_res$extra_rob," EXTRA ROBUST","")),sep="")), sbs=sbs, SB_threshold=SB_threshold,plot_labels=T,add_contours=T,names=samples(header(vcf_chunk)))
         dev.off()
       }
       reg_res
@@ -81,10 +82,14 @@ while(dim(vcf_chunk)[1] != 0) {
   sig = lapply(reg_list, function(regs) {
     lapply(regs, function(reg) unlist(reg$coef["sigma"]))
   })
+  extra_robust_gl = unlist(lapply(reg_list, function(regs) {
+    lapply(regs, function(reg) unlist(reg$extra_rob))
+  }))
 
   #annotate the header of the chunk
   info(header(vcf_chunk))["ERR",]=list("A","Float","Error rate estimated by needlestack")
   info(header(vcf_chunk))["SIG",]=list("A","Float","Dispertion parameter estimated by needlestack")
+  info(header(vcf_chunk))["WARN",]=list("A","Character","Warning message when position is processed specifically by needlestack")
   geno(header(vcf_chunk))["QVAL",]=list("A","Float","Phred q-values computed by needlestack")
 
   #annotate the chunk with computed values
@@ -93,6 +98,8 @@ while(dim(vcf_chunk)[1] != 0) {
   geno(vcf_chunk)$QVAL = matrix(data = unlist(lapply(qvals, function(q) as.list(data.frame(t(mapply(c,q))))),recursive = FALSE),
                                 nrow = dim(vcf_chunk)[1],
                                 byrow = TRUE)
+  info(vcf_chunk)$WARN = rep(NA, length(extra_robust_gl))
+  info(vcf_chunk)$WARN[which(extra_robust_gl==TRUE)]="EXTRA_ROBUST_GL"
 
   #write out the annotated VCF
   con = file(out_vcf, open = "a")
