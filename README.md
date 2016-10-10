@@ -109,7 +109,7 @@ echo "executor.\$local.queueSize = "`getconf _NPROCESSORS_ONLN` >> ~/.nextflow/c
 
 | Parameter | Default value | Description |
 |-----------|--------------:|-------------| 
-| min_dp    |            50 | Minimum coverage in at least one sample to consider a site |
+| min_dp    |            50 | Minimum median coverage to consider a site. In addition, at least 10 samples have to be covered by min_dp. |
 | min_ao | 5 | Minimum number of non-ref reads in at least one sample to consider a site |
 | nsplit | 1 | Split the bed file in nsplit pieces and run in parallel |
 | min_qval | 50 | qvalue threshold in [Phred scale](https://en.wikipedia.org/wiki/Phred_quality_score) to consider a variant |
