@@ -70,7 +70,7 @@ if (params.help) {
     log.info '    --input_vcf      VCF FILE                 VCF file (basically from GATK pipeline) to annotate.'
     log.info 'Options:'
     log.info '    --nsplit         INTEGER                  Split the region for calling in nsplit pieces and run in parallel.'
-    log.info '    --min_dp         INTEGER                  Minimum coverage in at least one sample to consider a site.'
+    log.info '    --min_dp         INTEGER                  Minimum median coverage (in addition, min_dp in at least 10 samples).'
     log.info '    --min_ao         INTEGER                  Minimum number of non-ref reads in at least one sample to consider a site.'
     log.info '    --min_qval       VALUE                    Qvalue in Phred scale to consider a variant.'
     log.info '    --sb_type        SOR or RVSB              Strand bias measure.'
