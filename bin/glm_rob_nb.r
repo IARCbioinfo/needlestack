@@ -30,6 +30,8 @@ glmrob.nb <- function(y,x,bounding.func='T/T',c.tukey.beta=5,c.tukey.sig=3,c.by.
     } else {extra_rob_out = FALSE}
   } else {extra_rob_out = FALSE}
 
+  if(extra_rob_out) min_reads=0
+  
   if (median(x, na.rm=T)<min_coverage | sum(x>min_coverage, na.rm=T)<size_min | max(y, na.rm = T)<min_reads ) {
     return(res=list("coverage"=x, "ma_count"=y, "coef"=c(sigma=NA,slope=NA), "pvalues"=rep(1,l=length(y)), "qvalues"=rep(1,l=length(y)),"GQ"=rep(0,l=length(y)),"extra_rob"=extra_rob_out))
   }
