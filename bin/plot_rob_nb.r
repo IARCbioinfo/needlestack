@@ -16,7 +16,7 @@
 plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_threshold=Inf,names=NULL,plot_labels=FALSE,add_contours=FALSE){
   n=sum(rob_nb_res$qvalue>qthreshold)
   m=sum(rob_nb_res$qvalue<=qthreshold)
-
+  
   cut_max_qvals=100
   cols=rep("black",length(rob_nb_res$coverage))
   palette=rev(rainbow(cut_max_qvals+1,start=0, end=4/6))
@@ -25,7 +25,7 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
   cols=palette[col_indices]
   outliers_color=cols
   outliers_color[which(sbs>SB_threshold)]="black"
-
+  
   temp_title = bquote(e==.(format(rob_nb_res$coef[[2]],digits = 2)) ~ "," ~ sigma==.(format(rob_nb_res$coef[[1]],digits = 2)))
   plot(rob_nb_res$coverage, rob_nb_res$ma_count,
        pch=21,bg=cols,col=outliers_color,xlab="Coverage (DP)",ylab="Number of ALT reads (AO)",
@@ -36,7 +36,7 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
     text(rob_nb_res$coverage[which(rob_nb_res$qvalues<=qthreshold)], rob_nb_res$ma_count[which(rob_nb_res$qvalues<=qthreshold)],
          labels=names[which(rob_nb_res$qvalues<=qthreshold)], cex= 0.6, pos=1)
   }
-
+  
   #### plot the color palette
   plot_palette <- function(topright=FALSE) {
     xmin <- par("usr")[1]
@@ -48,7 +48,7 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
     if(topright){xright=xmin+(xmax-xmin)*0.9;xleft=xmin+(xmax-xmin)*0.94}
     ybottom=ymin+(ymax-ymin)*0.72
     ytop=ymin+(ymax-ymin)*0.94
-
+    
     rasterImage(as.raster(matrix(rev(palette), ncol=1)),xright ,ybottom ,xleft,ytop )
     rect(xright ,ybottom ,xleft,ytop )
     text(x=(xright+xleft)/2, y = ytop+(ytop-ybottom)*0.1, labels = "QVAL", cex=0.8)
@@ -70,7 +70,7 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
   }
   plot_palette()
   ####
-
+  
   if (!is.na(rob_nb_res$coef["slope"])) {
     ################### ADD CONTOURS ##################
     max_nb_grid_pts = 2500
@@ -78,6 +78,7 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
     qlevels = c(10,30,50,70,100)
     # following function returns a qvalue for a new point by adding it in the set of observations, recomputing all qvalues and taking its corresponding value.
     toQvalue <- function(x,y){
+      if(y>x) return(0)
       unlist(-10*log10(p.adjust((dnbinom(c(rob_nb_res$ma_count,y),size=1/rob_nb_res$coef[[1]],mu=rob_nb_res$coef[[2]]*c(rob_nb_res$coverage,x)) +
                                    pnbinom(c(rob_nb_res$ma_count,y),size=1/rob_nb_res$coef[[1]],mu=rob_nb_res$coef[[2]]*c(rob_nb_res$coverage,x),lower.tail = F)))
                        [length(rob_nb_res$coverage)+1]))
@@ -95,22 +96,22 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
       maxDP_qvals = unlist(lapply(maxDP_AO,function(AO){ toQvalue(x=max(rob_nb_res$coverage,na.rm=T),y=AO) }))
       af_min_lim = log10(maxDP_AO[which(maxDP_qvals>=qlevels[1])[1]]/max(rob_nb_res$coverage,na.rm=T))
       ylim_zoom = maxDP_AO[which(maxDP_qvals>=max_qvalue)[1]]
-      ylim_zoom_cor=ifelse(is.na(ylim_zoom),max(rob_nb_res$ma_count,na.rm=T),ylim_zoom)
-      if(!is.na(ylim_zoom)){ #ylim_zoom is na iff we found at least one qvalue >= max_qvalue (if error rate closed to 1, only qvalues closed to 0)
+      ylim_zoom_cor=ifelse(is.na(ylim_zoom),max(rob_nb_res$coverage,na.rm=T),ylim_zoom)
+      if(!is.na(ylim_zoom_cor)){ #ylim_zoom is na iff we found at least one qvalue >= max_qvalue (if error rate closed to 1, only qvalues closed to 0)
         #### compute dim of the qvalue grid
-        if(ylim_zoom*max(rob_nb_res$coverage,na.rm=T) <= max_nb_grid_pts){
+        if(ylim_zoom_cor*max(rob_nb_res$coverage,na.rm=T) <= max_nb_grid_pts){
           xgrid = seq(0,max(rob_nb_res$coverage,na.rm=T), by=1)
-          ygrid = seq(0,ylim_zoom,by=1) #use by=1 to have integer, if not dnbinom not happy
+          ygrid = seq(0,ylim_zoom_cor,by=1) #use by=1 to have integer, if not dnbinom not happy
         } else {
-          if(ylim_zoom<=50){
-            ygrid=seq(0,ylim_zoom,by=1)
+          if(ylim_zoom_cor<=50){
+            ygrid=seq(0,ylim_zoom_cor,by=1)
             xlength = round(max_nb_grid_pts/length(ygrid))
             xgrid = round(seq(0,max(rob_nb_res$coverage,na.rm=T),length=xlength))
           } else {
             ylength = 50
             xlength = round(max_nb_grid_pts/ylength)
             xgrid = round(seq(0,max(rob_nb_res$coverage,na.rm=T),length=xlength))
-            ygrid = round(seq(0,ylim_zoom,length=ylength))
+            ygrid = round(seq(0,ylim_zoom_cor,length=ylength))
           }
         }
         #here we initiate the grid with each case containing list=(DP,AO) from xgrid, ygrid
@@ -141,7 +142,7 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
          main=plot_title, ylim=c(0,ylim_zoom_cor), xlim=c(0,max(rob_nb_res$coverage,na.rm=T)))
     #### plot the contour "by hands"
     if(add_contours){
-      if(!is.na(ylim_zoom)){
+      if(!is.na(ylim_zoom_cor)){
         for(qvalue in qlevels) {
           lines(xgrid, unlist(lapply(xgrid,function(DP,ygrid,xgrid){
             qval=min(matgrid[match(DP,xgrid),which(matgrid[match(DP,xgrid),]>=qvalue)])
@@ -161,7 +162,7 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
     lines(DP_for_IC,qnbinom(p=0.01, size=1/rob_nb_res$coef[[1]], mu=rob_nb_res$coef[[2]]*DP_for_IC),col="black",lty=3,lwd=2)
     abline(a=0, b=rob_nb_res$coef[[2]], col="black")
     plot_palette()
-
+    
     plot(rob_nb_res$GQ,log10(rob_nb_res$ma_count/rob_nb_res$coverage),pch=21,bg=cols,col=outliers_color,ylab=bquote("log"[10] ~ "[Allelic Fraction (AF)]"),xlab="QVAL",main="Allelic fraction effect")
     abline(v=-10*log10(qthreshold),col="red",lwd=2)
     plot_palette()
@@ -172,7 +173,7 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
     abline(v=-10*log10(qthreshold),col="red",lwd=2)
     plot_palette()
     if(add_contours){
-      if(!is.na(ylim_zoom)){
+      if(!is.na(ylim_zoom_cor)){
         #### plot min(af) ~ DP
         plot(1,type='n', ylim=c(1.1*af_min_lim,0), xlim=range(xgrid), xlab="DP", ylab=bquote("log"[10] ~ "[min(AF)]"))
         for(qvalue in qlevels) {
