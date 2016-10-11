@@ -95,6 +95,7 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
       }
       maxDP_qvals = unlist(lapply(maxDP_AO,function(AO){ toQvalue(x=max(rob_nb_res$coverage,na.rm=T),y=AO) }))
       af_min_lim = log10(maxDP_AO[which(maxDP_qvals>=qlevels[1])[1]]/max(rob_nb_res$coverage,na.rm=T))
+      if(is.na(af_min_lim)) af_min_lim=0 #if maxDP_qvals does not contain qlevels[1] 
       ylim_zoom = maxDP_AO[which(maxDP_qvals>=max_qvalue)[1]]
       ylim_zoom_cor=ifelse(is.na(ylim_zoom),max(rob_nb_res$coverage,na.rm=T),ylim_zoom)
       if(!is.na(ylim_zoom_cor)){ #ylim_zoom is na iff we found at least one qvalue >= max_qvalue (if error rate closed to 1, only qvalues closed to 0)
