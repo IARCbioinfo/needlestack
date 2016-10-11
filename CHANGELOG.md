@@ -1,10 +1,11 @@
 # Change Log
 
-## [v1.0](https://github.com/IARCbioinfo/needlestack/tree/v1.0) (2016-06-23)
+## [v1.0](https://github.com/IARCbioinfo/needlestack/tree/v1.0) (2016-08-03)
 [Full Changelog](https://github.com/IARCbioinfo/needlestack/compare/v0.3...v1.0)
 
 **Implemented enhancements:**
 
+- Manage the three possible genotypes in vcf [\#130](https://github.com/IARCbioinfo/needlestack/issues/130)
 - The graph showing AF vs log10\(qval\) should show phred-scaled qvalues [\#121](https://github.com/IARCbioinfo/needlestack/issues/121)
 
 **Fixed bugs:**

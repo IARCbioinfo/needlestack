@@ -16,360 +16,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-glmrob.nb <- function(y,x,bounding.func='T/T',c.tukey.beta=5,c.tukey.sig=3,c.by.beta=4,weights.on.x='none',
-                      minsig=1e-3,maxsig=10,minmu=1e-10,maxmu=1e5,maxit=30,maxit.sig=50,sig.prec=1e-8,tol=1e-6,
-                      n_ai.sig.tukey=100,n_xout=10^4,min_coverage=1,min_reads=1,size_min=10,...){
-
-  if (max(x)<min_coverage | max(y)<min_reads) return(res=list("coverage"=x, "ma_count"=y, "coef"=c(sigma=NA,slope=NA), "pvalues"=rep(1,l=length(y)), "qvalues"=rep(1,l=length(y)),"GQ"=rep(0,l=length(y))))
-
-  ### Written by William H. Aeberhard, February 2014
-  ## Disclaimer: Users of these routines are cautioned that, while due care has been taken and they are
-  ## believed accurate, they have not been rigorously tested and their use and results are
-  ## solely the responsibilities of the user.
-  ### Modified by Matthieu Foll and Tiffany Delhomme, 2015 (follm@iarc.fr)
-  #-------------------------------------------------------------------
-  # General set up
-  #-------------------------------------------------------------------
-  yy <- y
-  xx <- x
-  y <- y[which(x>0)]
-  x <- x[which(x>0)]
-  if(length(x)<10) return(res=list("coverage"=x, "ma_count"=y, "coef"=c(sigma=NA,slope=NA), "pvalues"=rep(1,l=length(y)), "qvalues"=rep(1,l=length(y)),"GQ"=rep(0,l=length(y))))
-  n <- length(y)
-  X <- matrix(log(x))
-  if (dim(X)[1]!=n){stop('length(y) does not match dim(X)[1].')}
-  onevec <- rep(1,n)
-  if (identical(X[,1],onevec)){X <- X[,-1]}
-  res <- list()
-  #-------------------------------------------------------------------
-  # initial estimates: MLEs for beta and sigma
-  #-------------------------------------------------------------------
-  invlink <- function(eta){exp(eta)}
-  derivlink <- function(mu){1/mu}
-  varfunc <- function(mu,sig){mu+sig*mu^2}
-  # initial mu computed through median outliers method
-  af=y/exp(X)
-  af[which(y==0)] <- 0
-  inislope <- mean(af[which(af<=quantile(af,0.75)+1.5*diff(quantile(af,c(0.25,0.75))))])
-  if(inislope<=1/(10*mean(exp(X)))){inislope<-1/(10*mean(exp(X)))}
-  mu <- inislope*exp(X)
-  mu[which(mu>maxmu)] <- maxmu
-  mu[which(mu<minmu)] <- minmu
-  eta <- log(mu)
-  # sig MLE based on initial mu, with starting value = moment based
-  sig <- sum((y/mu-1)^2)/length(y)
-  if (sig>maxsig){sig <- maxsig}
-  if (sig<minsig){sig <- minsig}
-  #-------------------------------------------------------------------
-  # Robust estimations
-  #-------------------------------------------------------------------
-  derivinvlink <- function(etai){exp(etai)}
-  if (weights.on.x=='none'){
-    weights.x <- onevec
-  } else if (weights.on.x=='hard'){
-    require(MASS) # for cov.rob
-    Xrc <- cov.rob(X,quantile.used=floor(0.8*n))
-    D2 <- mahalanobis(X,center=Xrc$center,cov=Xrc$cov) # copied from robustbase:::wts_RobDist
-    qchi2 <- qchisq(p=0.95,df=dim(X)[2])
-    weights.x <- ifelse(D2<=qchi2,1,0)
-  } else {stop('Only "hard" and "none" are implemented for weights.on.x.')}
-  derivinvlink <- function(eta){exp(eta)}
-  psi.sig.ML <- function(r,mu,sig){
-    digamma(r*sqrt(mu*(sig*mu+1))+mu+1/sig)-sig*r*sqrt(mu/(sig*mu+1))-digamma(1/sig)-log(sig*mu+1)
-  }
-  if (bounding.func=='T/T'){
-    ### estimations
-    tukeypsi <- function(r,c.tukey){
-      ifelse(abs(r)>c.tukey,0,((r/c.tukey)^2-1)^2*r)
-    }
-    E.tukeypsi.1 <- function(mui,sig,c.tukey){
-      sqrtVmui <- sqrt(varfunc(mui,sig))
-      j1 <- max(c(ceiling(mui-c.tukey*sqrtVmui),0))
-      j2 <- floor(mui+c.tukey*sqrtVmui)
-      if (j1>j2){0}
-      else {
-        if (j2-j1+1 > 2*n_ai.sig.tukey) {
-          j12 <- round(seq(j1,j2,l=n_ai.sig.tukey))
-          yj12 <- (((j12-mui)/(c.tukey*sqrtVmui))^2-1)^2*(j12-mui)*dnbinom(j12,mu=mui,size=1/sig)
-          integrate(splinefun(x = j12, y=yj12,method = "natural"), lower = min(j12), upper = max(j12)+1)[[1]]/sqrtVmui
-        } else {
-          j12 <- j1:j2
-          sum((((j12-mui)/(c.tukey*sqrtVmui))^2-1)^2*(j12-mui)*dnbinom(j12,mu=mui,size=1/sig))/sqrtVmui
-        }
-      }
-    }
-    E.tukeypsi.2 <- function(mui,sig,c.tukey){
-      sqrtVmui <- sqrt(varfunc(mui,sig))
-      j1 <- max(c(ceiling(mui-c.tukey*sqrtVmui),0))
-      j2 <- floor(mui+c.tukey*sqrtVmui)
-      if (j1>j2){0}
-      else {
-        if (j2-j1+1 > 2*n_ai.sig.tukey) {
-          j12 <- round(seq(j1,j2,l=n_ai.sig.tukey))
-          yj12 <- (((j12-mui)/(c.tukey*sqrtVmui))^2-1)^2*(j12-mui)^2*dnbinom(j12,mu=mui,size=1/sig)
-          integrate(splinefun(x = j12, y=yj12,method = "natural"), lower = min(j12), upper = max(j12)+1)[[1]]/sqrtVmui
-        } else {
-          j12 <- j1:j2
-          sum((((j12-mui)/(c.tukey*sqrtVmui))^2-1)^2*(j12-mui)^2*dnbinom(j12,mu=mui,size=1/sig))/sqrtVmui
-        }
-      }
-    }
-    ai.sig.tukey <- function(mui,sig,c.tukey){
-      psi.sig.ML.mod <- function(j,mui,invsig){
-        digamma(j+invsig)-digamma(invsig)-log(mui/invsig+1)-(j-mui)/(mui+invsig)
-      }
-      sqrtVmui <- sqrt(mui*(sig*mui+1))
-      invsig <- 1/sig
-      j1 <- max(c(ceiling(mui-c.tukey*sqrtVmui),0))
-      j2 <- floor(mui+c.tukey*sqrtVmui)
-      if (j1>j2){0}
-      else {
-        if (j2-j1+1 > 2*n_ai.sig.tukey) {
-          j12 <- round(seq(j1,j2,l=n_ai.sig.tukey))
-          yj12 <- (((j12-mui)/(c.tukey*sqrtVmui))^2-1)^2*psi.sig.ML.mod(j=j12,mui=mui,invsig=invsig)*dnbinom(x=j12,mu=mui,size=invsig)
-          integrate(splinefun(x = j12, y=yj12,method = "natural"), lower = min(j12), upper = max(j12)+1)[[1]] #xout=j1:j2
-        } else {
-          j12 <- j1:j2
-          sum((((j12-mui)/(c.tukey*sqrtVmui))^2-1)^2*psi.sig.ML.mod(j=j12,mui=mui,invsig=invsig)*dnbinom(x=j12,mu=mui,size=invsig))
-        }
-      }
-    }
-    sig.rob.tukey <- function(sig,y,mu,c.tukey){
-      r <- (y-mu)/sqrt(varfunc(mu,sig))
-      wi <- tukeypsi(r=r,c.tukey=c.tukey)/r
-      sum(wi*psi.sig.ML(r=r,mu=mu,sig=sig)-sapply(X=mu,FUN=ai.sig.tukey,sig=sig,c.tukey=c.tukey))
-    }
-    sig0 <- sig+1+tol
-    beta11 <- log(inislope)
-    #beta11 <- log(median(y[which(y<=1.5*quantile(y,0.75))]/x[which(y<=1.5*quantile(y,0.75))])) #slope estimated with median
-    beta00 <- beta11+tol+1
-    it <- 0
-    while((abs(sig-sig0)>tol | abs(max(beta11-beta00))>tol) & it<maxit){
-      sig0 <- sig
-      beta00 <- beta11
-      # estimate sigma given mu
-      sig=tryCatch( {
-        uniroot(f=sig.rob.tukey,interval=c(minsig,maxsig),tol=sig.prec,maxiter=maxit.sig,mu=mu,y=y,c.tukey=c.tukey.sig)$root
-      },error=function(cond){ return(NA) } )
-      if (is.na(sig)){sig <- minsig}
-      else {
-        if (sig>maxsig){sig <- maxsig}
-        if (sig<minsig){sig <- minsig}
-      }
-      # estimate mu given sigma
-      beta1 <- log(inislope)
-      beta0 <- beta1+tol+1
-      it.mu <- 0
-      while(abs(max(beta1-beta0))>tol & it.mu<maxit){
-        beta0 <- beta1
-        sap <- sapply(X=mu,FUN=E.tukeypsi.2,sig=sig,c.tukey=c.tukey.beta)
-        bi <- sap*varfunc(mu,sig)^(-3/2)*derivinvlink(eta)^2
-        ei <- (tukeypsi(r=(y-mu)/sqrt(varfunc(mu,sig)),c.tukey=c.tukey.beta)-sapply(X=mu,FUN=E.tukeypsi.1,sig=sig,c.tukey=c.tukey.beta))/
-          sap*varfunc(mu,sig)*derivlink(mu)
-        zi <- eta + ei
-        wls <- lm(zi~offset(X),weights=bi) ## added offset
-        beta1 <- c(coef(wls),1) # coef(wls)
-        eta <- fitted(wls)
-        mu <- invlink(eta)
-        mu[which(mu>maxmu)] <- maxmu
-        mu[which(mu==0)] <- minmu
-        eta <- log(mu)
-        it.mu <- it.mu+1
-      }
-      beta11 <- beta1
-      it <- it+1
-    }
-    #build the result
-    x <- xx
-    y <- yy
-    res$coverage <- x
-    res$ma_count <- y
-    res$coef <- c(sigma=sig,slope=exp(beta1[[1]]))
-    res$pvalues <- dnbinom(y,size=1/res$coef[[1]],mu=res$coef[[2]]*x) + pnbinom(y,size=1/res$coef[[1]],mu=res$coef[[2]]*x,lower.tail = F)
-    res$qvalues=p.adjust(res$pvalues,method="BH")
-    res$GQ=-log10(res$qvalues)*10
-    res$GQ[res$GQ>1000]=1000 #here also manage qvalues=Inf
-  } else {stop('Available bounding.func is "T/T"')}
-  return(res)
-}
-
-plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_threshold=Inf,names=NULL,plot_labels=FALSE,add_contours=FALSE){
-  n=sum(rob_nb_res$qvalue>qthreshold)
-  m=sum(rob_nb_res$qvalue<=qthreshold)
-
-  cut_max_qvals=100
-  cols=rep("black",length(rob_nb_res$coverage))
-  palette=rev(rainbow(cut_max_qvals+1,start=0, end=4/6))
-  col_indices = round(-10*log10(rob_nb_res$qvalues))+1
-  col_indices[which(col_indices>cut_max_qvals)]=cut_max_qvals+1
-  cols=palette[col_indices]
-  outliers_color=cols
-  outliers_color[which(sbs>SB_threshold)]="black"
-
-  temp_title = bquote(e==.(format(rob_nb_res$coef[[2]],digits = 2)) ~ "," ~ sigma==.(format(rob_nb_res$coef[[1]],digits = 2)))
-  plot(rob_nb_res$coverage, rob_nb_res$ma_count,
-       pch=21,bg=cols,col=outliers_color,xlab="Coverage (DP)",ylab="Number of ALT reads (AO)",
-       main=plot_title, xlim=c(0,max(rob_nb_res$coverage)),ylim=c(0,max(rob_nb_res$ma_count)))
-  mtext(temp_title)
-  #### labeling outliers
-  if(!is.null(names) & plot_labels & length(names[which(rob_nb_res$qvalues<=qthreshold)]) > 0) {
-    text(rob_nb_res$coverage[which(rob_nb_res$qvalues<=qthreshold)], rob_nb_res$ma_count[which(rob_nb_res$qvalues<=qthreshold)],
-         labels=names[which(rob_nb_res$qvalues<=qthreshold)], cex= 0.6, pos=1)
-  }
-
-  #### plot the color palette
-  plot_palette <- function(topright=FALSE) {
-    xmin <- par("usr")[1]
-    xmax <- par("usr")[2]
-    ymin <- par("usr")[3]
-    ymax <- par("usr")[4]
-    xright=xmin+(xmax-xmin)*(1-0.9)
-    xleft=xmin+(xmax-xmin)*(1-0.94)
-    if(topright){xright=xmin+(xmax-xmin)*0.9;xleft=xmin+(xmax-xmin)*0.94}
-    ybottom=ymin+(ymax-ymin)*0.72
-    ytop=ymin+(ymax-ymin)*0.94
-
-    rasterImage(as.raster(matrix(rev(palette), ncol=1)),xright ,ybottom ,xleft,ytop )
-    rect(xright ,ybottom ,xleft,ytop )
-    text(x=(xright+xleft)/2, y = ytop+(ytop-ybottom)*0.1, labels = "QVAL", cex=0.8)
-    keep_labels=seq(0,cut_max_qvals,by=20)
-    keep_labels_pos=seq(ybottom,ytop,l=length(keep_labels))
-    tick_width=-(xleft-xright)/5
-    for (i in 1:length(keep_labels)) {
-      if (topright) {
-        lines(c(xright,xright+tick_width),c(keep_labels_pos[i],keep_labels_pos[i]))
-      } else {
-        lines(c(xleft,xleft-tick_width),c(keep_labels_pos[i],keep_labels_pos[i]))
-      }
-    }
-    if(topright) {
-      text(x=xright+1.5*tick_width, y = keep_labels_pos, labels = keep_labels,adj = c(1,0.5), cex = 0.8)
-    } else {
-      text(x=(xright-(xright-xleft))*0.3, y = keep_labels_pos, labels = keep_labels,adj = c(1,0.5), cex = 0.8)
-    }
-  }
-  plot_palette()
-  ####
-
-  if (!is.na(rob_nb_res$coef["slope"])) {
-    ################### ADD CONTOURS ##################
-    max_nb_grid_pts = 2500
-    max_qvalue=100
-    qlevels = c(10,30,50,70,100)
-    # following function returns a qvalue for a new point by adding it in the set of observations, recomputing all qvalues and taking its corresponding value.
-    toQvalue <- function(x,y){
-      unlist(-10*log10(p.adjust((dnbinom(c(rob_nb_res$ma_count,y),size=1/rob_nb_res$coef[[1]],mu=rob_nb_res$coef[[2]]*c(rob_nb_res$coverage,x)) +
-                               pnbinom(c(rob_nb_res$ma_count,y),size=1/rob_nb_res$coef[[1]],mu=rob_nb_res$coef[[2]]*c(rob_nb_res$coverage,x),lower.tail = F)),method="BH")
-                   [length(rob_nb_res$coverage)+1]))
-    }
-    #here we compute the dimension of the qvalue grid (ylength*xlength), with min(ylength)=5 (this avoids a too "flat" grid)
-    #if needed to sampling (too large grid if dimension=max(AO)*max(DP)), we verify two equations: equality of ratios ylength/xlength before and after sampling and ylength*xlength=max_nb_grid_pts
-    #### compute zoom y limit
-    if(add_contours){
-      nb_pts_zoom_computation=1000
-      if(max(rob_nb_res$coverage) > nb_pts_zoom_computation){
-        maxDP_AO = unique(sort(c(round(max(rob_nb_res$coverage)*rbeta(nb_pts_zoom_computation,1,100)),runif(100,1,max(rob_nb_res$coverage)))))
-      } else {
-        maxDP_AO = seq(1,max(rob_nb_res$coverage),by=1)
-      }
-      maxDP_qvals = unlist(lapply(maxDP_AO,function(AO){ toQvalue(x=max(rob_nb_res$coverage),y=AO) }))
-      af_min_lim = log10(maxDP_AO[which(maxDP_qvals>=qlevels[1])[1]]/max(rob_nb_res$coverage))
-      ylim_zoom = maxDP_AO[which(maxDP_qvals>=max_qvalue)[1]]
-      ylim_zoom_cor=ifelse(is.na(ylim_zoom),max(rob_nb_res$ma_count),ylim_zoom)
-      if(!is.na(ylim_zoom)){ #ylim_zoom is na iff we found at least one qvalue >= max_qvalue (if error rate closed to 1, only qvalues closed to 0)
-        #### compute dim of the qvalue grid
-        if(ylim_zoom*max(rob_nb_res$coverage) <= max_nb_grid_pts){
-          xgrid = seq(0,max(rob_nb_res$coverage), by=1)
-          ygrid = seq(0,ylim_zoom,by=1) #use by=1 to have integer, if not dnbinom not happy
-        } else {
-          if(ylim_zoom<=50){
-            ygrid=seq(0,ylim_zoom,by=1)
-            xlength = round(max_nb_grid_pts/length(ygrid))
-            xgrid = round(seq(0,max(rob_nb_res$coverage),length=xlength))
-          } else {
-            ylength = 50
-            xlength = round(max_nb_grid_pts/ylength)
-            xgrid = round(seq(0,max(rob_nb_res$coverage),length=xlength))
-            ygrid = round(seq(0,ylim_zoom,length=ylength))
-          }
-        }
-        #here we initiate the grid with each case containing list=(DP,AO) from xgrid, ygrid
-        matgrid = array(as.list(as.data.frame(t(expand.grid(xgrid,ygrid)))),dim=c(length(xgrid),length(ygrid)))
-        #then we fill in the grid with qvalues for each pair of AO,DP taken from ygrid,xgrid vectors (we use initiated values to identify corresponding AO,DP). Finally we plot the contours.
-        matgrid=matrix(sapply(matgrid,function(case) toQvalue(unlist(case)[1],unlist(case)[2])), length(xgrid),length(ygrid))
-        #### plot the contour "by hands"
-        for(qvalue in qlevels) {
-          lines(xgrid, unlist(lapply(xgrid,function(DP,ygrid,xgrid){
-            qval=min(matgrid[match(DP,xgrid),which(matgrid[match(DP,xgrid),]>=qvalue)])
-            AO=min(ygrid[which(matgrid[match(DP,xgrid),]==qval)])
-            AO },ygrid,xgrid)),col=palette[min(qvalue,cut_max_qvals)+1],lwd=1.3,lty=3)
-        }
-      }
-    }
-    #### plot confidence interval + error rate
-    xi=max(rob_nb_res$coverage)
-    yi1=qnbinom(p=0.99, size=1/rob_nb_res$coef[[1]], mu=rob_nb_res$coef[[2]]*xi)
-    yi2=qnbinom(p=0.01, size=1/rob_nb_res$coef[[1]], mu=rob_nb_res$coef[[2]]*xi)
-    if(max(rob_nb_res$coverage)>1000) { DP_for_IC = round(seq(0,max(rob_nb_res$coverage),length=1000)) } else { DP_for_IC = seq(0,max(rob_nb_res$coverage),by=1) }
-    lines(DP_for_IC,qnbinom(p=0.99, size=1/rob_nb_res$coef[[1]], mu=rob_nb_res$coef[[2]]*DP_for_IC),col="black",lty=3,lwd=2)
-    lines(DP_for_IC,qnbinom(p=0.01, size=1/rob_nb_res$coef[[1]], mu=rob_nb_res$coef[[2]]*DP_for_IC),col="black",lty=3,lwd=2)
-    abline(a=0, b=rob_nb_res$coef[[2]], col="black")
-    #### plot zoom on max qvalue if add_contours, otherwise on 2*IC
-    if(!add_contours) ylim_zoom_cor = 2*yi1
-    plot(rob_nb_res$coverage, rob_nb_res$ma_count,
-         pch=21,bg=cols,col=outliers_color,xlab="Coverage (DP)",ylab="Number of ALT reads (AO)",
-         main=plot_title, ylim=c(0,ylim_zoom_cor), xlim=c(0,max(rob_nb_res$coverage)))
-    #### plot the contour "by hands"
-    if(add_contours){
-      if(!is.na(ylim_zoom)){
-        for(qvalue in qlevels) {
-          lines(xgrid, unlist(lapply(xgrid,function(DP,ygrid,xgrid){
-            qval=min(matgrid[match(DP,xgrid),which(matgrid[match(DP,xgrid),]>=qvalue)])
-            AO=min(ygrid[which(matgrid[match(DP,xgrid),]==qval)])
-            AO },ygrid,xgrid)),col=palette[min(qvalue,cut_max_qvals)+1],lwd=1.3,lty=3)
-        }
-      }
-    }
-    #contour(xgrid, ygrid, matgrid, levels=qlevels , col = rev(rainbow(length(qlevels),start=0, end=4/6)), add=T, lwd = 1.3, labcex = 0.8, lty=3)
-    mtext(paste("zoom on maximum q-value =",max_qvalue))
-    #### labeling outliers and plot confidence interval + error rate
-    if(!is.null(names) & plot_labels & length(names[which(rob_nb_res$qvalues<=qthreshold)]) > 0) {
-      text(rob_nb_res$coverage[which(rob_nb_res$qvalues<=qthreshold)], rob_nb_res$ma_count[which(rob_nb_res$qvalues<=qthreshold)],
-         labels=names[which(rob_nb_res$qvalues<=qthreshold)], cex= 0.6, pos=1)
-    }
-    lines(DP_for_IC,qnbinom(p=0.99, size=1/rob_nb_res$coef[[1]], mu=rob_nb_res$coef[[2]]*DP_for_IC),col="black",lty=3,lwd=2)
-    lines(DP_for_IC,qnbinom(p=0.01, size=1/rob_nb_res$coef[[1]], mu=rob_nb_res$coef[[2]]*DP_for_IC),col="black",lty=3,lwd=2)
-    abline(a=0, b=rob_nb_res$coef[[2]], col="black")
-    plot_palette()
-
-    plot(rob_nb_res$GQ,log10(rob_nb_res$ma_count/rob_nb_res$coverage),pch=21,bg=cols,col=outliers_color,ylab=bquote("log"[10] ~ "[Allelic Fraction (AF)]"),xlab="QVAL",main="Allelic fraction effect")
-    abline(v=-10*log10(qthreshold),col="red",lwd=2)
-    plot_palette()
-    ylim_zoom_af = ifelse(add_contours, ylim_zoom_cor/max(rob_nb_res$coverage), (2*yi1)/xi)
-    plot(rob_nb_res$GQ,log10(rob_nb_res$ma_count/rob_nb_res$coverage),pch=21,bg=cols,col=outliers_color,ylab=bquote("log"[10] ~ "[Allelic Fraction (AF)]"),xlab="QVAL",main="Allelic fraction effect",
-         ylim=c(min(log10(rob_nb_res$ma_count/rob_nb_res$coverage)[is.finite(log10(rob_nb_res$ma_count/rob_nb_res$coverage))]),log10(ylim_zoom_af)), xlim=c(0,100))
-    if(add_contours) { mtext(paste("zoom on maximum q-value =",max_qvalue)) } else { mtext("zoom on 99% confidence interval") }
-    abline(v=-10*log10(qthreshold),col="red",lwd=2)
-    plot_palette()
-    if(add_contours){
-      if(!is.na(ylim_zoom)){
-        #### plot min(af) ~ DP
-        plot(1,type='n', ylim=c(1.1*af_min_lim,0), xlim=range(xgrid), xlab="DP", ylab=bquote("log"[10] ~ "[min(AF)]"))
-        for(qvalue in qlevels) {
-          lines(xgrid, unlist(lapply(xgrid,function(DP,ygrid,xgrid){
-            qval=min(matgrid[match(DP,xgrid),which(matgrid[match(DP,xgrid),]>=qvalue)])
-            af=min(ygrid[which(matgrid[match(DP,xgrid),]==qval)]) / DP
-            if(DP==0 || af>1) { af=1 } #af>1 if min(...)>DP
-            log10(af) },ygrid,xgrid)),col=palette[min(qvalue,cut_max_qvals)+1])
-        }
-        plot_palette(topright = TRUE)
-        #hist(rob_nb_res$pvalues,main="p-values distribution",ylab="Density",xlab="p-value",col="grey",freq=T,br=20,xlim=c(0,1))
-        #hist(rob_nb_res$qvalues,main="q-values distribution",breaks=20,xlab="q-value",col="grey",freq=T,xlim=c(0,1))
-      }
-    }
-  }
-}
-
 ############################## ARGUMENTS SECTION ##############################
 args <- commandArgs(TRUE)
 parseArgs <- function(x) strsplit(sub("^--", "", x), "=")
@@ -377,18 +23,19 @@ argsL <- as.list(as.character(as.data.frame(do.call("rbind", parseArgs(args)))$V
 names(argsL) <- as.data.frame(do.call("rbind", parseArgs(args)))$V1
 args <- argsL;rm(argsL)
 
-if("--help" %in% args | is.null(args$out_file) | is.null(args$fasta_ref)) {
+if("--help" %in% args | is.null(args$out_file) | is.null(args$fasta_ref) | is.null(args$source_path) ) {
   cat("
       The R Script arguments_section.R
 
       Mandatory arguments:
       --out_file=file_name           - name of output vcf
+      --source_path=path             - path to source files (glm_rob_nb.r, plot_rob_nb.r)
       --fasta_ref=path               - path of fasta ref
       --help                         - print this text
 
       Optionnal arguments:
       --samtools=path                - path of samtools, default=samtools
-      --SB_type=SOR or RVSB      - strand bias measure, default=SOR
+      --SB_type=SOR, RVSB or FS    - strand bias measure, default=SOR
       --SB_threshold_SNV=value       - strand bias threshold for SNV, default=100
       --SB_threshold_indel=value     - strand bias threshold for indel, default=100
       --min_coverage=value           - minimum coverage in at least one sample to consider a site, default=50
@@ -396,6 +43,7 @@ if("--help" %in% args | is.null(args$out_file) | is.null(args$fasta_ref)) {
       --GQ_threshold=value           - phred scale qvalue threshold for variants, default=50
       --output_all_SNVs=boolean     - output all SNVs, even when no variant is detected, default=FALSE
       --do_plots=boolean              - output regression plots, default=TRUE
+      --extra_rob=boolean              - perform an extra-robust regression, default=FALSE
 
       WARNING : by default samtools has to be in your path
 
@@ -416,6 +64,7 @@ if(is.null(args$output_all_SNVs)) {args$output_all_SNVs=FALSE} else {args$output
 if(is.null(args$do_plots)) {args$do_plots=TRUE} else {args$do_plots=as.logical(args$do_plots)}
 if(is.null(args$plot_labels)) {args$plot_labels=FALSE} else {args$plot_labels=as.logical(args$plot_labels)}
 if(is.null(args$add_contours)) {args$add_contours=FALSE} else {args$add_contours=as.logical(args$add_contours)}
+if(is.null(args$extra_rob)) {args$extra_rob=FALSE} else {args$extra_rob=as.logical(args$extra_rob)}
 
 samtools=args$samtools
 out_file=args$out_file
@@ -432,6 +81,10 @@ output_all_SNVs=args$output_all_SNVs
 do_plots=args$do_plots
 plot_labels=args$plot_labels
 add_contours=args$add_contours
+extra_rob=args$extra_rob
+
+source(paste(args$source_path,"glm_rob_nb.r",sep=""))
+source(paste(args$source_path,"plot_rob_nb.r",sep=""))
 
 ############################################################
 
@@ -502,7 +155,10 @@ common_annot=function() {
   all_sor<<-SOR(sum(Rp),sum(Vp),sum(Rm),sum(Vm))
   if (is.na(all_sor)) all_sor<<- (-1)
   if (is.infinite(all_sor)) all_sor<<- 99
-  #FisherStrand<<-fisher.test(matrix(c(Vp,Vm,Rp,Rm),nrow=2))$p.value
+  FisherStrand<<- -10*log10(unlist(lapply(1:nindiv, function(indiv) fisher.test(matrix(c(Vp[indiv],Vm[indiv],Rp[indiv],Rm[indiv]), nrow=2))$p.value ))) #col1=alt(V), col2=ref(R)
+  FisherStrand[which(FisherStrand>1000)] = 1000
+  FisherStrand_all<<--10*log10(fisher.test(matrix(c(sum(Vp),sum(Vm),sum(Rp),sum(Rm)), nrow=2))$p.value)
+  if(FisherStrand_all>1000) FisherStrand_all=1000
   all_RO<<-sum(Rp+Rm)
 }
 
@@ -529,9 +185,11 @@ write_out("##INFO=<ID=SAF,Number=1,Type=Integer,Description=\"Total number of al
 write_out("##INFO=<ID=SAR,Number=1,Type=Integer,Description=\"Total number of alternate observations on the reverse strand\">")
 write_out("##INFO=<ID=SOR,Number=1,Type=Float,Description=\"Total Symmetric Odds Ratio of 2x2 contingency table to detect strand bias\">")
 write_out("##INFO=<ID=RVSB,Number=1,Type=Float,Description=\"Total Relative Variant Strand Bias\">")
+write_out("##INFO=<ID=FS,Number=1,Type=Float,Description=\"Total Fisher Exact Test p-value for detecting strand bias (Phred-scale)\">")
 write_out("##INFO=<ID=ERR,Number=1,Type=Float,Description=\"Estimated error rate for the alternate allele\">")
 write_out("##INFO=<ID=SIG,Number=1,Type=Float,Description=\"Estimated overdispersion for the alternate allele\">")
 write_out("##INFO=<ID=CONT,Number=1,Type=String,Description=\"Context of the reference sequence\">")
+write_out("##INFO=<ID=WARN,Number=1,Type=String,Description=\"Warning message when position is processed specifically\">")
 
 write_out("##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">")
 write_out("##FORMAT=<ID=QVAL,Number=1,Type=Float,Description=\"Phred-scaled qvalue for not being an error\">")
@@ -542,6 +200,7 @@ write_out("##FORMAT=<ID=AF,Number=1,Type=Float,Description=\"Allele fraction of 
 write_out("##FORMAT=<ID=SB,Number=4,Type=Integer,Description=\"Per-sample component statistics to detect strand bias as SRF,SRR,SAF,SAR\">")
 write_out("##FORMAT=<ID=SOR,Number=1,Type=Float,Description=\"Symmetric Odds Ratio of 2x2 contingency table to detect strand bias\">")
 write_out("##FORMAT=<ID=RVSB,Number=1,Type=Float,Description=\"Relative Variant Strand Bias\">")
+write_out("##FORMAT=<ID=FS,Number=1,Type=Float,Description=\"Fisher Exact Test p-value for detecting strand bias (Phred-scale)\">")
 
 write_out("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t",paste(indiv_run[,2],collapse = "\t"))
 
@@ -553,13 +212,13 @@ for (i in 1:npos) {
       Vm=atcg_matrix[i,eval(as.name(paste(tolower(alt),"_cols",sep="")))]
       ma_count=Vp+Vm
       DP=coverage_matrix[i,]
-      reg_res=glmrob.nb(x=DP,y=ma_count,min_coverage=min_coverage,min_reads=min_reads)
+      reg_res=glmrob.nb(x=DP,y=ma_count,min_coverage=min_coverage,min_reads=min_reads,extra_rob=extra_rob)
       if (output_all_SNVs | (!is.na(reg_res$coef["slope"]) & sum(reg_res$GQ>=GQ_threshold,na.rm=TRUE)>0)) {
         all_AO=sum(ma_count)
         all_DP=sum(coverage_matrix[i,])
         common_annot()
         all_RO=sum(Rp+Rm)
-        if (SB_type=="SOR") sbs=sors else sbs=rvsbs
+        if (SB_type=="SOR") sbs=sors else { if (SB_type=="RVSB") sbs=rvsbs else {sbs=FisherStrand} }
         if (output_all_SNVs | (sum(sbs<=SB_threshold_SNV & reg_res$GQ>=GQ_threshold,na.rm=TRUE)>0)) {
           con=pipe(paste(samtools," faidx ",fasta_ref," ",pos_ref[i,"chr"],":",pos_ref[i,"loc"]-3,"-",pos_ref[i,"loc"]-1," | tail -n1",sep=""))
   		    before=readLines(con)
@@ -569,9 +228,9 @@ for (i in 1:npos) {
   		    close(con)
   		    cat(pos_ref[i,"chr"],"\t",pos_ref[i,"loc"],"\t",".","\t",pos_ref[i,"ref"],"\t",alt,"\t",max(reg_res$GQ),"\t",".",sep = "",file=out_file,append=T)
           # INFO field
-  		    cat("\t","TYPE=snv;NS=",sum(coverage_matrix[i,]>0),";AF=",sum(reg_res$GQ>=GQ_threshold)/sum(coverage_matrix[i,]>0),";DP=",all_DP,";RO=",all_RO,";AO=",all_AO,";SRF=",sum(Rp),";SRR=",sum(Rm),";SAF=",sum(Vp),";SAR=",sum(Vm),";SOR=",all_sor,";RVSB=",all_rvsb,";ERR=",reg_res$coef["slope"],";SIG=",reg_res$coef["sigma"],";CONT=",paste(before,after,sep="x"),sep="",file=out_file,append=T)
+  		    cat("\t","TYPE=snv;NS=",sum(coverage_matrix[i,]>0),";AF=",sum(reg_res$GQ>=GQ_threshold)/sum(coverage_matrix[i,]>0),";DP=",all_DP,";RO=",all_RO,";AO=",all_AO,";SRF=",sum(Rp),";SRR=",sum(Rm),";SAF=",sum(Vp),";SAR=",sum(Vm),";SOR=",all_sor,";RVSB=",all_rvsb,";FS=",FisherStrand_all,";ERR=",reg_res$coef["slope"],";SIG=",reg_res$coef["sigma"],";CONT=",paste(before,after,sep="x"),ifelse(reg_res$extra_rob,";WARN=EXTRA_ROBUST_GL",""),sep="",file=out_file,append=T)
   		    # FORMAT field
-  		    cat("\t","GT:QVAL:DP:RO:AO:AF:SB:SOR:RVSB",sep = "",file=out_file,append=T)
+  		    cat("\t","GT:QVAL:DP:RO:AO:AF:SB:SOR:RVSB:FS",sep = "",file=out_file,append=T)
           # all samples
   		    genotype=rep("0/0",l=nindiv)
   		    heterozygotes=which(reg_res$GQ>=GQ_threshold & sbs<=SB_threshold_SNV & reg_res$ma_count/reg_res$coverage < 0.75)
@@ -579,12 +238,12 @@ for (i in 1:npos) {
           homozygotes=which(reg_res$GQ>=GQ_threshold & sbs<=SB_threshold_SNV & reg_res$ma_count/reg_res$coverage >= 0.75)
   		    genotype[homozygotes]="1/1"
           for (cur_sample in 1:nindiv) {
-            cat("\t",genotype[cur_sample],":",reg_res$GQ[cur_sample],":",DP[cur_sample],":",(Rp+Rm)[cur_sample],":",ma_count[cur_sample],":",(ma_count/DP)[cur_sample],":",Rp[cur_sample],",",Rm[cur_sample],",",Vp[cur_sample],",",Vm[cur_sample],":",sors[cur_sample],":",rvsbs[cur_sample],sep = "",file=out_file,append=T)
+            cat("\t",genotype[cur_sample],":",reg_res$GQ[cur_sample],":",DP[cur_sample],":",(Rp+Rm)[cur_sample],":",ma_count[cur_sample],":",(ma_count/DP)[cur_sample],":",Rp[cur_sample],",",Rm[cur_sample],",",Vp[cur_sample],",",Vm[cur_sample],":",sors[cur_sample],":",rvsbs[cur_sample],":",FisherStrand[cur_sample],sep = "",file=out_file,append=T)
           }
   		    cat("\n",sep = "",file=out_file,append=T)
           if (do_plots) {
-            pdf(paste(pos_ref[i,"chr"],"_",pos_ref[i,"loc"],"_",pos_ref[i,"loc"],"_",pos_ref[i,"ref"],"_",alt,".pdf",sep=""),7,6)
-            plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(pos_ref[i,"loc"])," (",.(pos_ref[i,"ref"]) %->% .(alt),")",sep="")), sbs=sbs, SB_threshold=SB_threshold_SNV,plot_labels=plot_labels,add_contours=add_contours,names=indiv_run[,2])
+            pdf(paste(pos_ref[i,"chr"],"_",pos_ref[i,"loc"],"_",pos_ref[i,"loc"],"_",pos_ref[i,"ref"],"_",alt,ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),7,6)
+            plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(pos_ref[i,"chr"]),":",.(pos_ref[i,"loc"])," (",.(pos_ref[i,"ref"]) %->% .(alt),")",.(ifelse(reg_res$extra_rob," EXTRA ROBUST","")),sep="")), sbs=sbs, SB_threshold=SB_threshold_SNV,plot_labels=plot_labels,add_contours=add_contours,names=indiv_run[,2])
             dev.off()
           }
         }
@@ -610,13 +269,13 @@ for (i in 1:npos) {
         Vm[names(ma_m_cur_del)]=ma_m_cur_del
         ma_count=Vp+Vm
         DP=coverage_matrix[i,]+ma_count
-        reg_res=glmrob.nb(x=DP,y=ma_count,min_coverage=min_coverage,min_reads=min_reads)
+        reg_res=glmrob.nb(x=DP,y=ma_count,min_coverage=min_coverage,min_reads=min_reads,extra_rob=extra_rob)
         if (!is.na(reg_res$coef["slope"]) & sum(reg_res$GQ>=GQ_threshold,na.rm=TRUE)>0) {
           all_AO=sum(ma_count)
           all_DP=sum(coverage_matrix[i,])+sum(ma_count)
           common_annot()
           all_RO=sum(Rp+Rm)
-          if (SB_type=="SOR") sbs=sors else sbs=rvsbs
+          if (SB_type=="SOR") sbs=sors else { if (SB_type=="RVSB") sbs=rvsbs else {sbs=FisherStrand} }
           if (sum(sbs<=SB_threshold_indel & reg_res$GQ>=GQ_threshold,na.rm=TRUE)>0) {
             con=pipe(paste(samtools," faidx ",fasta_ref," ",pos_ref[i,"chr"],":",pos_ref[i,"loc"]+1-3,"-",pos_ref[i,"loc"]+1-1," | tail -n1",sep=""))
             before=readLines(con)
@@ -628,9 +287,9 @@ for (i in 1:npos) {
             next_bp=substr(after,1,1)
             cat(pos_ref[i,"chr"],"\t",pos_ref[i,"loc"],"\t",".","\t",paste(prev_bp,cur_del,sep=""),"\t",prev_bp,"\t",max(reg_res$GQ),"\t",".",sep = "",file=out_file,append=T)
             # INFO field
-            cat("\t","TYPE=del;NS=",sum(coverage_matrix[i,]>0),";AF=",sum(reg_res$GQ>=GQ_threshold)/sum(coverage_matrix[i,]>0),";DP=",all_DP,";RO=",all_RO,";AO=",all_AO,";SRF=",sum(Rp),";SRR=",sum(Rm),";SAF=",sum(Vp),";SAR=",sum(Vm),";SOR=",all_sor,";RVSB=",all_rvsb,";ERR=",reg_res$coef["slope"],";SIG=",reg_res$coef["sigma"],";CONT=",paste(before,after,sep="x"),sep="",file=out_file,append=T)
+            cat("\t","TYPE=del;NS=",sum(coverage_matrix[i,]>0),";AF=",sum(reg_res$GQ>=GQ_threshold)/sum(coverage_matrix[i,]>0),";DP=",all_DP,";RO=",all_RO,";AO=",all_AO,";SRF=",sum(Rp),";SRR=",sum(Rm),";SAF=",sum(Vp),";SAR=",sum(Vm),";SOR=",all_sor,";RVSB=",all_rvsb,";FS=",FisherStrand_all,";ERR=",reg_res$coef["slope"],";SIG=",reg_res$coef["sigma"],";CONT=",paste(before,after,sep="x"),ifelse(reg_res$extra_rob,";WARN=EXTRA_ROBUST_GL",""),sep="",file=out_file,append=T)
             # FORMAT field
-            cat("\t","GT:QVAL:DP:RO:AO:AF:SB:SOR:RVSB",sep = "",file=out_file,append=T)
+            cat("\t","GT:QVAL:DP:RO:AO:AF:SB:SOR:RVSB:FS",sep = "",file=out_file,append=T)
             # all samples
             genotype=rep("0/0",l=nindiv)
             heterozygotes=which(reg_res$GQ>=GQ_threshold & sbs<=SB_threshold_indel & reg_res$ma_count/reg_res$coverage < 0.75)
@@ -638,13 +297,13 @@ for (i in 1:npos) {
             homozygotes=which(reg_res$GQ>=GQ_threshold & sbs<=SB_threshold_indel & reg_res$ma_count/reg_res$coverage >= 0.75)
     		    genotype[homozygotes]="1/1"
             for (cur_sample in 1:nindiv) {
-              cat("\t",genotype[cur_sample],":",reg_res$GQ[cur_sample],":",DP[cur_sample],":",(Rp+Rm)[cur_sample],":",ma_count[cur_sample],":",(ma_count/DP)[cur_sample],":",Rp[cur_sample],",",Rm[cur_sample],",",Vp[cur_sample],",",Vm[cur_sample],":",sors[cur_sample],":",rvsbs[cur_sample],sep = "",file=out_file,append=T)
+              cat("\t",genotype[cur_sample],":",reg_res$GQ[cur_sample],":",DP[cur_sample],":",(Rp+Rm)[cur_sample],":",ma_count[cur_sample],":",(ma_count/DP)[cur_sample],":",Rp[cur_sample],",",Rm[cur_sample],",",Vp[cur_sample],",",Vm[cur_sample],":",sors[cur_sample],":",rvsbs[cur_sample],":",FisherStrand[cur_sample],sep = "",file=out_file,append=T)
             }
             cat("\n",sep = "",file=out_file,append=T)
             if (do_plots) {
               # deletions are shifted in samtools mpileup by 1bp, so put them at the right place by adding + to pos_ref[i,"loc"] everywhere in what follows
-              pdf(paste(pos_ref[i,"chr"],"_",pos_ref[i,"loc"]+1,"_",pos_ref[i,"loc"]+1+nchar(cur_del)-1,"_",cur_del,"_","-",".pdf",sep=""),7,6)
-              plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(pos_ref[i,"loc"]+1)," (",.(cur_del) %->% .("-"),")",sep="")),sbs=sbs, SB_threshold=SB_threshold_indel,plot_labels=plot_labels,add_contours=add_contours,names=indiv_run[,2])
+              pdf(paste(pos_ref[i,"chr"],"_",pos_ref[i,"loc"]+1,"_",pos_ref[i,"loc"]+1+nchar(cur_del)-1,"_",cur_del,"_","-",ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),7,6)
+              plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(pos_ref[i,"chr"]),":",.(pos_ref[i,"loc"]+1)," (",.(cur_del) %->% .("-"),")",.(ifelse(reg_res$extra_rob," EXTRA ROBUST","")),sep="")),sbs=sbs, SB_threshold=SB_threshold_indel,plot_labels=plot_labels,add_contours=add_contours,names=indiv_run[,2])
               dev.off()
             }
           }
@@ -671,13 +330,13 @@ for (i in 1:npos) {
         Vm[names(ma_m_cur_ins)]=ma_m_cur_ins
         ma_count=Vp+Vm
         DP=coverage_matrix[i,]+ma_count[]
-        reg_res=glmrob.nb(x=DP,y=ma_count,min_coverage=min_coverage,min_reads=min_reads)
+        reg_res=glmrob.nb(x=DP,y=ma_count,min_coverage=min_coverage,min_reads=min_reads,extra_rob=extra_rob)
         if (!is.na(reg_res$coef["slope"]) & sum(reg_res$GQ>=GQ_threshold,na.rm=TRUE)>0) {
           all_AO=sum(ma_count)
           all_DP=sum(coverage_matrix[i,])+sum(ma_count)
           common_annot()
           all_RO=sum(Rp+Rm)
-          if (SB_type=="SOR") sbs=sors else sbs=rvsbs
+          if (SB_type=="SOR") sbs=sors else { if (SB_type=="RVSB") sbs=rvsbs else {sbs=FisherStrand} }
           if (sum(sbs<=SB_threshold_indel & reg_res$GQ>=GQ_threshold,na.rm=TRUE)>0) {
             con=pipe(paste(samtools," faidx ",fasta_ref," ",pos_ref[i,"chr"],":",pos_ref[i,"loc"]-2,"-",pos_ref[i,"loc"]," | tail -n1",sep=""))
             before=readLines(con)
@@ -688,9 +347,9 @@ for (i in 1:npos) {
             prev_bp=substr(before,3,3)
             cat(pos_ref[i,"chr"],"\t",pos_ref[i,"loc"],"\t",".","\t",prev_bp,"\t",paste(prev_bp,cur_ins,sep=""),"\t",max(reg_res$GQ),"\t",".",sep = "",file=out_file,append=T)
             # INFO field
-            cat("\t","TYPE=ins;NS=",sum(coverage_matrix[i,]>0),";AF=",sum(reg_res$GQ>=GQ_threshold)/sum(coverage_matrix[i,]>0),";DP=",all_DP,";RO=",all_RO,";AO=",all_AO,";SRF=",sum(Rp),";SRR=",sum(Rm),";SAF=",sum(Vp),";SAR=",sum(Vm),";SOR=",all_sor,";RVSB=",all_rvsb,";ERR=",reg_res$coef["slope"],";SIG=",reg_res$coef["sigma"],";CONT=",paste(before,after,sep="x"),sep="",file=out_file,append=T)
+            cat("\t","TYPE=ins;NS=",sum(coverage_matrix[i,]>0),";AF=",sum(reg_res$GQ>=GQ_threshold)/sum(coverage_matrix[i,]>0),";DP=",all_DP,";RO=",all_RO,";AO=",all_AO,";SRF=",sum(Rp),";SRR=",sum(Rm),";SAF=",sum(Vp),";SAR=",sum(Vm),";SOR=",all_sor,";RVSB=",all_rvsb,";FS=",FisherStrand_all,";ERR=",reg_res$coef["slope"],";SIG=",reg_res$coef["sigma"],";CONT=",paste(before,after,sep="x"),ifelse(reg_res$extra_rob,";WARN=EXTRA_ROBUST_GL",""),sep="",file=out_file,append=T)
             # FORMAT field
-            cat("\t","GT:QVAL:DP:RO:AO:AF:SB:SOR:RVSB",sep = "",file=out_file,append=T)
+            cat("\t","GT:QVAL:DP:RO:AO:AF:SB:SOR:RVSB:FS",sep = "",file=out_file,append=T)
             # all samples
             genotype=rep("0/0",l=nindiv)
             heterozygotes=which(reg_res$GQ>=GQ_threshold & sbs<=SB_threshold_indel & reg_res$ma_count/reg_res$coverage < 0.75)
@@ -698,12 +357,12 @@ for (i in 1:npos) {
             homozygotes=which(reg_res$GQ>=GQ_threshold & sbs<=SB_threshold_indel & reg_res$ma_count/reg_res$coverage >= 0.75)
     		    genotype[homozygotes]="1/1"
             for (cur_sample in 1:nindiv) {
-              cat("\t",genotype[cur_sample],":",reg_res$GQ[cur_sample],":",DP[cur_sample],":",(Rp+Rm)[cur_sample],":",ma_count[cur_sample],":",(ma_count/DP)[cur_sample],":",Rp[cur_sample],",",Rm[cur_sample],",",Vp[cur_sample],",",Vm[cur_sample],":",sors[cur_sample],":",rvsbs[cur_sample],sep = "",file=out_file,append=T)
+              cat("\t",genotype[cur_sample],":",reg_res$GQ[cur_sample],":",DP[cur_sample],":",(Rp+Rm)[cur_sample],":",ma_count[cur_sample],":",(ma_count/DP)[cur_sample],":",Rp[cur_sample],",",Rm[cur_sample],",",Vp[cur_sample],",",Vm[cur_sample],":",sors[cur_sample],":",rvsbs[cur_sample],":",FisherStrand[cur_sample],sep = "",file=out_file,append=T)
             }
             cat("\n",sep = "",file=out_file,append=T)
             if (do_plots) {
-              pdf(paste(pos_ref[i,"chr"],"_",pos_ref[i,"loc"],"_",pos_ref[i,"loc"],"_","-","_",cur_ins,".pdf",sep=""),7,6)
-              plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(pos_ref[i,"loc"])," (",.("-") %->% .(cur_ins),")",sep="")),sbs=sbs, SB_threshold=SB_threshold_indel,plot_labels=plot_labels,add_contours=add_contours,names=indiv_run[,2])
+              pdf(paste(pos_ref[i,"chr"],"_",pos_ref[i,"loc"],"_",pos_ref[i,"loc"],"_","-","_",cur_ins,ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),7,6)
+              plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(pos_ref[i,"chr"]),":",.(pos_ref[i,"loc"])," (",.("-") %->% .(cur_ins),")",.(ifelse(reg_res$extra_rob," EXTRA ROBUST","")),sep="")),sbs=sbs, SB_threshold=SB_threshold_indel,plot_labels=plot_labels,add_contours=add_contours,names=indiv_run[,2])
               dev.off()
             }
           }

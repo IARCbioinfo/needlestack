@@ -109,13 +109,13 @@ echo "executor.\$local.queueSize = "`getconf _NPROCESSORS_ONLN` >> ~/.nextflow/c
 
 | Parameter | Default value | Description |
 |-----------|--------------:|-------------| 
-| min_dp    |            50 | Minimum coverage in at least one sample to consider a site |
+| min_dp    |            50 | Minimum median coverage to consider a site. In addition, at least 10 samples have to be covered by min_dp. |
 | min_ao | 5 | Minimum number of non-ref reads in at least one sample to consider a site |
 | nsplit | 1 | Split the bed file in nsplit pieces and run in parallel |
 | min_qval | 50 | qvalue threshold in [Phred scale](https://en.wikipedia.org/wiki/Phred_quality_score) to consider a variant |
-| sb_type | SOR | Strand bias measure, either SOR or RVSB |
-| sb_snv | 100 | Strand bias threshold for SNVs (100 =no filter) |
-| sb_indel | 100 | Strand bias threshold for indels (100 = no filter)|
+| sb_type | SOR | Strand bias measure, either SOR, RVSB or FS |
+| sb_snv | 100 or 1000 | Strand bias threshold for SNVs (100 (1000 if FS) = no filter) |
+| sb_indel | 100 or 1000 | Strand bias threshold for indels (100 (1000 if FS) = no filter)|
 | map_qual | 20 | Min mapping quality (passed to samtools) |
 | base_qual | 20 | Min base quality (passed to samtools) |
 | max_DP | 30000 | Downsample coverage per sample (passed to samtools) |
@@ -129,6 +129,7 @@ echo "executor.\$local.queueSize = "`getconf _NPROCESSORS_ONLN` >> ~/.nextflow/c
 | out_vcf | all_variants.vcf | File name of final VCF |
 | bed |   | BED file containing a list of regions (or positions) where needlestack should be run |
 | region |   | A region in format CHR:START-END where calling should be done |
+| input_vcf |   | A vcf file (basically from GATK) where calling should be done. Needlestack will use DP and AO from this vcf |
 
 By default, if neither `--bed` nor `--region` are provided, needlestack would run on whole reference, building a bed file from fasta index inputed.
 If `--bed` and `--region` are both provided, it should run on the region only.
