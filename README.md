@@ -129,6 +129,7 @@ echo "executor.\$local.queueSize = "`getconf _NPROCESSORS_ONLN` >> ~/.nextflow/c
 | out_vcf | all_variants.vcf | File name of final VCF |
 | bed |   | BED file containing a list of regions (or positions) where needlestack should be run |
 | region |   | A region in format CHR:START-END where calling should be done |
+| input_vcf |   | A vcf file (basically from GATK) where calling should be done. Needlestack will use DP and AO from this vcf |
 
 By default, if neither `--bed` nor `--region` are provided, needlestack would run on whole reference, building a bed file from fasta index inputed.
 If `--bed` and `--region` are both provided, it should run on the region only.
