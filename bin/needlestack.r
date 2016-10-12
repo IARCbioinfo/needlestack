@@ -66,7 +66,7 @@ if(is.null(args$do_plots)) {args$do_plots=TRUE} else {args$do_plots=as.logical(a
 if(is.null(args$plot_labels)) {args$plot_labels=FALSE} else {args$plot_labels=as.logical(args$plot_labels)}
 if(is.null(args$add_contours)) {args$add_contours=FALSE} else {args$add_contours=as.logical(args$add_contours)}
 if(is.null(args$extra_rob)) {args$extra_rob=FALSE} else {args$extra_rob=as.logical(args$extra_rob)}
-if(is.null(args$pairs_file)) {args$pairs_file=""}
+if(is.null(args$pairs_file)) {args$pairs_file=FALSE}
 
 samtools=args$samtools
 out_file=args$out_file
@@ -94,8 +94,10 @@ source(paste(args$source_path,"plot_rob_nb.r",sep=""))
 
 options("scipen"=100)
 
-isTNpairs = file.exists(args$pairs_file) #checks existence of tumour-normal pairs file
-if( isTNpairs ) TNpairs=read.table(pairs_file)
+if(pairs_file != FALSE) { #if user give a pairs_file to needlestack
+  isTNpairs = file.exists(args$pairs_file) #checks existence of tumour-normal pairs file
+  if( isTNpairs ) TNpairs=read.table(pairs_file)
+}
 
 indiv_run=read.table("names.txt",stringsAsFactors=F,colClasses = "character")
 indiv_run[,2]=make.unique(indiv_run[,2],sep="_")
@@ -240,7 +242,7 @@ for (i in 1:npos) {
   		    cat("\t","TYPE=snv;NS=",sum(coverage_matrix[i,]>0),";AF=",sum(reg_res$GQ>=GQ_threshold)/sum(coverage_matrix[i,]>0),";DP=",all_DP,";RO=",all_RO,";AO=",all_AO,";SRF=",sum(Rp),";SRR=",sum(Rm),";SAF=",sum(Vp),";SAR=",sum(Vm),";SOR=",all_sor,";RVSB=",all_rvsb,";FS=",FisherStrand_all,";ERR=",reg_res$coef["slope"],";SIG=",reg_res$coef["sigma"],";CONT=",paste(before,after,sep="x"),ifelse(reg_res$extra_rob,";WARN=EXTRA_ROBUST_GL",""),sep="",file=out_file,append=T)
   		    # FORMAT field
           cat("\t","GT:QVAL:DP:RO:AO:AF:SB:SOR:RVSB:FS:QVAL_20PC:SOMATIC_STATUS",sep = "",file=out_file,append=T)
-  		    
+
           # all samples
   		    genotype=rep("0/0",l=nindiv)
   		    heterozygotes=which(reg_res$GQ>=GQ_threshold & sbs<=SB_threshold_SNV & reg_res$ma_count/reg_res$coverage < 0.75)
@@ -251,13 +253,13 @@ for (i in 1:npos) {
           	    qval_20pc=rep(".",l=nindiv)
   		    normal_variant=c()  #to change to get right values
   		    qval_20pc[normal_variant]=0 # to change to get right values
-  		    
+
   		    somatic_status=rep("UNKNOWN",l=nindiv)
   		    somatic=c()  #to change to get right values
   		    germline=c() #to change to get right values
   		    somatic_status[somatic]="SOMATIC"
   		    somatic_status[germline]="GERMLINE"
-  		    
+
           for (cur_sample in 1:nindiv) {
               cat("\t",genotype[cur_sample],":",reg_res$GQ[cur_sample],":",DP[cur_sample],":",(Rp+Rm)[cur_sample],":",ma_count[cur_sample],":",(ma_count/DP)[cur_sample],":",Rp[cur_sample],",",Rm[cur_sample],",",Vp[cur_sample],",",Vm[cur_sample],":",sors[cur_sample],":",rvsbs[cur_sample],":",FisherStrand[cur_sample],":",qval_20pc[cur_sample],":",somatic_status[cur_sample],sep = "",file=out_file,append=T)
           }
@@ -321,17 +323,17 @@ for (i in 1:npos) {
             qval_20pc=rep(".",l=nindiv)
             normal_variant=c()  #to change to get right values
             qval_20pc[normal_variant]=0 # to change to get right values
-            
+
             somatic_status=rep("UNKNOWN",l=nindiv)
             somatic=c()  #to change to get right values
             germline=c() #to change to get right values
             somatic_status[somatic]="SOMATIC"
             somatic_status[germline]="GERMLINE"
-            
+
             for (cur_sample in 1:nindiv) {
                 cat("\t",genotype[cur_sample],":",reg_res$GQ[cur_sample],":",DP[cur_sample],":",(Rp+Rm)[cur_sample],":",ma_count[cur_sample],":",(ma_count/DP)[cur_sample],":",Rp[cur_sample],",",Rm[cur_sample],",",Vp[cur_sample],",",Vm[cur_sample],":",sors[cur_sample],":",rvsbs[cur_sample],":",FisherStrand[cur_sample],":",qval_20pc[cur_sample],":",somatic_status[cur_sample],sep = "",file=out_file,append=T)
             }
-    		    
+
             cat("\n",sep = "",file=out_file,append=T)
             if (do_plots) {
               # deletions are shifted in samtools mpileup by 1bp, so put them at the right place by adding + to pos_ref[i,"loc"] everywhere in what follows
@@ -393,17 +395,17 @@ for (i in 1:npos) {
             qval_20pc=rep(".",l=nindiv)
             normal_variant=c()  #to change to get right values
             qval_20pc[normal_variant]=0 # to change to get right values
-            
+
             somatic_status=rep("UNKNOWN",l=nindiv)
             somatic=c()  #to change to get right values
             germline=c() #to change to get right values
             somatic_status[somatic]="SOMATIC"
             somatic_status[germline]="GERMLINE"
-            
+
             for (cur_sample in 1:nindiv) {
                 cat("\t",genotype[cur_sample],":",reg_res$GQ[cur_sample],":",DP[cur_sample],":",(Rp+Rm)[cur_sample],":",ma_count[cur_sample],":",(ma_count/DP)[cur_sample],":",Rp[cur_sample],",",Rm[cur_sample],",",Vp[cur_sample],",",Vm[cur_sample],":",sors[cur_sample],":",rvsbs[cur_sample],":",FisherStrand[cur_sample],":",qval_20pc[cur_sample],":",somatic_status[cur_sample],sep = "",file=out_file,append=T)
             }
-            
+
             cat("\n",sep = "",file=out_file,append=T)
             if (do_plots) {
               pdf(paste(pos_ref[i,"chr"],"_",pos_ref[i,"loc"],"_",pos_ref[i,"loc"],"_","-","_",cur_ins,ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),7,6)

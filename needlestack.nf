@@ -46,6 +46,9 @@ params.no_plots = false  // do not produce pdf plots of regressions
 params.no_indels = false // do not skip indels
 params.no_labels = false // label outliers
 params.no_contours = false // add contours to the plots and plot min(AF)~DP
+params.pairs_file = "FALSE" // by default R will get a false boolean value for pairs_file option
+assert (params.pairs_file != true) : "please enter a file name when using --pairs_file option"
+if (params.pairs_file != "") { try { assert file(params.pairs_file).exists() : "\n WARNING : input tumor-normal pairs file not located in execution directory" } catch (AssertionError e) { println e.getMessage() } }
 
 /* If --help in parameters, print software usage */
 
@@ -89,6 +92,7 @@ if (params.help) {
     log.info '    --out_folder     OUTPUT FOLDER            Output directory, by default input bam folder.'
     log.info '    --bed            BED FILE                 A BED file for calling.'
     log.info '    --region         CHR:START-END            A region for calling.'
+    log.info '    --pairs_file     TEXT FILE                A tab-delimited file containing two columns (normal and tumor sample name) for each sample in line.'
     log.info ''
     exit 1
 }
@@ -104,6 +108,7 @@ log.info 'This program comes with ABSOLUTELY NO WARRANTY; for details see LICENS
 log.info 'This is free software, and you are welcome to redistribute it'
 log.info 'under certain conditions; see LICENSE.txt for details.'
 log.info '--------------------------------------------------------'
+log.info(params.pairs_file == "" ? "Perform a tumor-normal somatic variant calling (--pairs_file)     : no"  : "Perform a tumor-normal somatic variant calling (--pairs_file)   : yes" )
 log.info "To consider a site for calling:"
 log.info "     minimum coverage (--min_dp)                                : ${params.min_dp}"
 log.info "     minimum of alternative reads (--min_ao)                    : ${params.min_ao}"
@@ -412,7 +417,7 @@ if(params.input_vcf) {
       '''
       # create a dummy empty pdf to avoid an error in the process when no variant is found
       touch empty.pdf
-      needlestack.r --source_path=!{baseDir}/bin/ --out_file=!{region_tag}.vcf --fasta_ref=!{fasta_ref} --GQ_threshold=!{params.min_qval} --min_coverage=!{params.min_dp} --min_reads=!{params.min_ao} --SB_type=!{params.sb_type} --SB_threshold_SNV=!{params.sb_snv} --SB_threshold_indel=!{params.sb_indel} --output_all_SNVs=!{params.all_SNVs} --do_plots=!{!params.no_plots} --plot_labels=!{!params.no_labels} --add_contours=!{!params.no_contours} --extra_rob=!{params.extra_robust_gl}
+      needlestack.r --pairs_file=!{params.pairs_file} --source_path=!{baseDir}/bin/ --out_file=!{region_tag}.vcf --fasta_ref=!{fasta_ref} --GQ_threshold=!{params.min_qval} --min_coverage=!{params.min_dp} --min_reads=!{params.min_ao} --SB_type=!{params.sb_type} --SB_threshold_SNV=!{params.sb_snv} --SB_threshold_indel=!{params.sb_indel} --output_all_SNVs=!{params.all_SNVs} --do_plots=!{!params.no_plots} --plot_labels=!{!params.no_labels} --add_contours=!{!params.no_contours} --extra_rob=!{params.extra_robust_gl}
       '''
   }
 
