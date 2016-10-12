@@ -48,7 +48,8 @@ params.no_labels = false // label outliers
 params.no_contours = false // add contours to the plots and plot min(AF)~DP
 params.pairs_file = "FALSE" // by default R will get a false boolean value for pairs_file option
 assert (params.pairs_file != true) : "please enter a file name when using --pairs_file option"
-if (params.pairs_file != "") { try { assert file(params.pairs_file).exists() : "\n WARNING : input tumor-normal pairs file not located in execution directory" } catch (AssertionError e) { println e.getMessage() } }
+if (params.pairs_file != "FALSE") { try { assert file(params.pairs_file).exists() : "\n WARNING : input tumor-normal pairs file not located in execution directory" } catch (AssertionError e) { println e.getMessage() } }
+pairs_file = file(params.pairs_file)
 
 /* If --help in parameters, print software usage */
 
@@ -408,6 +409,7 @@ if(params.input_vcf) {
       file fasta_ref
       file fasta_ref_fai
       file fasta_ref_gzi
+      file pairs_file
 
       output:
       file "${region_tag}.vcf" into vcf
