@@ -109,7 +109,7 @@ log.info 'This program comes with ABSOLUTELY NO WARRANTY; for details see LICENS
 log.info 'This is free software, and you are welcome to redistribute it'
 log.info 'under certain conditions; see LICENSE.txt for details.'
 log.info '--------------------------------------------------------'
-log.info(params.pairs_file == "" ? "Perform a tumor-normal somatic variant calling (--pairs_file)     : no"  : "Perform a tumor-normal somatic variant calling (--pairs_file)   : yes" )
+log.info(params.pairs_file == "FALSE" ? "Perform a tumor-normal somatic variant calling (--pairs_file)   : no"  : "Perform a tumor-normal somatic variant calling (--pairs_file)   : yes (file ${params.pairs_file})" )
 log.info "To consider a site for calling:"
 log.info "     minimum coverage (--min_dp)                                : ${params.min_dp}"
 log.info "     minimum of alternative reads (--min_ao)                    : ${params.min_ao}"
