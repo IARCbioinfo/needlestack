@@ -24,8 +24,8 @@
 // - needlestack.r (in bin folder)
 // - pileup2baseindel.pl (in bin folder) (+ perl)
 
-params.min_dp = 50 // minimum coverage in at least one sample to consider a site
-params.min_ao = 5 // minimum number of non-ref reads in at least one sample to consider a site
+params.min_dp = 30 // minimum median coverage to consider a site
+params.min_ao = 3 // minimum number of non-ref reads in at least one sample to consider a site
 params.nsplit = 1 // split the positions for calling in nsplit pieces and run in parallel
 params.min_qval = 50 // qvalue in Phred scale to consider a variant
 params.sb_type = "SOR" // strand bias measure to be used: "SOR" or "RVSB"
@@ -36,9 +36,9 @@ if(params.sb_type in ["SOR", "RVSB"] ) {
   params.sb_snv = 1000 // strand bias threshold for snv
   params.sb_indel = 1000 // strand bias threshold for indels
 }
-params.map_qual = 20 // min mapping quality (passed to samtools)
-params.base_qual = 20 // min base quality (passed to samtools)
-params.max_DP = 30000 // downsample coverage per sample (passed to samtools)
+params.map_qual = 0 // min mapping quality (passed to samtools)
+params.base_qual = 13 // min base quality (passed to samtools)
+params.max_DP = 50000 // downsample coverage per sample (passed to samtools)
 params.use_file_name = false //put these argument to use the bam file names as sample names and do not to use the sample name filed from the bam files (SM tag)
 params.all_SNVs = false //  output all sites, even when no variant is detected
 params.extra_robust_gl = false //  perform an extra robust regression basically for germline variants
@@ -111,7 +111,7 @@ log.info 'under certain conditions; see LICENSE.txt for details.'
 log.info '--------------------------------------------------------'
 log.info(params.pairs_file == "FALSE" ? "Perform a tumor-normal somatic variant calling (--pairs_file)   : no"  : "Perform a tumor-normal somatic variant calling (--pairs_file)   : yes (file ${params.pairs_file})" )
 log.info "To consider a site for calling:"
-log.info "     minimum coverage (--min_dp)                                : ${params.min_dp}"
+log.info "     minimum median coverage (--min_dp)                         : ${params.min_dp}"
 log.info "     minimum of alternative reads (--min_ao)                    : ${params.min_ao}"
 log.info "Phred-scale qvalue threshold (--min_qval)                       : ${params.min_qval}"
 log.info(params.no_plots == true ? "PDF regression plots (--no_plots)                               : no"  : "PDF regression plots (--no_plots)                               : yes" )
