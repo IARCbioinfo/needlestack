@@ -93,10 +93,10 @@ source(paste(args$source_path,"plot_rob_nb.r",sep=""))
 ############################################################
 
 options("scipen"=100)
-
-if(pairs_file != FALSE) { #if user give a pairs_file to needlestack
-  isTNpairs = file.exists(args$pairs_file) #checks existence of tumour-normal pairs file
-  if( isTNpairs ) TNpairs=read.table(pairs_file)
+isTNpairs = FALSE #activates Tumor-Normal pairs mode
+if(pairs_file != FALSE) { #if user gives a pairs_file to needlestack
+  isTNpairs = file.exists(args$pairs_file) #checks existence of tumour-normal pairs file => will be redundant once this is checked in the workflow
+  if( isTNpairs ) TNpairs=read.table(pairs_file,h=T)
 }
 
 indiv_run=read.table("names.txt",stringsAsFactors=F,colClasses = "character")
@@ -171,6 +171,13 @@ common_annot=function() {
   all_RO<<-sum(Rp+Rm)
 }
 
+toQvalue20pc <- function(x,rob_nb_res){
+    y = ceiling(x*0.2) #take ceiling to be conservative
+    unlist(-10*log10(p.adjust((dnbinom(c(rob_nb_res$ma_count,y),size=1/rob_nb_res$coef[[1]],mu=rob_nb_res$coef[[2]]*c(rob_nb_res$coverage,x)) +
+                               pnbinom(c(rob_nb_res$ma_count,y),size=1/rob_nb_res$coef[[1]],mu=rob_nb_res$coef[[2]]*c(rob_nb_res$coverage,x),lower.tail = F)))
+                     [length(rob_nb_res$coverage)+1]))
+}
+
 if(file.exists(out_file)) file.remove(out_file)
 write_out=function(...) {
   cat(paste(...,sep=""),"\n",file=out_file,sep="",append=T)
@@ -210,6 +217,9 @@ write_out("##FORMAT=<ID=SB,Number=4,Type=Integer,Description=\"Per-sample compon
 write_out("##FORMAT=<ID=SOR,Number=1,Type=Float,Description=\"Symmetric Odds Ratio of 2x2 contingency table to detect strand bias\">")
 write_out("##FORMAT=<ID=RVSB,Number=1,Type=Float,Description=\"Relative Variant Strand Bias\">")
 write_out("##FORMAT=<ID=FS,Number=1,Type=Float,Description=\"Fisher Exact Test p-value for detecting strand bias (Phred-scale)\">")
+write_out("##FORMAT=<ID=FS,Number=1,Type=Float,Description=\"Fisher Exact Test p-value for detecting strand bias (Phred-scale)\">")
+write_out("##FORMAT=<ID=QVAL_20PC,Number=1,Type=Float,Description=\"Phred-scaled qvalue for an allelic fraction of 20% in the Normal tissue\">")
+write_out("##FORMAT=<ID=SOMATIC_STATUS,Number=1,Type=String,Description=\"Somatic status (SOMATIC,GERMLINE, or UNKNOWN) of Tumor variants\">")
 
 write_out("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t",paste(indiv_run[,2],collapse = "\t"))
 
@@ -222,8 +232,29 @@ for (i in 1:npos) {
       ma_count=Vp+Vm
       DP=coverage_matrix[i,]
       reg_res=glmrob.nb(x=DP,y=ma_count,min_coverage=min_coverage,min_reads=min_reads,extra_rob=extra_rob)
-      ## compute qval_20pc here using code:
-      #unlist(-10*log10(p.adjust((dnbinom(c(rob_nb_res$ma_count,y),size=1/rob_nb_res$coef[[1]],mu=rob_nb_res$coef[[2]]*c(rob_nb_res$coverage,x)) + pnbinom(c(rob_nb_res$ma_count,y),size=1/rob_nb_res$coef[[1]],mu=rob_nb_res$coef[[2]]*c(rob_nb_res$coverage,x),lower.tail = F)))[length(rob_nb_res$coverage)+1]))
+      # compute Qval20pc
+      qval_20pc = rep(0,nindiv)
+      somatic_status = rep(".",nindiv)
+      if(isTNpairs){
+          Tindex = which(indiv_run[,2] %in% TNpairs$TUMOR )
+          Nindex = which(indiv_run[,2] %in% TNpairs$NORMAL )
+          DPN = DP[Nindex]
+          ma_countN = ma_count[Nindex]
+          qval_20pcN = sapply(1:length(Nindex),function(ii) toQvalue20pc(DPN[ii],reg_res) )
+          qval_20pc[Nindex] = qval_20pcN
+          somatic_status[Nindex] = "."
+          ##QVAL_TUMOR<50  -> "." (no tumor variant)
+          somatic_status[Tindex][(reg_res$GQ[Tindex] < GQ_threshold) ] = "."
+          ##QVAL_TUMOR>50 & QVAL_20PC<threshold & QVAL_NORMAL<threshold -> UNKNOWN (tumor variant, no normal variant but without enough power)
+          somatic_status[Tindex][(reg_res$GQ[Tindex] > GQ_threshold)&(qval_20pcN<GQ_threshold)&(reg_res$GQ[Nindex]<GQ_threshold) ] = "UNKNOWN"
+          ##QVAL_TUMOR>50 & QVAL_20PC<threshold & QVAL_NORMAL>threshold -> GERMLINE (tumor variant, normal variant despite low power)
+          somatic_status[Tindex][ (reg_res$GQ[Tindex] > GQ_threshold)&(qval_20pcN<GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE"
+          #QVAL_TUMOR>50 & QVAL_20PC>threshold & QVAL_NORMAL<threshold -> SOMATIC (tumor variant, no normal variant despite good power)
+          somatic_status[Tindex][(reg_res$GQ[Tindex] > GQ_threshold)&(qval_20pcN>GQ_threshold)&(reg_res$GQ[Nindex]<GQ_threshold) ] = "SOMATIC"
+          #QVAL_TUMOR>50 & QVAL_20PC>threshold & QVAL_NORMAL>threshold -> GERMLINE (tumor variant, normal variant)
+          somatic_status[Tindex][ (reg_res$GQ[Tindex] > GQ_threshold)&(qval_20pcN>GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE"
+      }
+      
       if (output_all_SNVs | (!is.na(reg_res$coef["slope"]) & sum(reg_res$GQ>=GQ_threshold,na.rm=TRUE)>0)) {
         all_AO=sum(ma_count)
         all_DP=sum(coverage_matrix[i,])
@@ -244,21 +275,11 @@ for (i in 1:npos) {
           cat("\t","GT:QVAL:DP:RO:AO:AF:SB:SOR:RVSB:FS:QVAL_20PC:SOMATIC_STATUS",sep = "",file=out_file,append=T)
 
           # all samples
-  		    genotype=rep("0/0",l=nindiv)
-  		    heterozygotes=which(reg_res$GQ>=GQ_threshold & sbs<=SB_threshold_SNV & reg_res$ma_count/reg_res$coverage < 0.75)
-  		    genotype[heterozygotes]="0/1"
+          genotype=rep("0/0",l=nindiv)
+          heterozygotes=which(reg_res$GQ>=GQ_threshold & sbs<=SB_threshold_SNV & reg_res$ma_count/reg_res$coverage < 0.75)
+          genotype[heterozygotes]="0/1"
           homozygotes=which(reg_res$GQ>=GQ_threshold & sbs<=SB_threshold_SNV & reg_res$ma_count/reg_res$coverage >= 0.75)
-  		    genotype[homozygotes]="1/1"
-
-          	    qval_20pc=rep(".",l=nindiv)
-  		    normal_variant=c()  #to change to get right values
-  		    qval_20pc[normal_variant]=0 # to change to get right values
-
-  		    somatic_status=rep("UNKNOWN",l=nindiv)
-  		    somatic=c()  #to change to get right values
-  		    germline=c() #to change to get right values
-  		    somatic_status[somatic]="SOMATIC"
-  		    somatic_status[germline]="GERMLINE"
+          genotype[homozygotes]="1/1"
 
           for (cur_sample in 1:nindiv) {
               cat("\t",genotype[cur_sample],":",reg_res$GQ[cur_sample],":",DP[cur_sample],":",(Rp+Rm)[cur_sample],":",ma_count[cur_sample],":",(ma_count/DP)[cur_sample],":",Rp[cur_sample],",",Rm[cur_sample],",",Vp[cur_sample],",",Vm[cur_sample],":",sors[cur_sample],":",rvsbs[cur_sample],":",FisherStrand[cur_sample],":",qval_20pc[cur_sample],":",somatic_status[cur_sample],sep = "",file=out_file,append=T)
@@ -293,6 +314,29 @@ for (i in 1:npos) {
         ma_count=Vp+Vm
         DP=coverage_matrix[i,]+ma_count
         reg_res=glmrob.nb(x=DP,y=ma_count,min_coverage=min_coverage,min_reads=min_reads,extra_rob=extra_rob)
+         # compute Qval20pc
+        qval_20pc = rep(0,nindiv)
+        somatic_status = rep(".",nindiv)
+        if(isTNpairs){
+            Tindex = which(indiv_run[,2] %in% TNpairs$TUMOR )
+            Nindex = which(indiv_run[,2] %in% TNpairs$NORMAL )
+            DPN = DP[Nindex]
+            ma_countN = ma_count[Nindex]
+            qval_20pcN = sapply(1:length(Nindex),function(ii) toQvalue20pc(DPN[ii],reg_res) )
+            qval_20pc[Nindex] = qval_20pcN
+            somatic_status[Nindex] = "."
+            ##QVAL_TUMOR<50  -> "." (no tumor variant)
+            somatic_status[Tindex][(reg_res$GQ[Tindex] < GQ_threshold) ] = "."
+            ##QVAL_TUMOR>50 & QVAL_20PC<threshold & QVAL_NORMAL<threshold -> UNKNOWN (tumor variant, no normal variant but without enough power)
+            somatic_status[Tindex][(reg_res$GQ[Tindex] > GQ_threshold)&(qval_20pcN<GQ_threshold)&(reg_res$GQ[Nindex]<GQ_threshold) ] = "UNKNOWN"
+            ##QVAL_TUMOR>50 & QVAL_20PC<threshold & QVAL_NORMAL>threshold -> GERMLINE (tumor variant, normal variant despite low power)
+            somatic_status[Tindex][ (reg_res$GQ[Tindex] > GQ_threshold)&(qval_20pcN<GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE"
+            #QVAL_TUMOR>50 & QVAL_20PC>threshold & QVAL_NORMAL<threshold -> SOMATIC (tumor variant, no normal variant despite good power)
+            somatic_status[Tindex][(reg_res$GQ[Tindex] > GQ_threshold)&(qval_20pcN>GQ_threshold)&(reg_res$GQ[Nindex]<GQ_threshold) ] = "SOMATIC"
+            #QVAL_TUMOR>50 & QVAL_20PC>threshold & QVAL_NORMAL>threshold -> GERMLINE (tumor variant, normal variant)
+            somatic_status[Tindex][ (reg_res$GQ[Tindex] > GQ_threshold)&(qval_20pcN>GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE"
+        }
+     
         if (!is.na(reg_res$coef["slope"]) & sum(reg_res$GQ>=GQ_threshold,na.rm=TRUE)>0) {
           all_AO=sum(ma_count)
           all_DP=sum(coverage_matrix[i,])+sum(ma_count)
@@ -316,19 +360,9 @@ for (i in 1:npos) {
             # all samples
             genotype=rep("0/0",l=nindiv)
             heterozygotes=which(reg_res$GQ>=GQ_threshold & sbs<=SB_threshold_indel & reg_res$ma_count/reg_res$coverage < 0.75)
-    		    genotype[heterozygotes]="0/1"
+            genotype[heterozygotes]="0/1"
             homozygotes=which(reg_res$GQ>=GQ_threshold & sbs<=SB_threshold_indel & reg_res$ma_count/reg_res$coverage >= 0.75)
-    		    genotype[homozygotes]="1/1"
-
-            qval_20pc=rep(".",l=nindiv)
-            normal_variant=c()  #to change to get right values
-            qval_20pc[normal_variant]=0 # to change to get right values
-
-            somatic_status=rep("UNKNOWN",l=nindiv)
-            somatic=c()  #to change to get right values
-            germline=c() #to change to get right values
-            somatic_status[somatic]="SOMATIC"
-            somatic_status[germline]="GERMLINE"
+            genotype[homozygotes]="1/1"
 
             for (cur_sample in 1:nindiv) {
                 cat("\t",genotype[cur_sample],":",reg_res$GQ[cur_sample],":",DP[cur_sample],":",(Rp+Rm)[cur_sample],":",ma_count[cur_sample],":",(ma_count/DP)[cur_sample],":",Rp[cur_sample],",",Rm[cur_sample],",",Vp[cur_sample],",",Vm[cur_sample],":",sors[cur_sample],":",rvsbs[cur_sample],":",FisherStrand[cur_sample],":",qval_20pc[cur_sample],":",somatic_status[cur_sample],sep = "",file=out_file,append=T)
@@ -366,6 +400,29 @@ for (i in 1:npos) {
         ma_count=Vp+Vm
         DP=coverage_matrix[i,]+ma_count[]
         reg_res=glmrob.nb(x=DP,y=ma_count,min_coverage=min_coverage,min_reads=min_reads,extra_rob=extra_rob)
+         # compute Qval20pc
+        qval_20pc = rep(0,nindiv)
+        somatic_status = rep(".",nindiv)
+        if(isTNpairs){
+            Tindex = which(indiv_run[,2] %in% TNpairs$TUMOR )
+            Nindex = which(indiv_run[,2] %in% TNpairs$NORMAL )
+            DPN = DP[Nindex]
+            ma_countN = ma_count[Nindex]
+            qval_20pcN = sapply(1:length(Nindex),function(ii) toQvalue20pc(DPN[ii],reg_res) )
+            qval_20pc[Nindex] = qval_20pcN
+            somatic_status[Nindex] = "."
+            ##QVAL_TUMOR<50  -> "." (no tumor variant)
+            somatic_status[Tindex][(reg_res$GQ[Tindex] < GQ_threshold) ] = "."
+            ##QVAL_TUMOR>50 & QVAL_20PC<threshold & QVAL_NORMAL<threshold -> UNKNOWN (tumor variant, no normal variant but without enough power)
+            somatic_status[Tindex][(reg_res$GQ[Tindex] > GQ_threshold)&(qval_20pcN<GQ_threshold)&(reg_res$GQ[Nindex]<GQ_threshold) ] = "UNKNOWN"
+            ##QVAL_TUMOR>50 & QVAL_20PC<threshold & QVAL_NORMAL>threshold -> GERMLINE (tumor variant, normal variant despite low power)
+            somatic_status[Tindex][ (reg_res$GQ[Tindex] > GQ_threshold)&(qval_20pcN<GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE"
+            #QVAL_TUMOR>50 & QVAL_20PC>threshold & QVAL_NORMAL<threshold -> SOMATIC (tumor variant, no normal variant despite good power)
+            somatic_status[Tindex][(reg_res$GQ[Tindex] > GQ_threshold)&(qval_20pcN>GQ_threshold)&(reg_res$GQ[Nindex]<GQ_threshold) ] = "SOMATIC"
+            #QVAL_TUMOR>50 & QVAL_20PC>threshold & QVAL_NORMAL>threshold -> GERMLINE (tumor variant, normal variant)
+            somatic_status[Tindex][ (reg_res$GQ[Tindex] > GQ_threshold)&(qval_20pcN>GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE"
+        }
+        
         if (!is.na(reg_res$coef["slope"]) & sum(reg_res$GQ>=GQ_threshold,na.rm=TRUE)>0) {
           all_AO=sum(ma_count)
           all_DP=sum(coverage_matrix[i,])+sum(ma_count)
@@ -391,16 +448,6 @@ for (i in 1:npos) {
     		    genotype[heterozygotes]="0/1"
             homozygotes=which(reg_res$GQ>=GQ_threshold & sbs<=SB_threshold_indel & reg_res$ma_count/reg_res$coverage >= 0.75)
     		    genotype[homozygotes]="1/1"
-
-            qval_20pc=rep(".",l=nindiv)
-            normal_variant=c()  #to change to get right values
-            qval_20pc[normal_variant]=0 # to change to get right values
-
-            somatic_status=rep("UNKNOWN",l=nindiv)
-            somatic=c()  #to change to get right values
-            germline=c() #to change to get right values
-            somatic_status[somatic]="SOMATIC"
-            somatic_status[germline]="GERMLINE"
 
             for (cur_sample in 1:nindiv) {
                 cat("\t",genotype[cur_sample],":",reg_res$GQ[cur_sample],":",DP[cur_sample],":",(Rp+Rm)[cur_sample],":",ma_count[cur_sample],":",(ma_count/DP)[cur_sample],":",Rp[cur_sample],",",Rm[cur_sample],",",Vp[cur_sample],",",Vm[cur_sample],":",sors[cur_sample],":",rvsbs[cur_sample],":",FisherStrand[cur_sample],":",qval_20pc[cur_sample],":",somatic_status[cur_sample],sep = "",file=out_file,append=T)
