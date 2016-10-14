@@ -371,8 +371,8 @@ for (i in 1:npos) {
             cat("\n",sep = "",file=out_file,append=T)
             if (do_plots) {
               # deletions are shifted in samtools mpileup by 1bp, so put them at the right place by adding + to pos_ref[i,"loc"] everywhere in what follows
-              pdf(paste(pos_ref[i,"chr"],"_",pos_ref[i,"loc"]+1,"_",pos_ref[i,"loc"]+1+nchar(cur_del)-1,"_",cur_del,"_","-",ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),7,6)
-              plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(pos_ref[i,"chr"]),":",.(pos_ref[i,"loc"]+1)," (",.(cur_del) %->% .("-"),")",.(ifelse(reg_res$extra_rob," EXTRA ROBUST","")),sep="")),sbs=sbs, SB_threshold=SB_threshold_indel,plot_labels=plot_labels,add_contours=add_contours,names=indiv_run[,2])
+              pdf(paste(pos_ref[i,"chr"],"_",pos_ref[i,"loc"],"_",pos_ref[i,"loc"]+nchar(cur_del)-1,"_",paste(prev_bp,cur_del,sep=""),"_",prev_bp,ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),7,6)
+              plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(pos_ref[i,"chr"]),":",.(pos_ref[i,"loc"])," (",.(paste(prev_bp,cur_del,sep="")) %->% .(prev_bp),")",.(ifelse(reg_res$extra_rob," EXTRA ROBUST","")),sep="")),sbs=sbs, SB_threshold=SB_threshold_indel,plot_labels=plot_labels,add_contours=add_contours,names=indiv_run[,2])
               dev.off()
             }
           }
@@ -455,8 +455,8 @@ for (i in 1:npos) {
 
             cat("\n",sep = "",file=out_file,append=T)
             if (do_plots) {
-              pdf(paste(pos_ref[i,"chr"],"_",pos_ref[i,"loc"],"_",pos_ref[i,"loc"],"_","-","_",cur_ins,ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),7,6)
-              plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(pos_ref[i,"chr"]),":",.(pos_ref[i,"loc"])," (",.("-") %->% .(cur_ins),")",.(ifelse(reg_res$extra_rob," EXTRA ROBUST","")),sep="")),sbs=sbs, SB_threshold=SB_threshold_indel,plot_labels=plot_labels,add_contours=add_contours,names=indiv_run[,2])
+              pdf(paste(pos_ref[i,"chr"],"_",pos_ref[i,"loc"],"_",pos_ref[i,"loc"],"_",prev_bp,"_",paste(prev_bp,cur_ins,sep=""),ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),7,6)
+              plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(pos_ref[i,"chr"]),":",.(pos_ref[i,"loc"])," (",.(prev_bp) %->% .(paste(prev_bp,cur_ins,sep="")),")",.(ifelse(reg_res$extra_rob," EXTRA ROBUST","")),sep="")),sbs=sbs, SB_threshold=SB_threshold_indel,plot_labels=plot_labels,add_contours=add_contours,names=indiv_run[,2])
               dev.off()
             }
           }
