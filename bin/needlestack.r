@@ -312,7 +312,7 @@ for (i in 1:npos) {
         Vp[names(ma_p_cur_del)]=ma_p_cur_del
         Vm[names(ma_m_cur_del)]=ma_m_cur_del
         ma_count=Vp+Vm
-        DP=coverage_matrix[i,]+ma_count
+        DP=coverage_matrix[i,]
         reg_res=glmrob.nb(x=DP,y=ma_count,min_coverage=min_coverage,min_reads=min_reads,extra_rob=extra_rob)
          # compute Qval20pc
         qval_20pc = rep(0,nindiv)
@@ -398,7 +398,7 @@ for (i in 1:npos) {
         Vp[names(ma_p_cur_ins)]=ma_p_cur_ins
         Vm[names(ma_m_cur_ins)]=ma_m_cur_ins
         ma_count=Vp+Vm
-        DP=coverage_matrix[i,]+ma_count[]
+        DP=coverage_matrix[i,]
         reg_res=glmrob.nb(x=DP,y=ma_count,min_coverage=min_coverage,min_reads=min_reads,extra_rob=extra_rob)
          # compute Qval20pc
         qval_20pc = rep(0,nindiv)
