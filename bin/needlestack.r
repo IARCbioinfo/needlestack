@@ -93,14 +93,25 @@ source(paste(args$source_path,"plot_rob_nb.r",sep=""))
 ############################################################
 
 options("scipen"=100)
-isTNpairs = FALSE #activates Tumor-Normal pairs mode
-if(pairs_file != FALSE) { #if user gives a pairs_file to needlestack
-  isTNpairs = file.exists(args$pairs_file) #checks existence of tumour-normal pairs file => will be redundant once this is checked in the workflow
-  if( isTNpairs ) TNpairs=read.table(pairs_file,h=T)
-}
 
 indiv_run=read.table("names.txt",stringsAsFactors=F,colClasses = "character")
 indiv_run[,2]=make.unique(indiv_run[,2],sep="_")
+
+isTNpairs = FALSE #activates Tumor-Normal pairs mode
+if(pairs_file != FALSE) { #if user gives a pairs_file to needlestack
+  isTNpairs = file.exists(pairs_file) #checks existence of tumour-normal pairs file => will be redundant once this is checked in the workflow
+  if( isTNpairs ){
+      pairsname = scan(pairs_file,nmax = 2,what = "character")
+      TNpairs=read.table(pairs_file,h=T)
+      names(TNpairs)[grep("TU",pairsname)] = "TUMOR" #set columns names (to avoid problems due to spelling variations or typos)
+      names(TNpairs)[grep("NO",pairsname)] = "NORMAL"
+      onlyNindex = which(indiv_run[,2]==TNpairs$NORMAL[is.na(TNpairs$TUMOR)]) #normal samples without matching tumor 
+      onlyTindex = which(indiv_run[,2]==TNpairs$TUMOR[is.na(TNpairs$NORMAL)]) #tumor samples without matching normal
+      TNpairs.complete = TNpairs[!(is.na(TNpairs$TUMOR)|is.na(TNpairs$NORMAL) ),] # all complete T-N pairs
+      Tindex = sapply( 1:nrow(TNpairs.complete) , function(k) return(which( indiv_run[,2]==TNpairs.complete$TUMOR[k])) )
+      Nindex = sapply( 1:nrow(TNpairs.complete) , function(k) return(which( indiv_run[,2]==TNpairs.complete$NORMAL[k])) )
+  }
+}
 
 pileups_files=paste("TABLE/",indiv_run[,1],".txt",sep="")
 nindiv=nrow(indiv_run)
@@ -236,23 +247,19 @@ for (i in 1:npos) {
       qval_20pc = rep(0,nindiv)
       somatic_status = rep(".",nindiv)
       if(isTNpairs){
-          Tindex = which(indiv_run[,2] %in% TNpairs$TUMOR )
-          Nindex = which(indiv_run[,2] %in% TNpairs$NORMAL )
-          DPN = DP[Nindex]
-          ma_countN = ma_count[Nindex]
-          qval_20pcN = sapply(1:length(Nindex),function(ii) toQvalue20pc(DPN[ii],reg_res) )
-          qval_20pc[Nindex] = qval_20pcN
-          somatic_status[Nindex] = "."
-          ##QVAL_TUMOR<50  -> "." (no tumor variant)
-          somatic_status[Tindex][(reg_res$GQ[Tindex] < GQ_threshold) ] = "."
-          ##QVAL_TUMOR>50 & QVAL_20PC<threshold & QVAL_NORMAL<threshold -> UNKNOWN (tumor variant, no normal variant but without enough power)
-          somatic_status[Tindex][(reg_res$GQ[Tindex] > GQ_threshold)&(qval_20pcN<GQ_threshold)&(reg_res$GQ[Nindex]<GQ_threshold) ] = "UNKNOWN"
-          ##QVAL_TUMOR>50 & QVAL_20PC<threshold & QVAL_NORMAL>threshold -> GERMLINE (tumor variant, normal variant despite low power)
-          somatic_status[Tindex][ (reg_res$GQ[Tindex] > GQ_threshold)&(qval_20pcN<GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE"
-          #QVAL_TUMOR>50 & QVAL_20PC>threshold & QVAL_NORMAL<threshold -> SOMATIC (tumor variant, no normal variant despite good power)
-          somatic_status[Tindex][(reg_res$GQ[Tindex] > GQ_threshold)&(qval_20pcN>GQ_threshold)&(reg_res$GQ[Nindex]<GQ_threshold) ] = "SOMATIC"
-          #QVAL_TUMOR>50 & QVAL_20PC>threshold & QVAL_NORMAL>threshold -> GERMLINE (tumor variant, normal variant)
-          somatic_status[Tindex][ (reg_res$GQ[Tindex] > GQ_threshold)&(qval_20pcN>GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE"
+          qval_20pc[Nindex] = sapply(1:length(Nindex),function(ii) toQvalue20pc(DP[Nindex][ii],reg_res) )
+          if( length(onlyNindex)>0 ) qval_20pc[onlyNindex] = sapply(1:length(onlyNindex),function(ii) toQvalue20pc(DP[onlyNindex][ii],reg_res) )
+          #no matching normal -> UNKNOWN (impossible to call somatic status)
+          somatic_status[onlyTindex][(reg_res$GQ[onlyTindex] > GQ_threshold) ] = "UNKNOWN"
+          #no tumor variant -> "." ; already set by default
+          #tumor variant, no normal variant but without enough power -> UNKNOWN
+          somatic_status[Tindex][(reg_res$GQ[Tindex] > GQ_threshold)&(qval_20pc[Nindex]<GQ_threshold)&(reg_res$GQ[Nindex]<GQ_threshold) ] = "UNKNOWN"
+          #tumor variant, normal variant despite low power -> GERMLINE
+          somatic_status[Tindex][ (reg_res$GQ[Tindex] > GQ_threshold)&(qval_20pc[Nindex]<GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE"
+          #tumor variant, no normal variant despite good power -> SOMATIC
+          somatic_status[Tindex][(reg_res$GQ[Tindex] > GQ_threshold)&(qval_20pc[Nindex]>GQ_threshold)&(reg_res$GQ[Nindex]<GQ_threshold) ] = "SOMATIC"
+          #tumor variant, normal variant -> GERMLINE
+          somatic_status[Tindex][ (reg_res$GQ[Tindex] > GQ_threshold)&(qval_20pc[Nindex]>GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE"
       }
       
       if (output_all_SNVs | (!is.na(reg_res$coef["slope"]) & sum(reg_res$GQ>=GQ_threshold,na.rm=TRUE)>0)) {
@@ -318,25 +325,21 @@ for (i in 1:npos) {
         qval_20pc = rep(0,nindiv)
         somatic_status = rep(".",nindiv)
         if(isTNpairs){
-            Tindex = which(indiv_run[,2] %in% TNpairs$TUMOR )
-            Nindex = which(indiv_run[,2] %in% TNpairs$NORMAL )
-            DPN = DP[Nindex]
-            ma_countN = ma_count[Nindex]
-            qval_20pcN = sapply(1:length(Nindex),function(ii) toQvalue20pc(DPN[ii],reg_res) )
-            qval_20pc[Nindex] = qval_20pcN
-            somatic_status[Nindex] = "."
-            ##QVAL_TUMOR<50  -> "." (no tumor variant)
-            somatic_status[Tindex][(reg_res$GQ[Tindex] < GQ_threshold) ] = "."
-            ##QVAL_TUMOR>50 & QVAL_20PC<threshold & QVAL_NORMAL<threshold -> UNKNOWN (tumor variant, no normal variant but without enough power)
-            somatic_status[Tindex][(reg_res$GQ[Tindex] > GQ_threshold)&(qval_20pcN<GQ_threshold)&(reg_res$GQ[Nindex]<GQ_threshold) ] = "UNKNOWN"
-            ##QVAL_TUMOR>50 & QVAL_20PC<threshold & QVAL_NORMAL>threshold -> GERMLINE (tumor variant, normal variant despite low power)
-            somatic_status[Tindex][ (reg_res$GQ[Tindex] > GQ_threshold)&(qval_20pcN<GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE"
-            #QVAL_TUMOR>50 & QVAL_20PC>threshold & QVAL_NORMAL<threshold -> SOMATIC (tumor variant, no normal variant despite good power)
-            somatic_status[Tindex][(reg_res$GQ[Tindex] > GQ_threshold)&(qval_20pcN>GQ_threshold)&(reg_res$GQ[Nindex]<GQ_threshold) ] = "SOMATIC"
-            #QVAL_TUMOR>50 & QVAL_20PC>threshold & QVAL_NORMAL>threshold -> GERMLINE (tumor variant, normal variant)
-            somatic_status[Tindex][ (reg_res$GQ[Tindex] > GQ_threshold)&(qval_20pcN>GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE"
+            qval_20pc[Nindex] = sapply(1:length(Nindex),function(ii) toQvalue20pc(DP[Nindex][ii],reg_res) )
+            if( length(onlyNindex)>0 ) qval_20pc[onlyNindex] = sapply(1:length(onlyNindex),function(ii) toQvalue20pc(DP[onlyNindex][ii],reg_res) )
+            #no matching normal -> UNKNOWN (impossible to call somatic status)
+            somatic_status[onlyTindex][(reg_res$GQ[onlyTindex] > GQ_threshold) ] = "UNKNOWN"
+            #no tumor variant -> "." ; already set by default
+            #tumor variant, no normal variant but without enough power -> UNKNOWN
+            somatic_status[Tindex][(reg_res$GQ[Tindex] > GQ_threshold)&(qval_20pc[Nindex]<GQ_threshold)&(reg_res$GQ[Nindex]<GQ_threshold) ] = "UNKNOWN"
+            #tumor variant, normal variant despite low power -> GERMLINE
+            somatic_status[Tindex][ (reg_res$GQ[Tindex] > GQ_threshold)&(qval_20pc[Nindex]<GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE"
+            #tumor variant, no normal variant despite good power -> SOMATIC
+            somatic_status[Tindex][(reg_res$GQ[Tindex] > GQ_threshold)&(qval_20pc[Nindex]>GQ_threshold)&(reg_res$GQ[Nindex]<GQ_threshold) ] = "SOMATIC"
+            #tumor variant, normal variant -> GERMLINE
+            somatic_status[Tindex][ (reg_res$GQ[Tindex] > GQ_threshold)&(qval_20pc[Nindex]>GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE"
         }
-     
+ 
         if (!is.na(reg_res$coef["slope"]) & sum(reg_res$GQ>=GQ_threshold,na.rm=TRUE)>0) {
           all_AO=sum(ma_count)
           all_DP=sum(coverage_matrix[i,])+sum(ma_count)
@@ -403,26 +406,23 @@ for (i in 1:npos) {
          # compute Qval20pc
         qval_20pc = rep(0,nindiv)
         somatic_status = rep(".",nindiv)
+
         if(isTNpairs){
-            Tindex = which(indiv_run[,2] %in% TNpairs$TUMOR )
-            Nindex = which(indiv_run[,2] %in% TNpairs$NORMAL )
-            DPN = DP[Nindex]
-            ma_countN = ma_count[Nindex]
-            qval_20pcN = sapply(1:length(Nindex),function(ii) toQvalue20pc(DPN[ii],reg_res) )
-            qval_20pc[Nindex] = qval_20pcN
-            somatic_status[Nindex] = "."
-            ##QVAL_TUMOR<50  -> "." (no tumor variant)
-            somatic_status[Tindex][(reg_res$GQ[Tindex] < GQ_threshold) ] = "."
-            ##QVAL_TUMOR>50 & QVAL_20PC<threshold & QVAL_NORMAL<threshold -> UNKNOWN (tumor variant, no normal variant but without enough power)
-            somatic_status[Tindex][(reg_res$GQ[Tindex] > GQ_threshold)&(qval_20pcN<GQ_threshold)&(reg_res$GQ[Nindex]<GQ_threshold) ] = "UNKNOWN"
-            ##QVAL_TUMOR>50 & QVAL_20PC<threshold & QVAL_NORMAL>threshold -> GERMLINE (tumor variant, normal variant despite low power)
-            somatic_status[Tindex][ (reg_res$GQ[Tindex] > GQ_threshold)&(qval_20pcN<GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE"
-            #QVAL_TUMOR>50 & QVAL_20PC>threshold & QVAL_NORMAL<threshold -> SOMATIC (tumor variant, no normal variant despite good power)
-            somatic_status[Tindex][(reg_res$GQ[Tindex] > GQ_threshold)&(qval_20pcN>GQ_threshold)&(reg_res$GQ[Nindex]<GQ_threshold) ] = "SOMATIC"
-            #QVAL_TUMOR>50 & QVAL_20PC>threshold & QVAL_NORMAL>threshold -> GERMLINE (tumor variant, normal variant)
-            somatic_status[Tindex][ (reg_res$GQ[Tindex] > GQ_threshold)&(qval_20pcN>GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE"
+            qval_20pc[Nindex] = sapply(1:length(Nindex),function(ii) toQvalue20pc(DP[Nindex][ii],reg_res) )
+            if( length(onlyNindex)>0 ) qval_20pc[onlyNindex] = sapply(1:length(onlyNindex),function(ii) toQvalue20pc(DP[onlyNindex][ii],reg_res) )
+            #no matching normal -> UNKNOWN (impossible to call somatic status)
+            somatic_status[onlyTindex][(reg_res$GQ[onlyTindex] > GQ_threshold) ] = "UNKNOWN"
+            #no tumor variant -> "." ; already set by default
+            #tumor variant, no normal variant but without enough power -> UNKNOWN
+            somatic_status[Tindex][(reg_res$GQ[Tindex] > GQ_threshold)&(qval_20pc[Nindex]<GQ_threshold)&(reg_res$GQ[Nindex]<GQ_threshold) ] = "UNKNOWN"
+            #tumor variant, normal variant despite low power -> GERMLINE
+            somatic_status[Tindex][ (reg_res$GQ[Tindex] > GQ_threshold)&(qval_20pc[Nindex]<GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE"
+            #tumor variant, no normal variant despite good power -> SOMATIC
+            somatic_status[Tindex][(reg_res$GQ[Tindex] > GQ_threshold)&(qval_20pc[Nindex]>GQ_threshold)&(reg_res$GQ[Nindex]<GQ_threshold) ] = "SOMATIC"
+            #tumor variant, normal variant -> GERMLINE
+            somatic_status[Tindex][ (reg_res$GQ[Tindex] > GQ_threshold)&(qval_20pc[Nindex]>GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE"
         }
-        
+
         if (!is.na(reg_res$coef["slope"]) & sum(reg_res$GQ>=GQ_threshold,na.rm=TRUE)>0) {
           all_AO=sum(ma_count)
           all_DP=sum(coverage_matrix[i,])+sum(ma_count)
