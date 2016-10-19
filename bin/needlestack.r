@@ -348,10 +348,10 @@ for (i in 1:npos) {
           if (SB_type=="SOR") sbs=sors else { if (SB_type=="RVSB") sbs=rvsbs else {sbs=FisherStrand} }
           if (sum(sbs<=SB_threshold_indel & reg_res$GQ>=GQ_threshold,na.rm=TRUE)>0) {
             con=pipe(paste(samtools," faidx ",fasta_ref," ",pos_ref[i,"chr"],":",pos_ref[i,"loc"]+1-3,"-",pos_ref[i,"loc"]+1-1," | tail -n1",sep=""))
-            before=readLines(con)
+            before=toupper(readLines(con))
             close(con)
             con=pipe(paste(samtools," faidx ",fasta_ref," ",pos_ref[i,"chr"],":",pos_ref[i,"loc"]+1+nchar(cur_del),"-",pos_ref[i,"loc"]+1+3+nchar(cur_del)-1," | tail -n1",sep=""))
-            after=readLines(con)
+            after=toupper(readLines(con))
             close(con)
             prev_bp=substr(before,3,3)
             next_bp=substr(after,1,1)
@@ -431,10 +431,10 @@ for (i in 1:npos) {
           if (SB_type=="SOR") sbs=sors else { if (SB_type=="RVSB") sbs=rvsbs else {sbs=FisherStrand} }
           if (sum(sbs<=SB_threshold_indel & reg_res$GQ>=GQ_threshold,na.rm=TRUE)>0) {
             con=pipe(paste(samtools," faidx ",fasta_ref," ",pos_ref[i,"chr"],":",pos_ref[i,"loc"]-2,"-",pos_ref[i,"loc"]," | tail -n1",sep=""))
-            before=readLines(con)
+            before=toupper(readLines(con))
             close(con)
             con=pipe(paste(samtools," faidx ",fasta_ref," ",pos_ref[i,"chr"],":",pos_ref[i,"loc"]+1,"-",pos_ref[i,"loc"]+3," | tail -n1",sep=""))
-            after=readLines(con)
+            after=toupper(readLines(con))
             close(con)
             prev_bp=substr(before,3,3)
             cat(pos_ref[i,"chr"],"\t",pos_ref[i,"loc"],"\t",".","\t",prev_bp,"\t",paste(prev_bp,cur_ins,sep=""),"\t",max(reg_res$GQ),"\t",".",sep = "",file=out_file,append=T)
