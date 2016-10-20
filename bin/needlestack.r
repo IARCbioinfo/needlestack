@@ -183,7 +183,7 @@ common_annot=function() {
 }
 
 toQvalue20pc <- function(x,rob_nb_res){
-    y = ceiling(x*0.2) #take ceiling to be conservative
+    y = floor(x*0.2) #take floor to be conservative
     unlist(-10*log10(p.adjust((dnbinom(c(rob_nb_res$ma_count,y),size=1/rob_nb_res$coef[[1]],mu=rob_nb_res$coef[[2]]*c(rob_nb_res$coverage,x)) +
                                pnbinom(c(rob_nb_res$ma_count,y),size=1/rob_nb_res$coef[[1]],mu=rob_nb_res$coef[[2]]*c(rob_nb_res$coverage,x),lower.tail = F)))
                      [length(rob_nb_res$coverage)+1]))
