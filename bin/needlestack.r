@@ -182,11 +182,17 @@ common_annot=function() {
   all_RO<<-sum(Rp+Rm)
 }
 
-toQvalue20pc <- function(x,rob_nb_res){
-    y = qbinom(0.05,x,0.2,lower.tail = T) #5% quantile of distrib of number or ALT reads if AF is 0.2
+## functions to compute the Qvalue of a function with a given AF
+toQvalueN <- function(x,rob_nb_res,sigma=0.1){ #change sigma value to change the departure from binomial distribution with parameter 0.5
+    y = qnbinom(0.01,size = 1/sigma,mu = 0.5*x) 
     unlist(-10*log10(p.adjust((dnbinom(c(rob_nb_res$ma_count,y),size=1/rob_nb_res$coef[[1]],mu=rob_nb_res$coef[[2]]*c(rob_nb_res$coverage,x)) +
-                               pnbinom(c(rob_nb_res$ma_count,y),size=1/rob_nb_res$coef[[1]],mu=rob_nb_res$coef[[2]]*c(rob_nb_res$coverage,x),lower.tail = F)))
-                     [length(rob_nb_res$coverage)+1]))
+                               pnbinom(c(rob_nb_res$ma_count,y),size=1/rob_nb_res$coef[[1]],mu=rob_nb_res$coef[[2]]*c(rob_nb_res$coverage,x),lower.tail = F)))[length(rob_nb_res$coverage)+1]))
+}
+
+toQvalueT <- function(x,rob_nb_res,afmin=0.01){ #change afmin to 
+    y = qbinom(0.01,x,afmin,lower.tail = T)
+    unlist(-10*log10(p.adjust((dnbinom(c(rob_nb_res$ma_count,y),size=1/rob_nb_res$coef[[1]],mu=rob_nb_res$coef[[2]]*c(rob_nb_res$coverage,x)) +
+                               pnbinom(c(rob_nb_res$ma_count,y),size=1/rob_nb_res$coef[[1]],mu=rob_nb_res$coef[[2]]*c(rob_nb_res$coverage,x),lower.tail = F)))[length(rob_nb_res$coverage)+1]))
 }
 
 if(file.exists(out_file)) file.remove(out_file)
@@ -229,7 +235,7 @@ write_out("##FORMAT=<ID=SOR,Number=1,Type=Float,Description=\"Symmetric Odds Rat
 write_out("##FORMAT=<ID=RVSB,Number=1,Type=Float,Description=\"Relative Variant Strand Bias\">")
 write_out("##FORMAT=<ID=FS,Number=1,Type=Float,Description=\"Fisher Exact Test p-value for detecting strand bias (Phred-scale)\">")
 write_out("##FORMAT=<ID=FS,Number=1,Type=Float,Description=\"Fisher Exact Test p-value for detecting strand bias (Phred-scale)\">")
-write_out("##FORMAT=<ID=QVAL_20PC,Number=1,Type=Float,Description=\"Phred-scaled qvalue for an allelic fraction of 20% in the Normal tissue\">")
+write_out("##FORMAT=<ID=QVAL_minAF,Number=1,Type=Float,Description=\"Phred-scaled qvalue for an allelic fraction of minAF\">")
 write_out("##FORMAT=<ID=SOMATIC_STATUS,Number=1,Type=String,Description=\"Somatic status (SOMATIC,GERMLINE, or UNKNOWN) of Tumor variants\">")
 
 write_out("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t",paste(indiv_run[,2],collapse = "\t"))
@@ -243,23 +249,28 @@ for (i in 1:npos) {
       ma_count=Vp+Vm
       DP=coverage_matrix[i,]
       reg_res=glmrob.nb(x=DP,y=ma_count,min_coverage=min_coverage,min_reads=min_reads,extra_rob=extra_rob)
-      # compute Qval20pc
-      qval_20pc = rep(0,nindiv)
+      # compute Qval for minAF
+      qval_minAF= rep(0,nindiv)
       somatic_status = rep(".",nindiv)
       if(isTNpairs){
-          qval_20pc[Nindex] = sapply(1:length(Nindex),function(ii) toQvalue20pc(DP[Nindex][ii],reg_res) )
-          if( length(onlyNindex)>0 ) qval_20pc[onlyNindex] = sapply(1:length(onlyNindex),function(ii) toQvalue20pc(DP[onlyNindex][ii],reg_res) )
+          qval_minAF[Nindex] = sapply(1:length(Nindex),function(ii) toQvalueN(DP[Nindex][ii],reg_res) )
+          qval_minAF[Tindex] = sapply(1:length(Tindex),function(ii) toQvalueT(DP[Tindex][ii],reg_res) )
+          if( length(onlyNindex)>0 ) qval_minAF[onlyNindex] = sapply(1:length(onlyNindex),function(ii) toQvalueN(DP[onlyNindex][ii],reg_res) )
+          if( length(onlyTindex)>0 ) qval_minAF[onlyTindex] = sapply(1:length(onlyTindex),function(ii) toQvalueT(DP[onlyTindex][ii],reg_res) )
           #no matching normal -> UNKNOWN (impossible to call somatic status)
           somatic_status[onlyTindex][(reg_res$GQ[onlyTindex] > GQ_threshold) ] = "UNKNOWN"
-          #no tumor variant -> "." ; already set by default
+          #no tumor variant -> "."; already set by default
           #tumor variant, no normal variant but without enough power -> UNKNOWN
-          somatic_status[Tindex][(reg_res$GQ[Tindex] > GQ_threshold)&(qval_20pc[Nindex]<GQ_threshold)&(reg_res$GQ[Nindex]<GQ_threshold) ] = "UNKNOWN"
+          somatic_status[Tindex][(reg_res$GQ[Tindex] > GQ_threshold)&(qval_minAF[Nindex]<GQ_threshold)&(reg_res$GQ[Nindex]<GQ_threshold) ] = "UNKNOWN"
           #tumor variant, normal variant despite low power -> GERMLINE
-          somatic_status[Tindex][ (reg_res$GQ[Tindex] > GQ_threshold)&(qval_20pc[Nindex]<GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE"
+          somatic_status[Tindex][ (reg_res$GQ[Tindex] > GQ_threshold)&(qval_minAF[Nindex]<GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE"
           #tumor variant, no normal variant despite good power -> SOMATIC
-          somatic_status[Tindex][(reg_res$GQ[Tindex] > GQ_threshold)&(qval_20pc[Nindex]>GQ_threshold)&(reg_res$GQ[Nindex]<GQ_threshold) ] = "SOMATIC"
+          somatic_status[Tindex][(reg_res$GQ[Tindex] > GQ_threshold)&(qval_minAF[Nindex]>GQ_threshold)&(reg_res$GQ[Nindex]<GQ_threshold) ] = "SOMATIC"
           #tumor variant, normal variant -> GERMLINE
-          somatic_status[Tindex][ (reg_res$GQ[Tindex] > GQ_threshold)&(qval_20pc[Nindex]>GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE"
+          somatic_status[Tindex][ (reg_res$GQ[Tindex] > GQ_threshold)&(qval_minAF[Nindex]>GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE"
+
+          #flag possible contamination
+          if( sum(somatic_status[Tindex]=="GERMLINE")>0 ) somatic_status[Tindex][somatic_status[Tindex] == "SOMATIC"] = "POSSIBLE_CONTAMINATION"
       }
       
       if (output_all_SNVs | (!is.na(reg_res$coef["slope"]) & sum(reg_res$GQ>=GQ_threshold,na.rm=TRUE)>0)) {
@@ -279,7 +290,7 @@ for (i in 1:npos) {
           # INFO field
   		    cat("\t","TYPE=snv;NS=",sum(coverage_matrix[i,]>0),";AF=",sum(reg_res$GQ>=GQ_threshold)/sum(coverage_matrix[i,]>0),";DP=",all_DP,";RO=",all_RO,";AO=",all_AO,";SRF=",sum(Rp),";SRR=",sum(Rm),";SAF=",sum(Vp),";SAR=",sum(Vm),";SOR=",all_sor,";RVSB=",all_rvsb,";FS=",FisherStrand_all,";ERR=",reg_res$coef["slope"],";SIG=",reg_res$coef["sigma"],";CONT=",paste(before,after,sep="x"),ifelse(reg_res$extra_rob,";WARN=EXTRA_ROBUST_GL",""),sep="",file=out_file,append=T)
   		    # FORMAT field
-          cat("\t","GT:QVAL:DP:RO:AO:AF:SB:SOR:RVSB:FS:QVAL_20PC:SOMATIC_STATUS",sep = "",file=out_file,append=T)
+          cat("\t","GT:QVAL:DP:RO:AO:AF:SB:SOR:RVSB:FS:QVAL_minAF:SOMATIC_STATUS",sep = "",file=out_file,append=T)
 
           # all samples
           genotype=rep("0/0",l=nindiv)
@@ -287,9 +298,13 @@ for (i in 1:npos) {
           genotype[heterozygotes]="0/1"
           homozygotes=which(reg_res$GQ>=GQ_threshold & sbs<=SB_threshold_SNV & reg_res$ma_count/reg_res$coverage >= 0.75)
           genotype[homozygotes]="1/1"
-
+          if(isTNpairs){
+              #no tumor variant but low power -> "./."
+              genotype[(reg_res$GQ < GQ_threshold)&(qval_minAF<GQ_threshold) ]="./."
+          }
+         
           for (cur_sample in 1:nindiv) {
-              cat("\t",genotype[cur_sample],":",reg_res$GQ[cur_sample],":",DP[cur_sample],":",(Rp+Rm)[cur_sample],":",ma_count[cur_sample],":",(ma_count/DP)[cur_sample],":",Rp[cur_sample],",",Rm[cur_sample],",",Vp[cur_sample],",",Vm[cur_sample],":",sors[cur_sample],":",rvsbs[cur_sample],":",FisherStrand[cur_sample],":",qval_20pc[cur_sample],":",somatic_status[cur_sample],sep = "",file=out_file,append=T)
+              cat("\t",genotype[cur_sample],":",reg_res$GQ[cur_sample],":",DP[cur_sample],":",(Rp+Rm)[cur_sample],":",ma_count[cur_sample],":",(ma_count/DP)[cur_sample],":",Rp[cur_sample],",",Rm[cur_sample],",",Vp[cur_sample],",",Vm[cur_sample],":",sors[cur_sample],":",rvsbs[cur_sample],":",FisherStrand[cur_sample],":",qval_minAF[cur_sample],":",somatic_status[cur_sample],sep = "",file=out_file,append=T)
           }
           cat("\n",sep = "",file=out_file,append=T)
           if (do_plots) {
@@ -322,24 +337,29 @@ for (i in 1:npos) {
         DP=coverage_matrix[i,]
         reg_res=glmrob.nb(x=DP,y=ma_count,min_coverage=min_coverage,min_reads=min_reads,extra_rob=extra_rob)
          # compute Qval20pc
-        qval_20pc = rep(0,nindiv)
+        qval_minAF = rep(0,nindiv)
         somatic_status = rep(".",nindiv)
         if(isTNpairs){
-            qval_20pc[Nindex] = sapply(1:length(Nindex),function(ii) toQvalue20pc(DP[Nindex][ii],reg_res) )
-            if( length(onlyNindex)>0 ) qval_20pc[onlyNindex] = sapply(1:length(onlyNindex),function(ii) toQvalue20pc(DP[onlyNindex][ii],reg_res) )
-            #no matching normal -> UNKNOWN (impossible to call somatic status)
+            qval_minAF[Nindex] = sapply(1:length(Nindex),function(ii) toQvalueN(DP[Nindex][ii],reg_res) )
+            qval_minAF[Tindex] = sapply(1:length(Tindex),function(ii) toQvalueT(DP[Tindex][ii],reg_res) )
+            if( length(onlyNindex)>0 ) qval_minAF[onlyNindex] = sapply(1:length(onlyNindex),function(ii) toQvalueN(DP[onlyNindex][ii],reg_res) )
+            if( length(onlyTindex)>0 ) qval_minAF[onlyTindex] = sapply(1:length(onlyTindex),function(ii) toQvalueT(DP[onlyTindex][ii],reg_res) )
+          #no matching normal -> UNKNOWN (impossible to call somatic status)
             somatic_status[onlyTindex][(reg_res$GQ[onlyTindex] > GQ_threshold) ] = "UNKNOWN"
-            #no tumor variant -> "." ; already set by default
-            #tumor variant, no normal variant but without enough power -> UNKNOWN
-            somatic_status[Tindex][(reg_res$GQ[Tindex] > GQ_threshold)&(qval_20pc[Nindex]<GQ_threshold)&(reg_res$GQ[Nindex]<GQ_threshold) ] = "UNKNOWN"
-            #tumor variant, normal variant despite low power -> GERMLINE
-            somatic_status[Tindex][ (reg_res$GQ[Tindex] > GQ_threshold)&(qval_20pc[Nindex]<GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE"
-            #tumor variant, no normal variant despite good power -> SOMATIC
-            somatic_status[Tindex][(reg_res$GQ[Tindex] > GQ_threshold)&(qval_20pc[Nindex]>GQ_threshold)&(reg_res$GQ[Nindex]<GQ_threshold) ] = "SOMATIC"
-            #tumor variant, normal variant -> GERMLINE
-            somatic_status[Tindex][ (reg_res$GQ[Tindex] > GQ_threshold)&(qval_20pc[Nindex]>GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE"
+          #no tumor variant -> "."; already set by default
+          #tumor variant, no normal variant but without enough power -> UNKNOWN
+            somatic_status[Tindex][(reg_res$GQ[Tindex] > GQ_threshold)&(qval_minAF[Nindex]<GQ_threshold)&(reg_res$GQ[Nindex]<GQ_threshold) ] = "UNKNOWN"
+          #tumor variant, normal variant despite low power -> GERMLINE
+            somatic_status[Tindex][ (reg_res$GQ[Tindex] > GQ_threshold)&(qval_minAF[Nindex]<GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE"
+          #tumor variant, no normal variant despite good power -> SOMATIC
+            somatic_status[Tindex][(reg_res$GQ[Tindex] > GQ_threshold)&(qval_minAF[Nindex]>GQ_threshold)&(reg_res$GQ[Nindex]<GQ_threshold) ] = "SOMATIC"
+          #tumor variant, normal variant -> GERMLINE
+            somatic_status[Tindex][ (reg_res$GQ[Tindex] > GQ_threshold)&(qval_minAF[Nindex]>GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE"
+            
+          #flag possible contamination
+            if( sum(somatic_status[Tindex]=="GERMLINE")>0 ) somatic_status[Tindex][somatic_status[Tindex] == "SOMATIC"] = "POSSIBLE_CONTAMINATION"
         }
- 
+  
         if (!is.na(reg_res$coef["slope"]) & sum(reg_res$GQ>=GQ_threshold,na.rm=TRUE)>0) {
           all_AO=sum(ma_count)
           all_DP=sum(coverage_matrix[i,])+sum(ma_count)
@@ -359,16 +379,20 @@ for (i in 1:npos) {
             # INFO field
             cat("\t","TYPE=del;NS=",sum(coverage_matrix[i,]>0),";AF=",sum(reg_res$GQ>=GQ_threshold)/sum(coverage_matrix[i,]>0),";DP=",all_DP,";RO=",all_RO,";AO=",all_AO,";SRF=",sum(Rp),";SRR=",sum(Rm),";SAF=",sum(Vp),";SAR=",sum(Vm),";SOR=",all_sor,";RVSB=",all_rvsb,";FS=",FisherStrand_all,";ERR=",reg_res$coef["slope"],";SIG=",reg_res$coef["sigma"],";CONT=",paste(before,after,sep="x"),ifelse(reg_res$extra_rob,";WARN=EXTRA_ROBUST_GL",""),sep="",file=out_file,append=T)
             # FORMAT field
-            cat("\t","GT:QVAL:DP:RO:AO:AF:SB:SOR:RVSB:FS:QVAL_20PC:SOMATIC_STATUS",sep = "",file=out_file,append=T)
+            cat("\t","GT:QVAL:DP:RO:AO:AF:SB:SOR:RVSB:FS:QVAL_minAF:SOMATIC_STATUS",sep = "",file=out_file,append=T)
             # all samples
             genotype=rep("0/0",l=nindiv)
             heterozygotes=which(reg_res$GQ>=GQ_threshold & sbs<=SB_threshold_indel & reg_res$ma_count/reg_res$coverage < 0.75)
             genotype[heterozygotes]="0/1"
             homozygotes=which(reg_res$GQ>=GQ_threshold & sbs<=SB_threshold_indel & reg_res$ma_count/reg_res$coverage >= 0.75)
             genotype[homozygotes]="1/1"
-
+            if(isTNpairs){
+              #no tumor variant but low power -> "./."
+                genotype[(reg_res$GQ < GQ_threshold)&(qval_minAF<GQ_threshold) ]="./."
+            }
+            
             for (cur_sample in 1:nindiv) {
-                cat("\t",genotype[cur_sample],":",reg_res$GQ[cur_sample],":",DP[cur_sample],":",(Rp+Rm)[cur_sample],":",ma_count[cur_sample],":",(ma_count/DP)[cur_sample],":",Rp[cur_sample],",",Rm[cur_sample],",",Vp[cur_sample],",",Vm[cur_sample],":",sors[cur_sample],":",rvsbs[cur_sample],":",FisherStrand[cur_sample],":",qval_20pc[cur_sample],":",somatic_status[cur_sample],sep = "",file=out_file,append=T)
+                cat("\t",genotype[cur_sample],":",reg_res$GQ[cur_sample],":",DP[cur_sample],":",(Rp+Rm)[cur_sample],":",ma_count[cur_sample],":",(ma_count/DP)[cur_sample],":",Rp[cur_sample],",",Rm[cur_sample],",",Vp[cur_sample],",",Vm[cur_sample],":",sors[cur_sample],":",rvsbs[cur_sample],":",FisherStrand[cur_sample],":",qval_minAF[cur_sample],":",somatic_status[cur_sample],sep = "",file=out_file,append=T)
             }
 
             cat("\n",sep = "",file=out_file,append=T)
@@ -404,25 +428,31 @@ for (i in 1:npos) {
         DP=coverage_matrix[i,]
         reg_res=glmrob.nb(x=DP,y=ma_count,min_coverage=min_coverage,min_reads=min_reads,extra_rob=extra_rob)
          # compute Qval20pc
-        qval_20pc = rep(0,nindiv)
+        qval_minAF = rep(0,nindiv)
         somatic_status = rep(".",nindiv)
 
         if(isTNpairs){
-            qval_20pc[Nindex] = sapply(1:length(Nindex),function(ii) toQvalue20pc(DP[Nindex][ii],reg_res) )
-            if( length(onlyNindex)>0 ) qval_20pc[onlyNindex] = sapply(1:length(onlyNindex),function(ii) toQvalue20pc(DP[onlyNindex][ii],reg_res) )
+            qval_minAF[Nindex] = sapply(1:length(Nindex),function(ii) toQvalueN(DP[Nindex][ii],reg_res) )
+            qval_minAF[Tindex] = sapply(1:length(Tindex),function(ii) toQvalueT(DP[Tindex][ii],reg_res) )
+            if( length(onlyNindex)>0 ) qval_minAF[onlyNindex] = sapply(1:length(onlyNindex),function(ii) toQvalueN(DP[onlyNindex][ii],reg_res) )
+            if( length(onlyTindex)>0 ) qval_minAF[onlyTindex] = sapply(1:length(onlyTindex),function(ii) toQvalueT(DP[onlyTindex][ii],reg_res) )
             #no matching normal -> UNKNOWN (impossible to call somatic status)
             somatic_status[onlyTindex][(reg_res$GQ[onlyTindex] > GQ_threshold) ] = "UNKNOWN"
-            #no tumor variant -> "." ; already set by default
+            #no tumor variant -> "."; already set by default
             #tumor variant, no normal variant but without enough power -> UNKNOWN
-            somatic_status[Tindex][(reg_res$GQ[Tindex] > GQ_threshold)&(qval_20pc[Nindex]<GQ_threshold)&(reg_res$GQ[Nindex]<GQ_threshold) ] = "UNKNOWN"
+            somatic_status[Tindex][(reg_res$GQ[Tindex] > GQ_threshold)&(qval_minAF[Nindex]<GQ_threshold)&(reg_res$GQ[Nindex]<GQ_threshold) ] = "UNKNOWN"
             #tumor variant, normal variant despite low power -> GERMLINE
-            somatic_status[Tindex][ (reg_res$GQ[Tindex] > GQ_threshold)&(qval_20pc[Nindex]<GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE"
+            somatic_status[Tindex][ (reg_res$GQ[Tindex] > GQ_threshold)&(qval_minAF[Nindex]<GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE"
             #tumor variant, no normal variant despite good power -> SOMATIC
-            somatic_status[Tindex][(reg_res$GQ[Tindex] > GQ_threshold)&(qval_20pc[Nindex]>GQ_threshold)&(reg_res$GQ[Nindex]<GQ_threshold) ] = "SOMATIC"
+            somatic_status[Tindex][(reg_res$GQ[Tindex] > GQ_threshold)&(qval_minAF[Nindex]>GQ_threshold)&(reg_res$GQ[Nindex]<GQ_threshold) ] = "SOMATIC"
             #tumor variant, normal variant -> GERMLINE
-            somatic_status[Tindex][ (reg_res$GQ[Tindex] > GQ_threshold)&(qval_20pc[Nindex]>GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE"
+            somatic_status[Tindex][ (reg_res$GQ[Tindex] > GQ_threshold)&(qval_minAF[Nindex]>GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE"
+            
+            #flag possible contamination
+            if( sum(somatic_status[Tindex]=="GERMLINE")>0 ) somatic_status[Tindex][somatic_status[Tindex] == "SOMATIC"] = "POSSIBLE_CONTAMINATION"
         }
-
+  
+        
         if (!is.na(reg_res$coef["slope"]) & sum(reg_res$GQ>=GQ_threshold,na.rm=TRUE)>0) {
           all_AO=sum(ma_count)
           all_DP=sum(coverage_matrix[i,])+sum(ma_count)
@@ -441,16 +471,20 @@ for (i in 1:npos) {
             # INFO field
             cat("\t","TYPE=ins;NS=",sum(coverage_matrix[i,]>0),";AF=",sum(reg_res$GQ>=GQ_threshold)/sum(coverage_matrix[i,]>0),";DP=",all_DP,";RO=",all_RO,";AO=",all_AO,";SRF=",sum(Rp),";SRR=",sum(Rm),";SAF=",sum(Vp),";SAR=",sum(Vm),";SOR=",all_sor,";RVSB=",all_rvsb,";FS=",FisherStrand_all,";ERR=",reg_res$coef["slope"],";SIG=",reg_res$coef["sigma"],";CONT=",paste(before,after,sep="x"),ifelse(reg_res$extra_rob,";WARN=EXTRA_ROBUST_GL",""),sep="",file=out_file,append=T)
             # FORMAT field
-            cat("\t","GT:QVAL:DP:RO:AO:AF:SB:SOR:RVSB:FS:QVAL_20PC:SOMATIC_STATUS",sep = "",file=out_file,append=T)
+            cat("\t","GT:QVAL:DP:RO:AO:AF:SB:SOR:RVSB:FS:QVAL_minAF:SOMATIC_STATUS",sep = "",file=out_file,append=T)
             # all samples
             genotype=rep("0/0",l=nindiv)
             heterozygotes=which(reg_res$GQ>=GQ_threshold & sbs<=SB_threshold_indel & reg_res$ma_count/reg_res$coverage < 0.75)
     		    genotype[heterozygotes]="0/1"
             homozygotes=which(reg_res$GQ>=GQ_threshold & sbs<=SB_threshold_indel & reg_res$ma_count/reg_res$coverage >= 0.75)
     		    genotype[homozygotes]="1/1"
-
+            if(isTNpairs){
+                #no tumor variant but low power -> "./."
+                genotype[(reg_res$GQ < GQ_threshold)&(qval_minAF<GQ_threshold) ]="./."
+            }
+         
             for (cur_sample in 1:nindiv) {
-                cat("\t",genotype[cur_sample],":",reg_res$GQ[cur_sample],":",DP[cur_sample],":",(Rp+Rm)[cur_sample],":",ma_count[cur_sample],":",(ma_count/DP)[cur_sample],":",Rp[cur_sample],",",Rm[cur_sample],",",Vp[cur_sample],",",Vm[cur_sample],":",sors[cur_sample],":",rvsbs[cur_sample],":",FisherStrand[cur_sample],":",qval_20pc[cur_sample],":",somatic_status[cur_sample],sep = "",file=out_file,append=T)
+                cat("\t",genotype[cur_sample],":",reg_res$GQ[cur_sample],":",DP[cur_sample],":",(Rp+Rm)[cur_sample],":",ma_count[cur_sample],":",(ma_count/DP)[cur_sample],":",Rp[cur_sample],",",Rm[cur_sample],",",Vp[cur_sample],",",Vm[cur_sample],":",sors[cur_sample],":",rvsbs[cur_sample],":",FisherStrand[cur_sample],":",qval_minAF[cur_sample],":",somatic_status[cur_sample],sep = "",file=out_file,append=T)
             }
 
             cat("\n",sep = "",file=out_file,append=T)
