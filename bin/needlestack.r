@@ -183,7 +183,7 @@ common_annot=function() {
 }
 
 toQvalue20pc <- function(x,rob_nb_res){
-    y = floor(x*0.2) #take floor to be conservative
+    y = qbinom(0.05,x,0.2,lower.tail = T) #5% quantile of distrib of number or ALT reads if AF is 0.2
     unlist(-10*log10(p.adjust((dnbinom(c(rob_nb_res$ma_count,y),size=1/rob_nb_res$coef[[1]],mu=rob_nb_res$coef[[2]]*c(rob_nb_res$coverage,x)) +
                                pnbinom(c(rob_nb_res$ma_count,y),size=1/rob_nb_res$coef[[1]],mu=rob_nb_res$coef[[2]]*c(rob_nb_res$coverage,x),lower.tail = F)))
                      [length(rob_nb_res$coverage)+1]))
