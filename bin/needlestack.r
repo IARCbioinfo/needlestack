@@ -45,11 +45,13 @@ if("--help" %in% args | is.null(args$out_file) | is.null(args$fasta_ref) | is.nu
       --do_plots=boolean              - output regression plots, default=TRUE
       --extra_rob=boolean              - perform an extra-robust regression, default=FALSE
       --pairs_file=file_name        - name of file containing the list of matched Tumor/Normal pairs for somatic variant calling
+      --afmin=value                  - minimum allelic fraction in mean for somatic mutations, default=0.01
+      --sigma=value                  - sigma parameter for negative binomial modeling germline mutations, default=0.1
 
       WARNING : by default samtools has to be in your path
 
       Example:
-      pileup_nbrr_caller_vcf.r --out_file=test.vcf --fasta_ref=~/Documents/References/ \n\n")
+      needlestack.r --out_file=test.vcf --fasta_ref=~/Documents/References/ \n\n")
 
   q(save="no")
 }
@@ -67,6 +69,8 @@ if(is.null(args$plot_labels)) {args$plot_labels=FALSE} else {args$plot_labels=as
 if(is.null(args$add_contours)) {args$add_contours=FALSE} else {args$add_contours=as.logical(args$add_contours)}
 if(is.null(args$extra_rob)) {args$extra_rob=FALSE} else {args$extra_rob=as.logical(args$extra_rob)}
 if(is.null(args$pairs_file)) {args$pairs_file=FALSE}
+if(is.null(args$afmin)) {args$afmin=0.01} else {args$afmin=as.numeric(args$afmin)}
+if(is.null(args$sigma)) {args$sigma=0.1} else {args$sigma=as.numeric(args$sigma)}
 
 samtools=args$samtools
 out_file=args$out_file
@@ -85,6 +89,8 @@ plot_labels=args$plot_labels
 add_contours=args$add_contours
 extra_rob=args$extra_rob
 pairs_file=args$pairs_file
+sigma=args$sigma
+afmin=args$afmin
 # in case the argument is not given
 
 source(paste(args$source_path,"glm_rob_nb.r",sep=""))
@@ -105,7 +111,7 @@ if(pairs_file != FALSE) { #if user gives a pairs_file to needlestack
       TNpairs=read.table(pairs_file,h=T)
       names(TNpairs)[grep("TU",pairsname)] = "TUMOR" #set columns names (to avoid problems due to spelling variations or typos)
       names(TNpairs)[grep("NO",pairsname)] = "NORMAL"
-      onlyNindex = which(indiv_run[,2]==TNpairs$NORMAL[is.na(TNpairs$TUMOR)]) #normal samples without matching tumor 
+      onlyNindex = which(indiv_run[,2]==TNpairs$NORMAL[is.na(TNpairs$TUMOR)]) #normal samples without matching tumor
       onlyTindex = which(indiv_run[,2]==TNpairs$TUMOR[is.na(TNpairs$NORMAL)]) #tumor samples without matching normal
       TNpairs.complete = TNpairs[!(is.na(TNpairs$TUMOR)|is.na(TNpairs$NORMAL) ),] # all complete T-N pairs
       Tindex = sapply( 1:nrow(TNpairs.complete) , function(k) return(which( indiv_run[,2]==TNpairs.complete$TUMOR[k])) )
@@ -183,13 +189,13 @@ common_annot=function() {
 }
 
 ## functions to compute the Qvalue of a function with a given AF
-toQvalueN <- function(x,rob_nb_res,sigma=0.1){ #change sigma value to change the departure from binomial distribution with parameter 0.5
-    y = qnbinom(0.01,size = 1/sigma,mu = 0.5*x) 
+toQvalueN <- function(x,rob_nb_res,sigma){ #change sigma value to change the departure from binomial distribution with parameter 0.5
+    y = qnbinom(0.01,size = 1/sigma,mu = 0.5*x)
     unlist(-10*log10(p.adjust((dnbinom(c(rob_nb_res$ma_count,y),size=1/rob_nb_res$coef[[1]],mu=rob_nb_res$coef[[2]]*c(rob_nb_res$coverage,x)) +
                                pnbinom(c(rob_nb_res$ma_count,y),size=1/rob_nb_res$coef[[1]],mu=rob_nb_res$coef[[2]]*c(rob_nb_res$coverage,x),lower.tail = F)))[length(rob_nb_res$coverage)+1]))
 }
 
-toQvalueT <- function(x,rob_nb_res,afmin=0.01){ #change afmin to 
+toQvalueT <- function(x,rob_nb_res,afmin){ #change afmin to
     y = qbinom(0.01,x,afmin,lower.tail = T)
     unlist(-10*log10(p.adjust((dnbinom(c(rob_nb_res$ma_count,y),size=1/rob_nb_res$coef[[1]],mu=rob_nb_res$coef[[2]]*c(rob_nb_res$coverage,x)) +
                                pnbinom(c(rob_nb_res$ma_count,y),size=1/rob_nb_res$coef[[1]],mu=rob_nb_res$coef[[2]]*c(rob_nb_res$coverage,x),lower.tail = F)))[length(rob_nb_res$coverage)+1]))
@@ -253,10 +259,10 @@ for (i in 1:npos) {
       qval_minAF= rep(0,nindiv)
       somatic_status = rep(".",nindiv)
       if(isTNpairs){
-          qval_minAF[Nindex] = sapply(1:length(Nindex),function(ii) toQvalueN(DP[Nindex][ii],reg_res) )
-          qval_minAF[Tindex] = sapply(1:length(Tindex),function(ii) toQvalueT(DP[Tindex][ii],reg_res) )
-          if( length(onlyNindex)>0 ) qval_minAF[onlyNindex] = sapply(1:length(onlyNindex),function(ii) toQvalueN(DP[onlyNindex][ii],reg_res) )
-          if( length(onlyTindex)>0 ) qval_minAF[onlyTindex] = sapply(1:length(onlyTindex),function(ii) toQvalueT(DP[onlyTindex][ii],reg_res) )
+          qval_minAF[Nindex] = sapply(1:length(Nindex),function(ii) toQvalueN(DP[Nindex][ii],reg_res,sigma) )
+          qval_minAF[Tindex] = sapply(1:length(Tindex),function(ii) toQvalueT(DP[Tindex][ii],reg_res,afmin) )
+          if( length(onlyNindex)>0 ) qval_minAF[onlyNindex] = sapply(1:length(onlyNindex),function(ii) toQvalueN(DP[onlyNindex][ii],reg_res,sigma) )
+          if( length(onlyTindex)>0 ) qval_minAF[onlyTindex] = sapply(1:length(onlyTindex),function(ii) toQvalueT(DP[onlyTindex][ii],reg_res,afmin) )
           #no matching normal -> UNKNOWN (impossible to call somatic status)
           somatic_status[onlyTindex][(reg_res$GQ[onlyTindex] > GQ_threshold) ] = "UNKNOWN"
           #no tumor variant -> "."; already set by default
@@ -272,7 +278,7 @@ for (i in 1:npos) {
           #flag possible contamination
           if( sum(somatic_status[Tindex]=="GERMLINE")>0 ) somatic_status[Tindex][somatic_status[Tindex] == "SOMATIC"] = "POSSIBLE_CONTAMINATION"
       }
-      
+
       if (output_all_SNVs | (!is.na(reg_res$coef["slope"]) & sum(reg_res$GQ>=GQ_threshold,na.rm=TRUE)>0)) {
         all_AO=sum(ma_count)
         all_DP=sum(coverage_matrix[i,])
@@ -302,7 +308,7 @@ for (i in 1:npos) {
               #no tumor variant but low power -> "./."
               genotype[(reg_res$GQ < GQ_threshold)&(qval_minAF<GQ_threshold) ]="./."
           }
-         
+
           for (cur_sample in 1:nindiv) {
               cat("\t",genotype[cur_sample],":",reg_res$GQ[cur_sample],":",DP[cur_sample],":",(Rp+Rm)[cur_sample],":",ma_count[cur_sample],":",(ma_count/DP)[cur_sample],":",Rp[cur_sample],",",Rm[cur_sample],",",Vp[cur_sample],",",Vm[cur_sample],":",sors[cur_sample],":",rvsbs[cur_sample],":",FisherStrand[cur_sample],":",qval_minAF[cur_sample],":",somatic_status[cur_sample],sep = "",file=out_file,append=T)
           }
@@ -340,10 +346,10 @@ for (i in 1:npos) {
         qval_minAF = rep(0,nindiv)
         somatic_status = rep(".",nindiv)
         if(isTNpairs){
-            qval_minAF[Nindex] = sapply(1:length(Nindex),function(ii) toQvalueN(DP[Nindex][ii],reg_res) )
-            qval_minAF[Tindex] = sapply(1:length(Tindex),function(ii) toQvalueT(DP[Tindex][ii],reg_res) )
-            if( length(onlyNindex)>0 ) qval_minAF[onlyNindex] = sapply(1:length(onlyNindex),function(ii) toQvalueN(DP[onlyNindex][ii],reg_res) )
-            if( length(onlyTindex)>0 ) qval_minAF[onlyTindex] = sapply(1:length(onlyTindex),function(ii) toQvalueT(DP[onlyTindex][ii],reg_res) )
+            qval_minAF[Nindex] = sapply(1:length(Nindex),function(ii) toQvalueN(DP[Nindex][ii],reg_res,sigma) )
+            qval_minAF[Tindex] = sapply(1:length(Tindex),function(ii) toQvalueT(DP[Tindex][ii],reg_res,afmin) )
+            if( length(onlyNindex)>0 ) qval_minAF[onlyNindex] = sapply(1:length(onlyNindex),function(ii) toQvalueN(DP[onlyNindex][ii],reg_res,sigma) )
+            if( length(onlyTindex)>0 ) qval_minAF[onlyTindex] = sapply(1:length(onlyTindex),function(ii) toQvalueT(DP[onlyTindex][ii],reg_res,afmin) )
           #no matching normal -> UNKNOWN (impossible to call somatic status)
             somatic_status[onlyTindex][(reg_res$GQ[onlyTindex] > GQ_threshold) ] = "UNKNOWN"
           #no tumor variant -> "."; already set by default
@@ -355,11 +361,11 @@ for (i in 1:npos) {
             somatic_status[Tindex][(reg_res$GQ[Tindex] > GQ_threshold)&(qval_minAF[Nindex]>GQ_threshold)&(reg_res$GQ[Nindex]<GQ_threshold) ] = "SOMATIC"
           #tumor variant, normal variant -> GERMLINE
             somatic_status[Tindex][ (reg_res$GQ[Tindex] > GQ_threshold)&(qval_minAF[Nindex]>GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE"
-            
+
           #flag possible contamination
             if( sum(somatic_status[Tindex]=="GERMLINE")>0 ) somatic_status[Tindex][somatic_status[Tindex] == "SOMATIC"] = "POSSIBLE_CONTAMINATION"
         }
-  
+
         if (!is.na(reg_res$coef["slope"]) & sum(reg_res$GQ>=GQ_threshold,na.rm=TRUE)>0) {
           all_AO=sum(ma_count)
           all_DP=sum(coverage_matrix[i,])+sum(ma_count)
@@ -390,7 +396,7 @@ for (i in 1:npos) {
               #no tumor variant but low power -> "./."
                 genotype[(reg_res$GQ < GQ_threshold)&(qval_minAF<GQ_threshold) ]="./."
             }
-            
+
             for (cur_sample in 1:nindiv) {
                 cat("\t",genotype[cur_sample],":",reg_res$GQ[cur_sample],":",DP[cur_sample],":",(Rp+Rm)[cur_sample],":",ma_count[cur_sample],":",(ma_count/DP)[cur_sample],":",Rp[cur_sample],",",Rm[cur_sample],",",Vp[cur_sample],",",Vm[cur_sample],":",sors[cur_sample],":",rvsbs[cur_sample],":",FisherStrand[cur_sample],":",qval_minAF[cur_sample],":",somatic_status[cur_sample],sep = "",file=out_file,append=T)
             }
@@ -432,10 +438,10 @@ for (i in 1:npos) {
         somatic_status = rep(".",nindiv)
 
         if(isTNpairs){
-            qval_minAF[Nindex] = sapply(1:length(Nindex),function(ii) toQvalueN(DP[Nindex][ii],reg_res) )
-            qval_minAF[Tindex] = sapply(1:length(Tindex),function(ii) toQvalueT(DP[Tindex][ii],reg_res) )
-            if( length(onlyNindex)>0 ) qval_minAF[onlyNindex] = sapply(1:length(onlyNindex),function(ii) toQvalueN(DP[onlyNindex][ii],reg_res) )
-            if( length(onlyTindex)>0 ) qval_minAF[onlyTindex] = sapply(1:length(onlyTindex),function(ii) toQvalueT(DP[onlyTindex][ii],reg_res) )
+            qval_minAF[Nindex] = sapply(1:length(Nindex),function(ii) toQvalueN(DP[Nindex][ii],reg_res,sigma) )
+            qval_minAF[Tindex] = sapply(1:length(Tindex),function(ii) toQvalueT(DP[Tindex][ii],reg_res,afmin) )
+            if( length(onlyNindex)>0 ) qval_minAF[onlyNindex] = sapply(1:length(onlyNindex),function(ii) toQvalueN(DP[onlyNindex][ii],reg_res,sigma) )
+            if( length(onlyTindex)>0 ) qval_minAF[onlyTindex] = sapply(1:length(onlyTindex),function(ii) toQvalueT(DP[onlyTindex][ii],reg_res,afmin) )
             #no matching normal -> UNKNOWN (impossible to call somatic status)
             somatic_status[onlyTindex][(reg_res$GQ[onlyTindex] > GQ_threshold) ] = "UNKNOWN"
             #no tumor variant -> "."; already set by default
@@ -447,12 +453,12 @@ for (i in 1:npos) {
             somatic_status[Tindex][(reg_res$GQ[Tindex] > GQ_threshold)&(qval_minAF[Nindex]>GQ_threshold)&(reg_res$GQ[Nindex]<GQ_threshold) ] = "SOMATIC"
             #tumor variant, normal variant -> GERMLINE
             somatic_status[Tindex][ (reg_res$GQ[Tindex] > GQ_threshold)&(qval_minAF[Nindex]>GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE"
-            
+
             #flag possible contamination
             if( sum(somatic_status[Tindex]=="GERMLINE")>0 ) somatic_status[Tindex][somatic_status[Tindex] == "SOMATIC"] = "POSSIBLE_CONTAMINATION"
         }
-  
-        
+
+
         if (!is.na(reg_res$coef["slope"]) & sum(reg_res$GQ>=GQ_threshold,na.rm=TRUE)>0) {
           all_AO=sum(ma_count)
           all_DP=sum(coverage_matrix[i,])+sum(ma_count)
@@ -482,7 +488,7 @@ for (i in 1:npos) {
                 #no tumor variant but low power -> "./."
                 genotype[(reg_res$GQ < GQ_threshold)&(qval_minAF<GQ_threshold) ]="./."
             }
-         
+
             for (cur_sample in 1:nindiv) {
                 cat("\t",genotype[cur_sample],":",reg_res$GQ[cur_sample],":",DP[cur_sample],":",(Rp+Rm)[cur_sample],":",ma_count[cur_sample],":",(ma_count/DP)[cur_sample],":",Rp[cur_sample],",",Rm[cur_sample],",",Vp[cur_sample],",",Vm[cur_sample],":",sors[cur_sample],":",rvsbs[cur_sample],":",FisherStrand[cur_sample],":",qval_minAF[cur_sample],":",somatic_status[cur_sample],sep = "",file=out_file,append=T)
             }
