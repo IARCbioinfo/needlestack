@@ -36,6 +36,8 @@ if(params.sb_type in ["SOR", "RVSB"] ) {
   params.sb_snv = 1000 // strand bias threshold for snv
   params.sb_indel = 1000 // strand bias threshold for indels
 }
+params.min_af_tumor = 0.01 #minimum allelic fraction in mean for somatic mutations
+params.sigma_normal = 0.1 #sigma paramater for negative binomial modeling germline mutations
 params.map_qual = 0 // min mapping quality (passed to samtools)
 params.base_qual = 13 // min base quality (passed to samtools)
 params.max_DP = 50000 // downsample coverage per sample (passed to samtools)
