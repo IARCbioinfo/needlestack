@@ -36,8 +36,8 @@ if(params.sb_type in ["SOR", "RVSB"] ) {
   params.sb_snv = 1000 // strand bias threshold for snv
   params.sb_indel = 1000 // strand bias threshold for indels
 }
-params.min_af_tumor = 0.01 #minimum allelic fraction in mean for somatic mutations
-params.sigma_normal = 0.1 #sigma paramater for negative binomial modeling germline mutations
+params.min_af_tumor = 0.01 // minimum allelic fraction in mean for somatic mutations
+params.sigma_normal = 0.1 // sigma parameter for negative binomial modeling germline mutations
 params.map_qual = 0 // min mapping quality (passed to samtools)
 params.base_qual = 13 // min base quality (passed to samtools)
 params.max_DP = 50000 // downsample coverage per sample (passed to samtools)
@@ -82,6 +82,8 @@ if (params.help) {
     log.info '    --sb_type        SOR or RVSB              Strand bias measure.'
     log.info '    --sb_snv         VALUE                    Strand bias threshold for SNVs.'
     log.info '    --sb_indel       VALUE                    Strand bias threshold for indels.'
+    log.info '    --min_af_tumor   VALUE                    Minimum allelic fraction in mean for somatic mutations.'
+    log.info '    --sigma_normal   VALUE                    Sigma parameter for negative binomial modeling germline mutations.'
     log.info '    --map_qual       VALUE                    Samtools minimum mapping quality.'
     log.info '    --base_qual      VALUE                    Samtools minimum base quality.'
     log.info '    --max_DP         INTEGER                  Samtools maximum coverage before downsampling.'
@@ -246,6 +248,8 @@ if(params.input_vcf) {
   assert (params.min_ao >= 0) : "minimum alternative reads must be higher than or equal to 0 (--min_ao)"
   assert (params.nsplit > 0) : "number of regions to split must be higher than 0 (--nsplit)"
   assert (params.min_qval >= 0) : "minimum Phred-scale qvalue must be higher than or equal to 0 (--min_qval)"
+  assert (params.min_af_tumor > 0 && params.min_af_tumor <= 1) : "minimum allelic fraction must be in [0,1] (--min_af_tumor)"
+  assert (params.sigma_normal >= 0) : " sigma parameter for negative binomial must be positive (--sigma_normal)"
   if(params.sb_type in ["SOR", "RVSB"] ) {
   assert (params.sb_snv > 0 && params.sb_snv < 101) : "strand bias (SOR or RVSB) for SNVs must be in [0,100]"
   assert (params.sb_indel > 0 && params.sb_indel < 101) : "strand bias (SOR or RVSB) for indels must be in [0,100]"
@@ -421,7 +425,7 @@ if(params.input_vcf) {
       '''
       # create a dummy empty pdf to avoid an error in the process when no variant is found
       touch empty.pdf
-      needlestack.r --pairs_file=!{params.pairs_file} --source_path=!{baseDir}/bin/ --out_file=!{region_tag}.vcf --fasta_ref=!{fasta_ref} --GQ_threshold=!{params.min_qval} --min_coverage=!{params.min_dp} --min_reads=!{params.min_ao} --SB_type=!{params.sb_type} --SB_threshold_SNV=!{params.sb_snv} --SB_threshold_indel=!{params.sb_indel} --output_all_SNVs=!{params.all_SNVs} --do_plots=!{!params.no_plots} --plot_labels=!{!params.no_labels} --add_contours=!{!params.no_contours} --extra_rob=!{params.extra_robust_gl}
+      needlestack.r --pairs_file=!{params.pairs_file} --source_path=!{baseDir}/bin/ --out_file=!{region_tag}.vcf --fasta_ref=!{fasta_ref} --GQ_threshold=!{params.min_qval} --min_coverage=!{params.min_dp} --min_reads=!{params.min_ao} --SB_type=!{params.sb_type} --SB_threshold_SNV=!{params.sb_snv} --SB_threshold_indel=!{params.sb_indel} --output_all_SNVs=!{params.all_SNVs} --do_plots=!{!params.no_plots} --plot_labels=!{!params.no_labels} --add_contours=!{!params.no_contours} --extra_rob=!{params.extra_robust_gl} --afmin=!{params.min_af_tumor} --sigma=!{params.sigma_normal} 
       '''
   }
 
