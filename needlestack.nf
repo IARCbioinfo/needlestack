@@ -282,6 +282,8 @@ if(params.input_vcf) {
   log.info "Strand bias measure (--sb_type)                                 : ${params.sb_type}"
   log.info "Strand bias threshold for SNVs (--sb_snv)                       : ${params.sb_snv}"
   log.info "Strand bias threshold for indels (--sb_indel)                   : ${params.sb_indel}"
+  log.info "Minimum allelic fraction for somatic (--min_af_tumor)           : ${params.min_af_tumor}"
+  log.info "Sigma parameter for germline (--sigma)                          : ${params.sigma_normal}"
   log.info "Samtools minimum mapping quality (--map_qual)                   : ${params.map_qual}"
   log.info "Samtools minimum base quality (--base_qual)                     : ${params.base_qual}"
   log.info "Samtools maximum coverage before downsampling (--max_DP)        : ${params.max_DP}"
@@ -425,7 +427,7 @@ if(params.input_vcf) {
       '''
       # create a dummy empty pdf to avoid an error in the process when no variant is found
       touch empty.pdf
-      needlestack.r --pairs_file=!{params.pairs_file} --source_path=!{baseDir}/bin/ --out_file=!{region_tag}.vcf --fasta_ref=!{fasta_ref} --GQ_threshold=!{params.min_qval} --min_coverage=!{params.min_dp} --min_reads=!{params.min_ao} --SB_type=!{params.sb_type} --SB_threshold_SNV=!{params.sb_snv} --SB_threshold_indel=!{params.sb_indel} --output_all_SNVs=!{params.all_SNVs} --do_plots=!{!params.no_plots} --plot_labels=!{!params.no_labels} --add_contours=!{!params.no_contours} --extra_rob=!{params.extra_robust_gl} --afmin=!{params.min_af_tumor} --sigma=!{params.sigma_normal} 
+      needlestack.r --pairs_file=!{params.pairs_file} --source_path=!{baseDir}/bin/ --out_file=!{region_tag}.vcf --fasta_ref=!{fasta_ref} --GQ_threshold=!{params.min_qval} --min_coverage=!{params.min_dp} --min_reads=!{params.min_ao} --SB_type=!{params.sb_type} --SB_threshold_SNV=!{params.sb_snv} --SB_threshold_indel=!{params.sb_indel} --output_all_SNVs=!{params.all_SNVs} --do_plots=!{!params.no_plots} --plot_labels=!{!params.no_labels} --add_contours=!{!params.no_contours} --extra_rob=!{params.extra_robust_gl} --afmin=!{params.min_af_tumor} --sigma=!{params.sigma_normal}
       '''
   }
 
