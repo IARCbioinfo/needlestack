@@ -232,6 +232,7 @@ write_out("##INFO=<ID=WARN,Number=1,Type=String,Description=\"Warning message wh
 
 write_out("##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">")
 write_out("##FORMAT=<ID=QVAL,Number=1,Type=Float,Description=\"Phred-scaled qvalue for not being an error\">")
+write_out("##FORMAT=<ID=QVAL_INV,Number=1,Type=Float,Description=\"Phred-scaled qvalue for not being an error in position where reference is switched\">")
 write_out("##FORMAT=<ID=DP,Number=1,Type=Integer,Description=\"Read Depth\">")
 write_out("##FORMAT=<ID=RO,Number=1,Type=Integer,Description=\"Reference allele observation count\">")
 write_out("##FORMAT=<ID=AO,Number=1,Type=Integer,Description=\"Alternate allele observation count\">")
@@ -302,7 +303,7 @@ for (i in 1:npos) {
   		    close(con)
   		    cat(pos_ref[i,"chr"],"\t",pos_ref[i,"loc"],"\t",".","\t",pos_ref[i,"ref"],"\t",ifelse(ref_inv,ref,alt),"\t",max(reg_res$GQ),"\t",".",sep = "",file=out_file,append=T)
           # INFO field
-  		    cat("\t","TYPE=snv;NS=",sum(coverage_matrix[i,]>0),";AF=",sum(reg_res$GQ>=GQ_threshold)/sum(coverage_matrix[i,]>0),";DP=",all_DP,";RO=",all_RO,";AO=",all_AO,";SRF=",sum(Rp),";SRR=",sum(Rm),";SAF=",sum(Vp),";SAR=",sum(Vm),";SOR=",all_sor,";RVSB=",all_rvsb,";FS=",FisherStrand_all,";ERR=",reg_res$coef["slope"],";SIG=",reg_res$coef["sigma"],";CONT=",paste(before,after,sep="x"),ifelse(reg_res$extra_rob,";WARN=EXTRA_ROBUST_GL",""),sep="",file=out_file,append=T)
+  		    cat("\t","TYPE=snv;NS=",sum(coverage_matrix[i,]>0),";AF=",sum(reg_res$GQ>=GQ_threshold)/sum(coverage_matrix[i,]>0),";DP=",all_DP,";RO=",all_RO,";AO=",all_AO,";SRF=",sum(Rp),";SRR=",sum(Rm),";SAF=",sum(Vp),";SAR=",sum(Vm),";SOR=",all_sor,";RVSB=",all_rvsb,";FS=",FisherStrand_all,";ERR=",reg_res$coef["slope"],";SIG=",reg_res$coef["sigma"],";CONT=",paste(before,after,sep="x"),ifelse(reg_res$extra_rob & !(ref_inv),";WARN=EXTRA_ROBUST_GL",""),ifelse(reg_res$extra_rob & ref_inv,";WARN=EXTRA_ROBUST_GL/INV_REF",""),ifelse(ref_inv & !(reg_res$extra_rob),";WARN=INV_REF",""),sep="",file=out_file,append=T)
   		    # FORMAT field
           cat("\t",paste("GT:",ifelse(ref_inv,"QVAL_INV","QVAL"),":DP:RO:AO:AF:SB:SOR:RVSB:FS:QVAL_minAF:SOMATIC_STATUS",sep=""),sep = "",file=out_file,append=T)
 
@@ -399,7 +400,7 @@ for (i in 1:npos) {
             next_bp=substr(after,1,1)
             cat(pos_ref[i,"chr"],"\t",pos_ref[i,"loc"],"\t",".","\t",paste(prev_bp,cur_del,sep=""),"\t",prev_bp,"\t",max(reg_res$GQ),"\t",".",sep = "",file=out_file,append=T)
             # INFO field
-            cat("\t","TYPE=del;NS=",sum(coverage_matrix[i,]>0),";AF=",sum(reg_res$GQ>=GQ_threshold)/sum(coverage_matrix[i,]>0),";DP=",all_DP,";RO=",all_RO,";AO=",all_AO,";SRF=",sum(Rp),";SRR=",sum(Rm),";SAF=",sum(Vp),";SAR=",sum(Vm),";SOR=",all_sor,";RVSB=",all_rvsb,";FS=",FisherStrand_all,";ERR=",reg_res$coef["slope"],";SIG=",reg_res$coef["sigma"],";CONT=",paste(before,after,sep="x"),ifelse(reg_res$extra_rob,";WARN=EXTRA_ROBUST_GL",""),sep="",file=out_file,append=T)
+            cat("\t","TYPE=del;NS=",sum(coverage_matrix[i,]>0),";AF=",sum(reg_res$GQ>=GQ_threshold)/sum(coverage_matrix[i,]>0),";DP=",all_DP,";RO=",all_RO,";AO=",all_AO,";SRF=",sum(Rp),";SRR=",sum(Rm),";SAF=",sum(Vp),";SAR=",sum(Vm),";SOR=",all_sor,";RVSB=",all_rvsb,";FS=",FisherStrand_all,";ERR=",reg_res$coef["slope"],";SIG=",reg_res$coef["sigma"],";CONT=",paste(before,after,sep="x"),ifelse(reg_res$extra_rob & !(ref_inv),";WARN=EXTRA_ROBUST_GL",""),ifelse(reg_res$extra_rob & ref_inv,";WARN=EXTRA_ROBUST_GL/INV_REF",""),ifelse(ref_inv & !(reg_res$extra_rob),";WARN=INV_REF",""),sep="",file=out_file,append=T)
             # FORMAT field
             cat("\t",paste("GT:",ifelse(ref_inv,"QVAL_INV","QVAL"),":DP:RO:AO:AF:SB:SOR:RVSB:FS:QVAL_minAF:SOMATIC_STATUS",sep=""),sep = "",file=out_file,append=T)
             # all samples
@@ -499,7 +500,7 @@ for (i in 1:npos) {
             prev_bp=substr(before,3,3)
             cat(pos_ref[i,"chr"],"\t",pos_ref[i,"loc"],"\t",".","\t",prev_bp,"\t",paste(prev_bp,cur_ins,sep=""),"\t",max(reg_res$GQ),"\t",".",sep = "",file=out_file,append=T)
             # INFO field
-            cat("\t","TYPE=ins;NS=",sum(coverage_matrix[i,]>0),";AF=",sum(reg_res$GQ>=GQ_threshold)/sum(coverage_matrix[i,]>0),";DP=",all_DP,";RO=",all_RO,";AO=",all_AO,";SRF=",sum(Rp),";SRR=",sum(Rm),";SAF=",sum(Vp),";SAR=",sum(Vm),";SOR=",all_sor,";RVSB=",all_rvsb,";FS=",FisherStrand_all,";ERR=",reg_res$coef["slope"],";SIG=",reg_res$coef["sigma"],";CONT=",paste(before,after,sep="x"),ifelse(reg_res$extra_rob,";WARN=EXTRA_ROBUST_GL",""),sep="",file=out_file,append=T)
+            cat("\t","TYPE=ins;NS=",sum(coverage_matrix[i,]>0),";AF=",sum(reg_res$GQ>=GQ_threshold)/sum(coverage_matrix[i,]>0),";DP=",all_DP,";RO=",all_RO,";AO=",all_AO,";SRF=",sum(Rp),";SRR=",sum(Rm),";SAF=",sum(Vp),";SAR=",sum(Vm),";SOR=",all_sor,";RVSB=",all_rvsb,";FS=",FisherStrand_all,";ERR=",reg_res$coef["slope"],";SIG=",reg_res$coef["sigma"],";CONT=",paste(before,after,sep="x"),ifelse(reg_res$extra_rob & !(ref_inv),";WARN=EXTRA_ROBUST_GL",""),ifelse(reg_res$extra_rob & ref_inv,";WARN=EXTRA_ROBUST_GL/INV_REF",""),ifelse(ref_inv & !(reg_res$extra_rob),";WARN=INV_REF",""),sep="",file=out_file,append=T)
             # FORMAT field
             cat("\t",paste("GT:",ifelse(ref_inv,"QVAL_INV","QVAL"),":DP:RO:AO:AF:SB:SOR:RVSB:FS:QVAL_minAF:SOMATIC_STATUS",sep=""),sep = "",file=out_file,append=T)
             # all samples
