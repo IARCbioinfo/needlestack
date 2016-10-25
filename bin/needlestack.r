@@ -254,6 +254,14 @@ for (i in 1:npos) {
       Vm=atcg_matrix[i,eval(as.name(paste(tolower(alt),"_cols",sep="")))]
       ma_count=Vp+Vm
       DP=coverage_matrix[i,]
+      if( sum( (ma_count/DP) > 0.8 , na.rm = T) > 0.5*length(ma_count) ){  #here we need to reverse alt and ref for the regression (use ma_count of the ref)
+        ref=alt
+        alt=pos_ref[i,"ref"]
+        Vp=atcg_matrix[i,eval(as.name(paste(alt,"_cols",sep="")))]
+        Vm=atcg_matrix[i,eval(as.name(paste(tolower(alt),"_cols",sep="")))]
+        ma_count=Vp+Vm
+        ref_inv=TRUE
+      } else { ref_inv=FALSE; ref=pos_ref[i,"ref"] }
       reg_res=glmrob.nb(x=DP,y=ma_count,min_coverage=min_coverage,min_reads=min_reads,extra_rob=extra_rob)
       # compute Qval for minAF
       qval_minAF= rep(0,nindiv)
@@ -292,18 +300,18 @@ for (i in 1:npos) {
           con=pipe(paste(samtools," faidx ",fasta_ref," ",pos_ref[i,"chr"],":",pos_ref[i,"loc"]+1,"-",pos_ref[i,"loc"]+3," | tail -n1",sep=""))
           after=readLines(con)
   		    close(con)
-  		    cat(pos_ref[i,"chr"],"\t",pos_ref[i,"loc"],"\t",".","\t",pos_ref[i,"ref"],"\t",alt,"\t",max(reg_res$GQ),"\t",".",sep = "",file=out_file,append=T)
+  		    cat(pos_ref[i,"chr"],"\t",pos_ref[i,"loc"],"\t",".","\t",pos_ref[i,"ref"],"\t",ifelse(ref_inv,ref,alt),"\t",max(reg_res$GQ),"\t",".",sep = "",file=out_file,append=T)
           # INFO field
   		    cat("\t","TYPE=snv;NS=",sum(coverage_matrix[i,]>0),";AF=",sum(reg_res$GQ>=GQ_threshold)/sum(coverage_matrix[i,]>0),";DP=",all_DP,";RO=",all_RO,";AO=",all_AO,";SRF=",sum(Rp),";SRR=",sum(Rm),";SAF=",sum(Vp),";SAR=",sum(Vm),";SOR=",all_sor,";RVSB=",all_rvsb,";FS=",FisherStrand_all,";ERR=",reg_res$coef["slope"],";SIG=",reg_res$coef["sigma"],";CONT=",paste(before,after,sep="x"),ifelse(reg_res$extra_rob,";WARN=EXTRA_ROBUST_GL",""),sep="",file=out_file,append=T)
   		    # FORMAT field
-          cat("\t","GT:QVAL:DP:RO:AO:AF:SB:SOR:RVSB:FS:QVAL_minAF:SOMATIC_STATUS",sep = "",file=out_file,append=T)
+          cat("\t",paste("GT:",ifelse(ref_inv,"QVAL_INV","QVAL"),":DP:RO:AO:AF:SB:SOR:RVSB:FS:QVAL_minAF:SOMATIC_STATUS",sep=""),sep = "",file=out_file,append=T)
 
           # all samples
-          genotype=rep("0/0",l=nindiv)
+          if(ref_inv) { genotype=rep("1/1",l=nindiv) } else { genotype=rep("0/0",l=nindiv) }
           heterozygotes=which(reg_res$GQ>=GQ_threshold & sbs<=SB_threshold_SNV & reg_res$ma_count/reg_res$coverage < 0.75)
           genotype[heterozygotes]="0/1"
           homozygotes=which(reg_res$GQ>=GQ_threshold & sbs<=SB_threshold_SNV & reg_res$ma_count/reg_res$coverage >= 0.75)
-          genotype[homozygotes]="1/1"
+          if(ref_inv) { genotype[homozygotes]="0/0" }  else { genotype[homozygotes]="1/1" }
           if(isTNpairs){
               #no tumor variant but low power -> "./."
               genotype[(reg_res$GQ < GQ_threshold)&(qval_minAF<GQ_threshold) ]="./."
@@ -314,8 +322,8 @@ for (i in 1:npos) {
           }
           cat("\n",sep = "",file=out_file,append=T)
           if (do_plots) {
-            pdf(paste(pos_ref[i,"chr"],"_",pos_ref[i,"loc"],"_",pos_ref[i,"loc"],"_",pos_ref[i,"ref"],"_",alt,ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),7,6)
-            plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(pos_ref[i,"chr"]),":",.(pos_ref[i,"loc"])," (",.(pos_ref[i,"ref"]) %->% .(alt),")",.(ifelse(reg_res$extra_rob," EXTRA ROBUST","")),sep="")), sbs=sbs, SB_threshold=SB_threshold_SNV,plot_labels=plot_labels,add_contours=add_contours,names=indiv_run[,2])
+            pdf(paste(pos_ref[i,"chr"],"_",pos_ref[i,"loc"],"_",pos_ref[i,"loc"],"_",ref,"_",alt,ifelse(ref_inv,"_inv_ref",""),ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),7,6)
+            plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(pos_ref[i,"chr"]),":",.(pos_ref[i,"loc"])," (",.(ref) %->% .(alt),")",.(ifelse(ref_inv," INV REF","")),.(ifelse(reg_res$extra_rob," EXTRA ROBUST","")),sep="")), sbs=sbs, SB_threshold=SB_threshold_SNV,plot_labels=plot_labels,add_contours=add_contours,names=indiv_run[,2])
             dev.off()
           }
         }
@@ -341,6 +349,14 @@ for (i in 1:npos) {
         Vm[names(ma_m_cur_del)]=ma_m_cur_del
         ma_count=Vp+Vm
         DP=coverage_matrix[i,]
+        if( sum( (ma_count/DP) > 0.8 , na.rm = T) > 0.5*length(ma_count) ){  #here we need to reverse alt and ref for the regression (use ma_count of the ref)
+          ref=alt
+          alt=pos_ref[i,"ref"]
+          Vp=atcg_matrix[i,eval(as.name(paste(alt,"_cols",sep="")))]
+          Vm=atcg_matrix[i,eval(as.name(paste(tolower(alt),"_cols",sep="")))]
+          ma_count=Vp+Vm
+          ref_inv=TRUE
+        } else { ref_inv=FALSE; ref=pos_ref[i,"ref"] }
         reg_res=glmrob.nb(x=DP,y=ma_count,min_coverage=min_coverage,min_reads=min_reads,extra_rob=extra_rob)
          # compute Qval20pc
         qval_minAF = rep(0,nindiv)
@@ -385,13 +401,13 @@ for (i in 1:npos) {
             # INFO field
             cat("\t","TYPE=del;NS=",sum(coverage_matrix[i,]>0),";AF=",sum(reg_res$GQ>=GQ_threshold)/sum(coverage_matrix[i,]>0),";DP=",all_DP,";RO=",all_RO,";AO=",all_AO,";SRF=",sum(Rp),";SRR=",sum(Rm),";SAF=",sum(Vp),";SAR=",sum(Vm),";SOR=",all_sor,";RVSB=",all_rvsb,";FS=",FisherStrand_all,";ERR=",reg_res$coef["slope"],";SIG=",reg_res$coef["sigma"],";CONT=",paste(before,after,sep="x"),ifelse(reg_res$extra_rob,";WARN=EXTRA_ROBUST_GL",""),sep="",file=out_file,append=T)
             # FORMAT field
-            cat("\t","GT:QVAL:DP:RO:AO:AF:SB:SOR:RVSB:FS:QVAL_minAF:SOMATIC_STATUS",sep = "",file=out_file,append=T)
+            cat("\t",paste("GT:",ifelse(ref_inv,"QVAL_INV","QVAL"),":DP:RO:AO:AF:SB:SOR:RVSB:FS:QVAL_minAF:SOMATIC_STATUS",sep=""),sep = "",file=out_file,append=T)
             # all samples
-            genotype=rep("0/0",l=nindiv)
-            heterozygotes=which(reg_res$GQ>=GQ_threshold & sbs<=SB_threshold_indel & reg_res$ma_count/reg_res$coverage < 0.75)
+            if(ref_inv) { genotype=rep("1/1",l=nindiv) } else { genotype=rep("0/0",l=nindiv) }
+            heterozygotes=which(reg_res$GQ>=GQ_threshold & sbs<=SB_threshold_SNV & reg_res$ma_count/reg_res$coverage < 0.75)
             genotype[heterozygotes]="0/1"
-            homozygotes=which(reg_res$GQ>=GQ_threshold & sbs<=SB_threshold_indel & reg_res$ma_count/reg_res$coverage >= 0.75)
-            genotype[homozygotes]="1/1"
+            homozygotes=which(reg_res$GQ>=GQ_threshold & sbs<=SB_threshold_SNV & reg_res$ma_count/reg_res$coverage >= 0.75)
+            if(ref_inv) { genotype[homozygotes]="0/0" }  else { genotype[homozygotes]="1/1" }
             if(isTNpairs){
               #no tumor variant but low power -> "./."
                 genotype[(reg_res$GQ < GQ_threshold)&(qval_minAF<GQ_threshold) ]="./."
@@ -404,8 +420,8 @@ for (i in 1:npos) {
             cat("\n",sep = "",file=out_file,append=T)
             if (do_plots) {
               # deletions are shifted in samtools mpileup by 1bp, so put them at the right place by adding + to pos_ref[i,"loc"] everywhere in what follows
-              pdf(paste(pos_ref[i,"chr"],"_",pos_ref[i,"loc"],"_",pos_ref[i,"loc"]+nchar(cur_del)-1,"_",paste(prev_bp,cur_del,sep=""),"_",prev_bp,ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),7,6)
-              plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(pos_ref[i,"chr"]),":",.(pos_ref[i,"loc"])," (",.(paste(prev_bp,cur_del,sep="")) %->% .(prev_bp),")",.(ifelse(reg_res$extra_rob," EXTRA ROBUST","")),sep="")),sbs=sbs, SB_threshold=SB_threshold_indel,plot_labels=plot_labels,add_contours=add_contours,names=indiv_run[,2])
+              pdf(paste(pos_ref[i,"chr"],"_",pos_ref[i,"loc"],"_",pos_ref[i,"loc"]+nchar(cur_del)-1,"_",paste(prev_bp,cur_del,sep=""),"_",prev_bp,ifelse(ref_inv,"_inv_ref",""),ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),7,6)
+              plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(pos_ref[i,"chr"]),":",.(pos_ref[i,"loc"])," (",.(paste(prev_bp,cur_del,sep="")) %->% .(prev_bp),")",.(ifelse(ref_inv," INV REF","")),.(ifelse(reg_res$extra_rob," EXTRA ROBUST","")),sep="")),sbs=sbs, SB_threshold=SB_threshold_indel,plot_labels=plot_labels,add_contours=add_contours,names=indiv_run[,2])
               dev.off()
             }
           }
@@ -432,6 +448,14 @@ for (i in 1:npos) {
         Vm[names(ma_m_cur_ins)]=ma_m_cur_ins
         ma_count=Vp+Vm
         DP=coverage_matrix[i,]
+        if( sum( (ma_count/DP) > 0.8 , na.rm = T) > 0.5*length(ma_count) ){  #here we need to reverse alt and ref for the regression (use ma_count of the ref)
+          ref=alt
+          alt=pos_ref[i,"ref"]
+          Vp=atcg_matrix[i,eval(as.name(paste(alt,"_cols",sep="")))]
+          Vm=atcg_matrix[i,eval(as.name(paste(tolower(alt),"_cols",sep="")))]
+          ma_count=Vp+Vm
+          ref_inv=TRUE
+        } else { ref_inv=FALSE; ref=pos_ref[i,"ref"] }
         reg_res=glmrob.nb(x=DP,y=ma_count,min_coverage=min_coverage,min_reads=min_reads,extra_rob=extra_rob)
          # compute Qval20pc
         qval_minAF = rep(0,nindiv)
@@ -477,13 +501,13 @@ for (i in 1:npos) {
             # INFO field
             cat("\t","TYPE=ins;NS=",sum(coverage_matrix[i,]>0),";AF=",sum(reg_res$GQ>=GQ_threshold)/sum(coverage_matrix[i,]>0),";DP=",all_DP,";RO=",all_RO,";AO=",all_AO,";SRF=",sum(Rp),";SRR=",sum(Rm),";SAF=",sum(Vp),";SAR=",sum(Vm),";SOR=",all_sor,";RVSB=",all_rvsb,";FS=",FisherStrand_all,";ERR=",reg_res$coef["slope"],";SIG=",reg_res$coef["sigma"],";CONT=",paste(before,after,sep="x"),ifelse(reg_res$extra_rob,";WARN=EXTRA_ROBUST_GL",""),sep="",file=out_file,append=T)
             # FORMAT field
-            cat("\t","GT:QVAL:DP:RO:AO:AF:SB:SOR:RVSB:FS:QVAL_minAF:SOMATIC_STATUS",sep = "",file=out_file,append=T)
+            cat("\t",paste("GT:",ifelse(ref_inv,"QVAL_INV","QVAL"),":DP:RO:AO:AF:SB:SOR:RVSB:FS:QVAL_minAF:SOMATIC_STATUS",sep=""),sep = "",file=out_file,append=T)
             # all samples
-            genotype=rep("0/0",l=nindiv)
-            heterozygotes=which(reg_res$GQ>=GQ_threshold & sbs<=SB_threshold_indel & reg_res$ma_count/reg_res$coverage < 0.75)
-    		    genotype[heterozygotes]="0/1"
-            homozygotes=which(reg_res$GQ>=GQ_threshold & sbs<=SB_threshold_indel & reg_res$ma_count/reg_res$coverage >= 0.75)
-    		    genotype[homozygotes]="1/1"
+            if(ref_inv) { genotype=rep("1/1",l=nindiv) } else { genotype=rep("0/0",l=nindiv) }
+            heterozygotes=which(reg_res$GQ>=GQ_threshold & sbs<=SB_threshold_SNV & reg_res$ma_count/reg_res$coverage < 0.75)
+            genotype[heterozygotes]="0/1"
+            homozygotes=which(reg_res$GQ>=GQ_threshold & sbs<=SB_threshold_SNV & reg_res$ma_count/reg_res$coverage >= 0.75)
+            if(ref_inv) { genotype[homozygotes]="0/0" }  else { genotype[homozygotes]="1/1" }
             if(isTNpairs){
                 #no tumor variant but low power -> "./."
                 genotype[(reg_res$GQ < GQ_threshold)&(qval_minAF<GQ_threshold) ]="./."
@@ -495,8 +519,8 @@ for (i in 1:npos) {
 
             cat("\n",sep = "",file=out_file,append=T)
             if (do_plots) {
-              pdf(paste(pos_ref[i,"chr"],"_",pos_ref[i,"loc"],"_",pos_ref[i,"loc"],"_",prev_bp,"_",paste(prev_bp,cur_ins,sep=""),ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),7,6)
-              plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(pos_ref[i,"chr"]),":",.(pos_ref[i,"loc"])," (",.(prev_bp) %->% .(paste(prev_bp,cur_ins,sep="")),")",.(ifelse(reg_res$extra_rob," EXTRA ROBUST","")),sep="")),sbs=sbs, SB_threshold=SB_threshold_indel,plot_labels=plot_labels,add_contours=add_contours,names=indiv_run[,2])
+              pdf(paste(pos_ref[i,"chr"],"_",pos_ref[i,"loc"],"_",pos_ref[i,"loc"],"_",prev_bp,"_",paste(prev_bp,cur_ins,sep=""),ifelse(ref_inv,"_inv_ref",""),ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),7,6)
+              plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(pos_ref[i,"chr"]),":",.(pos_ref[i,"loc"])," (",.(prev_bp) %->% .(paste(prev_bp,cur_ins,sep="")),")",.(ifelse(ref_inv," INV REF","")),.(ifelse(reg_res$extra_rob," EXTRA ROBUST","")),sep="")),sbs=sbs, SB_threshold=SB_threshold_indel,plot_labels=plot_labels,add_contours=add_contours,names=indiv_run[,2])
               dev.off()
             }
           }
