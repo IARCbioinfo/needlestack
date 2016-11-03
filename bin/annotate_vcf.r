@@ -48,18 +48,21 @@ while(dim(vcf_chunk)[1] != 0) {
   DP_matrix = geno(vcf_chunk,"DP")
   # AO counts (matrix of lists of integers)
   AD_matrix = geno(vcf_chunk,"AD")
-
+  
   #compute regressions and qvals,err,sig
   reg_list = lapply(1:dim(vcf_chunk)[1], function(var_line) { #for each line of the chunk return a list of reg for each AD
-    print(var_line)
-    print(start(ranges(rowRanges(vcf_chunk,"seqnames"))[var_line]))
     # replace NAs and integer(0) by correct number of 0 ADs
     AD_matrix[var_line, which(is.na(AD_matrix[var_line,]))] = lapply(AD_matrix[var_line, which(is.na(AD_matrix[var_line,]))], function(x) x=as.vector(rep(0,max(lengths(AD_matrix[var_line,])))))
     AD_matrix[var_line,] = lapply(AD_matrix[var_line,], function(x) {if(length(x)==0) { x=as.vector(rep(0, ifelse(max(lengths(AD_matrix[var_line,]),na.rm = T) >0, max(lengths(AD_matrix[var_line,]),na.rm = T), 2) )) } else {x=x} } )
     lapply(2:max(lengths(AD_matrix[var_line,])), function(AD_index) { #for each alternative
       DP=DP_matrix[var_line,]
       AO=unlist(lapply(AD_matrix[var_line,],"[[",AD_index)) #AD_matrix[var_line,] is a list of AD for each sample, here return list of ADs(i) for alt i
+      if( sum( (AO/DP) > 0.8 , na.rm = T) > 0.5*length(AO) ){ #test reference switching
+        AO = DP - unlist(lapply(1:length(DP), function(i) sum(unlist(AD_matrix[var_line,i])[2:length(unlist(AD_matrix[var_line,i]))]))) #compute AO(ref)
+        inv_ref = T
+      } else { inv_ref = F }
       reg_res=glmrob.nb(x=DP,y=AO,min_coverage=min_coverage,min_reads=min_reads,extra_rob=extra_rob)
+      reg_res$inv_ref = inv_ref
       if (do_plots) {
         chr=as.character(seqnames(rowRanges(vcf_chunk,"seqnames"))[var_line])
         loc=start(ranges(rowRanges(vcf_chunk,"seqnames"))[var_line])
@@ -85,13 +88,16 @@ while(dim(vcf_chunk)[1] != 0) {
   extra_robust_gl = unlist(lapply(reg_list, function(regs) {
     lapply(regs, function(reg) unlist(reg$extra_rob))
   }))
-
+  inv_refs = unlist(lapply(reg_list, function(regs) {
+    lapply(regs, function(reg) unlist(reg$inv_ref))
+  }))
+  
   #annotate the header of the chunk
   info(header(vcf_chunk))["ERR",]=list("A","Float","Error rate estimated by needlestack")
   info(header(vcf_chunk))["SIG",]=list("A","Float","Dispertion parameter estimated by needlestack")
   info(header(vcf_chunk))["WARN",]=list("A","Character","Warning message when position is processed specifically by needlestack")
   geno(header(vcf_chunk))["QVAL",]=list("A","Float","Phred q-values computed by needlestack")
-
+  
   #annotate the chunk with computed values
   info(vcf_chunk)$ERR = NumericList(err)
   info(vcf_chunk)$SIG = NumericList(sig)
@@ -100,7 +106,9 @@ while(dim(vcf_chunk)[1] != 0) {
                                 byrow = TRUE)
   info(vcf_chunk)$WARN = rep(NA, length(extra_robust_gl))
   info(vcf_chunk)$WARN[which(extra_robust_gl==TRUE)]="EXTRA_ROBUST_GL"
-
+  info(vcf_chunk)$WARN[which(inv_refs==TRUE)]="INV_REF"
+  info(vcf_chunk)$WARN[which(extra_robust_gl==TRUE & inv_refs==TRUE)]="EXTRA_ROBUST_GL/INV_REF"
+  
   #write out the annotated VCF
   con = file(out_vcf, open = "a")
   writeVcf(vcf_chunk, con)

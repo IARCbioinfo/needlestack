@@ -122,8 +122,15 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
         #### plot the contour "by hands"
         for(qvalue in qlevels) {
           lines(xgrid, unlist(lapply(xgrid,function(DP,ygrid,xgrid){
-            qval = ifelse(sum(matgrid[match(DP,xgrid),]>=qvalue)==0,NA,min(matgrid[match(DP,xgrid),which(matgrid[match(DP,xgrid),]>=qvalue)])) #NA iff no case>=qvalue in matgrid at DP
-            AO = ifelse(is.na(qval),0,min(ygrid[which(matgrid[match(DP,xgrid),]==qval)]))
+            if(sum(matgrid[match(DP,xgrid),]>=qvalue)==0) {
+              qval = NA } else {
+              qval = min(matgrid[match(DP,xgrid),which(matgrid[match(DP,xgrid),]>=qvalue)]) 
+            } #NA iff no case>=qvalue in matgrid at DP
+            if (is.na(qval)) {
+              AO = 0
+            } else {
+              AO = min(ygrid[which(matgrid[match(DP,xgrid),]==qval)])
+            }
             AO },ygrid,xgrid)),col=rev(rainbow(length(qlevels),start=0, end=4/6))[match(qvalue,qlevels)],lwd=1.3,lty=3)
         }
       }
@@ -146,8 +153,15 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
       if(!is.na(ylim_zoom_cor)){
         for(qvalue in qlevels) {
           lines(xgrid, unlist(lapply(xgrid,function(DP,ygrid,xgrid){
-            qval = ifelse(sum(matgrid[match(DP,xgrid),]>=qvalue)==0,NA,min(matgrid[match(DP,xgrid),which(matgrid[match(DP,xgrid),]>=qvalue)])) #NA iff no case>=qvalue in matgrid at DP
-            AO = ifelse(is.na(qval),0,min(ygrid[which(matgrid[match(DP,xgrid),]==qval)]))
+            if(sum(matgrid[match(DP,xgrid),]>=qvalue)==0) {
+              qval = NA } else {
+                qval = min(matgrid[match(DP,xgrid),which(matgrid[match(DP,xgrid),]>=qvalue)]) 
+              } #NA iff no case>=qvalue in matgrid at DP
+            if (is.na(qval)) {
+              AO = 0
+            } else {
+              AO = min(ygrid[which(matgrid[match(DP,xgrid),]==qval)])
+            }
             AO },ygrid,xgrid)),col=rev(rainbow(length(qlevels),start=0, end=4/6))[match(qvalue,qlevels)],lwd=1.3,lty=3)
         }
       }
@@ -179,8 +193,15 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
         plot(1,type='n', ylim=c(1.1*af_min_lim,0), xlim=range(xgrid), xlab="DP", ylab=bquote("log"[10] ~ "[min(AF)]"))
         for(qvalue in qlevels) {
           lines(xgrid, unlist(lapply(xgrid,function(DP,ygrid,xgrid){
-            qval = ifelse(sum(matgrid[match(DP,xgrid),]>=qvalue)==0,NA,min(matgrid[match(DP,xgrid),which(matgrid[match(DP,xgrid),]>=qvalue)])) #NA iff no case>=qvalue in matgrid at DP
-            af = ifelse(is.na(qval),0,min(ygrid[which(matgrid[match(DP,xgrid),]==qval)])/DP)
+            if(sum(matgrid[match(DP,xgrid),]>=qvalue)==0) {
+              qval = NA } else {
+              qval = min(matgrid[match(DP,xgrid),which(matgrid[match(DP,xgrid),]>=qvalue)]) 
+            } #NA iff no case>=qvalue in matgrid at DP
+            if (is.na(qval)) {
+              af = 0
+            } else {
+              af = min(ygrid[which(matgrid[match(DP,xgrid),]==qval)])/DP
+            }
             if(DP==0 || af>1) { af=1 } #af>1 if min(...)>DP
             log10(af) },ygrid,xgrid)),col=rev(rainbow(length(qlevels),start=0, end=4/6))[match(qvalue,qlevels)])
         }
