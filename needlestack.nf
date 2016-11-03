@@ -202,6 +202,17 @@ if(params.input_vcf) {
     '''
     # Extract the header from the first VCF
     grep '^#' !{all_vcf[0]} > !{out_annotated_vcf}
+
+    # Add version numbers in the VCF header just after fileformat line
+    echo '##NeedlestackCommand=!{workflow.commandLine}' > versions.txt
+    echo '##NeedlestackRepository=!{workflow.repository}' >> versions.txt
+    echo '##NeedlestackCommitId=!{workflow.commitId}' >> versions.txt
+    echo '##NeedlestackRevision=!{workflow.revision}' >> versions.txt
+    echo '##NeedlestackContainer=!{workflow.container}' >> versions.txt
+    echo '##nextflow=v!{workflow.nextflow.version}' >> versions.txt
+    echo '##Rscript='$(Rscript --version 2>&1) >> versions.txt
+    sed -i '/##fileformat=.*/ r versions.txt' !{out_annotated_vcf}
+
     # this is only for the split_vcf process when using the split linux command that ensures files are in the right order
     grep -h -v '^#' split_*.vcf >> !{out_annotated_vcf}
     # this is for the slow version of the split_vcf process
