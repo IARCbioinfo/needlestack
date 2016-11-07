@@ -67,7 +67,10 @@ while(dim(vcf_chunk)[1] != 0) {
         chr=as.character(seqnames(rowRanges(vcf_chunk,"seqnames"))[var_line])
         loc=start(ranges(rowRanges(vcf_chunk,"seqnames"))[var_line])
         ref=as.character(ref(vcf_chunk)[[var_line]])
-        alt=paste(as.character(alt(vcf_chunk)[[var_line]]),collapse = ",")
+        alts=as.character(alt(vcf_chunk)[[var_line]])
+        alts_long_name = alts[nchar(alts)>10] #if long alt, take only extremities with a length depending on the index of the alt
+        alts[nchar(alts)>10]=paste(substr(alts_long_name,1,5+match(alts_long_name,alts)),substr(alts_long_name,nchar(alts_long_name)-(5+match(alts_long_name,alts)),nchar(alts_long_name)),sep="...")
+        alt=paste(alts,collapse = ",")
         sbs=rep(NA,dim(vcf_chunk)[2])
         pdf(paste(chr,"_",loc,"_",loc,"_",ref,"_",alt,"_",AD_index-1,ifelse(reg_res$inv_ref,"_inv_ref",""),ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),7,6)
         plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(chr),":",.(loc)," (",.(ref) %->% .(alt),"[",.(AD_index-1),"]",")",.(ifelse(reg_res$extra_rob," EXTRA ROBUST","")),sep="")), sbs=sbs, SB_threshold=SB_threshold,plot_labels=T,add_contours=T,names=samples(header(vcf_chunk)))
