@@ -121,17 +121,18 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
         matgrid=matrix(sapply(matgrid,function(case) toQvalue(unlist(case)[1],unlist(case)[2])), length(xgrid),length(ygrid))
         #### plot the contour "by hands"
         for(qvalue in qlevels) {
-          lines(xgrid, unlist(lapply(xgrid,function(DP,ygrid,xgrid){
+          dat = na.omit(cbind(xgrid,unlist(lapply(xgrid,function(DP,ygrid,xgrid){
             if(sum(matgrid[match(DP,xgrid),]>=qvalue)==0) {
               qval = NA } else {
-              qval = min(matgrid[match(DP,xgrid),which(matgrid[match(DP,xgrid),]>=qvalue)]) 
-            } #NA iff no case>=qvalue in matgrid at DP
+                qval = min(matgrid[match(DP,xgrid),which(matgrid[match(DP,xgrid),]>=qvalue)]) 
+              } #NA iff no case>=qvalue in matgrid at DP
             if (is.na(qval)) {
-              AO = 0
+              if( DP == 0 ) { AO = 0 } else { AO = NA }
             } else {
               AO = min(ygrid[which(matgrid[match(DP,xgrid),]==qval)])
             }
-            AO },ygrid,xgrid)),col=rev(rainbow(length(qlevels),start=0, end=4/6))[match(qvalue,qlevels)],lwd=1.3,lty=3)
+            AO },ygrid,xgrid))))
+          lines(dat[,1],dat[,2],col=rev(rainbow(length(qlevels),start=0, end=4/6))[match(qvalue,qlevels)],lwd=1.3,lty=3)
         }
       }
     }
@@ -152,18 +153,18 @@ plot_rob_nb <- function(rob_nb_res,qthreshold=0.01,plot_title=NULL,sbs,SB_thresh
     if(add_contours){
       if(!is.na(ylim_zoom_cor)){
         for(qvalue in qlevels) {
-          lines(xgrid, unlist(lapply(xgrid,function(DP,ygrid,xgrid){
+          dat = na.omit(cbind(xgrid,unlist(lapply(xgrid,function(DP,ygrid,xgrid){
             if(sum(matgrid[match(DP,xgrid),]>=qvalue)==0) {
               qval = NA } else {
                 qval = min(matgrid[match(DP,xgrid),which(matgrid[match(DP,xgrid),]>=qvalue)]) 
               } #NA iff no case>=qvalue in matgrid at DP
             if (is.na(qval)) {
-              AO = 0
+              if( DP == 0 ) { AO = 0 } else { AO = NA }
             } else {
               AO = min(ygrid[which(matgrid[match(DP,xgrid),]==qval)])
             }
-            AO },ygrid,xgrid)),col=rev(rainbow(length(qlevels),start=0, end=4/6))[match(qvalue,qlevels)],lwd=1.3,lty=3)
-        }
+            AO },ygrid,xgrid))))
+          lines(dat[,1],dat[,2],col=rev(rainbow(length(qlevels),start=0, end=4/6))[match(qvalue,qlevels)],lwd=1.3,lty=3)        }
       }
     }
     #contour(xgrid, ygrid, matgrid, levels=qlevels , col = rev(rainbow(length(qlevels),start=0, end=4/6)), add=T, lwd = 1.3, labcex = 0.8, lty=3)
