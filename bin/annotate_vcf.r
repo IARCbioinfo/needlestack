@@ -89,10 +89,10 @@ while(dim(vcf_chunk)[1] != 0) {
     lapply(regs, function(reg) unlist(reg$coef["sigma"]))
   })
   extra_robust_gl = unlist(lapply(reg_list, function(regs) {
-    lapply(regs, function(reg) unlist(reg$extra_rob))
+    Reduce("&",lapply(regs, function(reg) unlist(reg$extra_rob))) #if at least on regression at the position is extra_rob
   }))
   inv_refs = unlist(lapply(reg_list, function(regs) {
-    lapply(regs, function(reg) unlist(reg$inv_ref))
+    Reduce("&",lapply(regs, function(reg) unlist(reg$inv_ref))) #if at least on regression at the position is inv_ref
   }))
   
   #annotate the header of the chunk
