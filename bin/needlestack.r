@@ -351,10 +351,10 @@ for (i in 1:npos) {
         ma_count=Vp+Vm
         DP=coverage_matrix[i,]
         if( sum( (ma_count/DP) > 0.8 , na.rm = T) > 0.5*length(ma_count) ){  #here we need to reverse alt and ref for the regression (use ma_count of the ref)
-          ref=alt
-          alt=pos_ref[i,"ref"]
-          Vp=atcg_matrix[i,eval(as.name(paste(alt,"_cols",sep="")))]
-          Vm=atcg_matrix[i,eval(as.name(paste(tolower(alt),"_cols",sep="")))]
+          ref=cur_del
+          cur_del=pos_ref[i,"ref"]
+          Vp=atcg_matrix[i,eval(as.name(paste(cur_del,"_cols",sep="")))]
+          Vm=atcg_matrix[i,eval(as.name(paste(tolower(cur_del),"_cols",sep="")))]
           ma_count=Vp+Vm
           ref_inv=TRUE
         } else { ref_inv=FALSE; ref=pos_ref[i,"ref"] }
@@ -450,10 +450,10 @@ for (i in 1:npos) {
         ma_count=Vp+Vm
         DP=coverage_matrix[i,]
         if( sum( (ma_count/DP) > 0.8 , na.rm = T) > 0.5*length(ma_count) ){  #here we need to reverse alt and ref for the regression (use ma_count of the ref)
-          ref=alt
-          alt=pos_ref[i,"ref"]
-          Vp=atcg_matrix[i,eval(as.name(paste(alt,"_cols",sep="")))]
-          Vm=atcg_matrix[i,eval(as.name(paste(tolower(alt),"_cols",sep="")))]
+          ref=cur_ins
+          cur_ins=pos_ref[i,"ref"]
+          Vp=atcg_matrix[i,eval(as.name(paste(cur_ins,"_cols",sep="")))]
+          Vm=atcg_matrix[i,eval(as.name(paste(tolower(cur_ins),"_cols",sep="")))]
           ma_count=Vp+Vm
           ref_inv=TRUE
         } else { ref_inv=FALSE; ref=pos_ref[i,"ref"] }
