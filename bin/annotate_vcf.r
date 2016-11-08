@@ -130,7 +130,7 @@ while(dim(vcf_chunk)[1] != 0) {
     }),recursive = FALSE), nrow = dim(vcf_chunk)[1], byrow = TRUE)
   geno(vcf_chunk)$QVAL_INV = matrix(data = unlist(lapply(1:length(qvals), function(i) {
     q=qvals[[i]]
-    if(i %in% inv_refs_pos) q=lapply(1:length(q), function(j) { x=q[[j]] ; if(inv_refs[[i]][[j]] == FALSE) x[]=NA ; x }) #replace QVAL by "." if INV_REF
+    if(i %in% inv_refs_pos) q=lapply(1:length(q), function(j) { x=q[[j]] ; if(inv_refs[[i]][[j]] == FALSE) x[]=NA ; x }) #replace QVAL_INV by "." if not INV_REF
     as.list(data.frame(t(mapply(c,q))))
   }),recursive = FALSE), nrow = dim(vcf_chunk)[1], byrow = TRUE)
   
