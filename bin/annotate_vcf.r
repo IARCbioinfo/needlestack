@@ -100,15 +100,11 @@ while(dim(vcf_chunk)[1] != 0) {
   info(header(vcf_chunk))["SIG",]=list("A","Float","Dispertion parameter estimated by needlestack")
   info(header(vcf_chunk))["WARN",]=list("A","Character","Warning message when position is processed specifically by needlestack")
   geno(header(vcf_chunk))["QVAL",]=list("A","Float","Phred q-values computed by needlestack")
+  geno(header(vcf_chunk))["QVAL_INV",]=list("A","Float","Phred q-values computed by needlestack at a position where ")
   
   #annotate the chunk with computed values
-  info(vcf_chunk)$ERR = NumericList(err)
-  info(vcf_chunk)$SIG = NumericList(sig)
-  geno(vcf_chunk)$QVAL = matrix(data = unlist(lapply(qvals, function(q) as.list(data.frame(t(mapply(c,q))))),recursive = FALSE),
-                                nrow = dim(vcf_chunk)[1],
-                                byrow = TRUE)
-  info(vcf_chunk)$WARN = rep(NA, dim(vcf_chunk)[1])
   #add WARN INFO field if extra-robust or inverted-reference
+  info(vcf_chunk)$WARN = rep(NA, dim(vcf_chunk)[1])
   extra_rob_pos = which(unlist(lapply(extra_robust_gl, function(l) Reduce("|",l))==TRUE))
   info(vcf_chunk)$WARN[extra_rob_pos]=unlist(lapply(extra_rob_pos, function(i) {
     ex=unlist(extra_robust_gl[i]) 
@@ -124,6 +120,19 @@ while(dim(vcf_chunk)[1] != 0) {
     ex=unlist(inv_refs[i]) #we know that if inv_ref == TRUE then extra_robust = TRUE
     ex[which(ex==TRUE)]="EXTRA_ROBUST_GL/INV_REF"; ex[which(ex==FALSE)]="." 
     paste(ex, collapse = ",") } ))
+  #compute other fields
+  info(vcf_chunk)$ERR = NumericList(err)
+  info(vcf_chunk)$SIG = NumericList(sig)
+  geno(vcf_chunk)$QVAL = matrix(data = unlist(lapply(1:length(qvals), function(i) {
+    q=qvals[[i]]
+    if(i %in% inv_refs_pos) q=lapply(1:length(q), function(j) { x=q[[j]] ; if(inv_refs[[i]][[j]] == TRUE) x[]=NA ; x }) #replace QVAL by "." if INV_REF
+    as.list(data.frame(t(mapply(c,q))))
+    }),recursive = FALSE), nrow = dim(vcf_chunk)[1], byrow = TRUE)
+  geno(vcf_chunk)$QVAL_INV = matrix(data = unlist(lapply(1:length(qvals), function(i) {
+    q=qvals[[i]]
+    if(i %in% inv_refs_pos) q=lapply(1:length(q), function(j) { x=q[[j]] ; if(inv_refs[[i]][[j]] == FALSE) x[]=NA ; x }) #replace QVAL by "." if INV_REF
+    as.list(data.frame(t(mapply(c,q))))
+  }),recursive = FALSE), nrow = dim(vcf_chunk)[1], byrow = TRUE)
   
   #write out the annotated VCF
   con = file(out_vcf, open = "a")
