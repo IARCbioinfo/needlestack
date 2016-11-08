@@ -88,12 +88,12 @@ while(dim(vcf_chunk)[1] != 0) {
   sig = lapply(reg_list, function(regs) {
     lapply(regs, function(reg) unlist(reg$coef["sigma"]))
   })
-  extra_robust_gl = unlist(lapply(reg_list, function(regs) {
-    Reduce("&",lapply(regs, function(reg) unlist(reg$extra_rob))) #if at least on regression at the position is extra_rob
-  }))
-  inv_refs = unlist(lapply(reg_list, function(regs) {
-    Reduce("&",lapply(regs, function(reg) unlist(reg$inv_ref))) #if at least on regression at the position is inv_ref
-  }))
+  extra_robust_gl = lapply(reg_list, function(regs) {
+    lapply(regs, function(reg) unlist(reg$extra_rob)) #if at least on regression at the position is extra_rob
+  })
+  inv_refs = lapply(reg_list, function(regs) {
+    lapply(regs, function(reg) unlist(reg$inv_ref)) #if at least on regression at the position is inv_ref
+  })
   
   #annotate the header of the chunk
   info(header(vcf_chunk))["ERR",]=list("A","Float","Error rate estimated by needlestack")
@@ -107,10 +107,23 @@ while(dim(vcf_chunk)[1] != 0) {
   geno(vcf_chunk)$QVAL = matrix(data = unlist(lapply(qvals, function(q) as.list(data.frame(t(mapply(c,q))))),recursive = FALSE),
                                 nrow = dim(vcf_chunk)[1],
                                 byrow = TRUE)
-  info(vcf_chunk)$WARN = rep(NA, length(extra_robust_gl))
-  info(vcf_chunk)$WARN[which(extra_robust_gl==TRUE)]="EXTRA_ROBUST_GL"
-  info(vcf_chunk)$WARN[which(inv_refs==TRUE)]="INV_REF"
-  info(vcf_chunk)$WARN[which(extra_robust_gl==TRUE & inv_refs==TRUE)]="EXTRA_ROBUST_GL/INV_REF"
+  info(vcf_chunk)$WARN = rep(NA, dim(vcf_chunk)[1])
+  #add WARN INFO field if extra-robust or inverted-reference
+  extra_rob_pos = which(unlist(lapply(extra_robust_gl, function(l) Reduce("|",l))==TRUE))
+  info(vcf_chunk)$WARN[extra_rob_pos]=unlist(lapply(extra_rob_pos, function(i) {
+    ex=unlist(extra_robust_gl[i]) 
+    ex[which(ex==TRUE)]="EXTRA_ROBUST_GL"; ex[which(ex==FALSE)]="." 
+    paste(ex, collapse = ",") } ))
+  inv_refs_pos = which(unlist(lapply(inv_refs, function(l) Reduce("|",l))==TRUE))
+  info(vcf_chunk)$WARN[inv_refs_pos]=unlist(lapply(inv_refs_pos, function(i) {
+    ex=unlist(inv_refs[i]) 
+    ex[which(ex==TRUE)]="INV_REF"; ex[which(ex==FALSE)]="." 
+    paste(ex, collapse = ",") } ))
+  inv_refs_extra_rob_pos = which(unlist(lapply(inv_refs, function(l) Reduce("|",l))==TRUE) & unlist(lapply(inv_refs, function(l) Reduce("&",l))==TRUE))
+  info(vcf_chunk)$WARN[inv_refs_extra_rob_pos]=unlist(lapply(inv_refs_extra_rob_pos, function(i) {
+    ex=unlist(inv_refs[i]) #we know that if inv_ref == TRUE then extra_robust = TRUE
+    ex[which(ex==TRUE)]="EXTRA_ROBUST_GL/INV_REF"; ex[which(ex==FALSE)]="." 
+    paste(ex, collapse = ",") } ))
   
   #write out the annotated VCF
   con = file(out_vcf, open = "a")
