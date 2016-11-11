@@ -315,7 +315,7 @@ for (i in 1:npos) {
           if(ref_inv) { genotype[homozygotes]="0/0" }  else { genotype[homozygotes]="1/1" }
           if(isTNpairs){
               #no tumor variant but low power -> "./."
-              genotype[(reg_res$GQ < GQ_threshold)&(qval_minAF<GQ_threshold) ]="./."
+              if(ref_inv) { genotype[(reg_res$GQ < GQ_threshold)&(qval_minAF<GQ_threshold) ]="./1" } else { genotype[(reg_res$GQ < GQ_threshold)&(qval_minAF<GQ_threshold) ]="./." }
           }
 
           for (cur_sample in 1:nindiv) {
@@ -411,7 +411,7 @@ for (i in 1:npos) {
             if(ref_inv) { genotype[homozygotes]="0/0" }  else { genotype[homozygotes]="1/1" }
             if(isTNpairs){
               #no tumor variant but low power -> "./."
-                genotype[(reg_res$GQ < GQ_threshold)&(qval_minAF<GQ_threshold) ]="./."
+                if(ref_inv) { genotype[(reg_res$GQ < GQ_threshold)&(qval_minAF<GQ_threshold) ]="./1" } else { genotype[(reg_res$GQ < GQ_threshold)&(qval_minAF<GQ_threshold) ]="./." }
             }
 
             for (cur_sample in 1:nindiv) {
@@ -513,7 +513,7 @@ for (i in 1:npos) {
             if(ref_inv) { genotype[homozygotes]="0/0" }  else { genotype[homozygotes]="1/1" }
             if(isTNpairs){
                 #no tumor variant but low power -> "./."
-                genotype[(reg_res$GQ < GQ_threshold)&(qval_minAF<GQ_threshold) ]="./."
+                if(ref_inv) { genotype[(reg_res$GQ < GQ_threshold)&(qval_minAF<GQ_threshold) ]="./1" } else { genotype[(reg_res$GQ < GQ_threshold)&(qval_minAF<GQ_threshold) ]="./." }
             }
 
             for (cur_sample in 1:nindiv) {
