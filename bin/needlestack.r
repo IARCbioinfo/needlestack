@@ -251,19 +251,20 @@ for (i in 1:npos) {
   if (is.element(pos_ref[i,"ref"],c("A","T","C","G"))) {
     # SNV
     for (alt in non_ref_bases(pos_ref[i,"ref"])) {
+      ref=pos_ref[i,"ref"]
       Vp=atcg_matrix[i,eval(as.name(paste(alt,"_cols",sep="")))]
       Vm=atcg_matrix[i,eval(as.name(paste(tolower(alt),"_cols",sep="")))]
       ma_count=Vp+Vm
       DP=coverage_matrix[i,]
       if( sum( (ma_count/DP) > 0.8 , na.rm = T) > 0.5*length(ma_count) ){  #here we need to reverse alt and ref for the regression (use ma_count of the ref)
-        ref=alt
-        alt=pos_ref[i,"ref"]
-        Vp=atcg_matrix[i,eval(as.name(paste(alt,"_cols",sep="")))]
-        Vm=atcg_matrix[i,eval(as.name(paste(tolower(alt),"_cols",sep="")))]
-        ma_count=Vp+Vm
+        alt_inv=pos_ref[i,"ref"]
+        Vp_inv=atcg_matrix[i,eval(as.name(paste(alt_inv,"_cols",sep="")))]
+        Vm_inv=atcg_matrix[i,eval(as.name(paste(tolower(alt_inv),"_cols",sep="")))]
+        ma_count_inv=Vp_inv+Vm_inv
         ref_inv=TRUE
-      } else { ref_inv=FALSE; ref=pos_ref[i,"ref"] }
-      reg_res=glmrob.nb(x=DP,y=ma_count,min_coverage=min_coverage,min_reads=min_reads,extra_rob=extra_rob)
+        reg_res=glmrob.nb(x=DP,y=ma_count_inv,min_coverage=min_coverage,min_reads=min_reads,extra_rob=extra_rob)
+      } else { ref_inv=FALSE; reg_res=glmrob.nb(x=DP,y=ma_count,min_coverage=min_coverage,min_reads=min_reads,extra_rob=extra_rob) }
+
       # compute Qval for minAF
       qval_minAF= rep(0,nindiv)
       somatic_status = rep(".",nindiv)
@@ -351,14 +352,14 @@ for (i in 1:npos) {
         ma_count=Vp+Vm
         DP=coverage_matrix[i,]
         if( sum( (ma_count/DP) > 0.8 , na.rm = T) > 0.5*length(ma_count) ){  #here we need to reverse alt and ref for the regression (use ma_count of the ref)
-          ref=cur_del
-          cur_del=pos_ref[i,"ref"]
-          Vp=atcg_matrix[i,eval(as.name(paste(cur_del,"_cols",sep="")))]
-          Vm=atcg_matrix[i,eval(as.name(paste(tolower(cur_del),"_cols",sep="")))]
-          ma_count=Vp+Vm
+          ref=pos_ref[i,"ref"]
+          cur_del_inv=pos_ref[i,"ref"]
+          Vp_inv=atcg_matrix[i,eval(as.name(paste(cur_del_inv,"_cols",sep="")))]
+          Vm_inv=atcg_matrix[i,eval(as.name(paste(tolower(cur_del_inv),"_cols",sep="")))]
+          ma_count_inv=Vp_inv+Vm_inv
           ref_inv=TRUE
-        } else { ref_inv=FALSE; ref=pos_ref[i,"ref"] }
-        reg_res=glmrob.nb(x=DP,y=ma_count,min_coverage=min_coverage,min_reads=min_reads,extra_rob=extra_rob)
+          reg_res=glmrob.nb(x=DP,y=ma_count_inv,min_coverage=min_coverage,min_reads=min_reads,extra_rob=extra_rob)
+        } else { ref_inv=FALSE; reg_res=glmrob.nb(x=DP,y=ma_count,min_coverage=min_coverage,min_reads=min_reads,extra_rob=extra_rob) }
          # compute Qval20pc
         qval_minAF = rep(0,nindiv)
         somatic_status = rep(".",nindiv)
@@ -452,14 +453,14 @@ for (i in 1:npos) {
         ma_count=Vp+Vm
         DP=coverage_matrix[i,]
         if( sum( (ma_count/DP) > 0.8 , na.rm = T) > 0.5*length(ma_count) ){  #here we need to reverse alt and ref for the regression (use ma_count of the ref)
-          ref=cur_ins
-          cur_ins=pos_ref[i,"ref"]
-          Vp=atcg_matrix[i,eval(as.name(paste(cur_ins,"_cols",sep="")))]
-          Vm=atcg_matrix[i,eval(as.name(paste(tolower(cur_ins),"_cols",sep="")))]
-          ma_count=Vp+Vm
+          ref=pos_ref[i,"ref"]
+          cur_ins_inv=pos_ref[i,"ref"]
+          Vp_inv=atcg_matrix[i,eval(as.name(paste(cur_ins_inv,"_cols",sep="")))]
+          Vm_inv=atcg_matrix[i,eval(as.name(paste(tolower(cur_ins_inv),"_cols",sep="")))]
+          ma_count_inv=Vp_inv+Vm_inv
           ref_inv=TRUE
-        } else { ref_inv=FALSE; ref=pos_ref[i,"ref"] }
-        reg_res=glmrob.nb(x=DP,y=ma_count,min_coverage=min_coverage,min_reads=min_reads,extra_rob=extra_rob)
+          reg_res=glmrob.nb(x=DP,y=ma_count_inv,min_coverage=min_coverage,min_reads=min_reads,extra_rob=extra_rob)
+        } else { ref_inv=FALSE; reg_res=glmrob.nb(x=DP,y=ma_count,min_coverage=min_coverage,min_reads=min_reads,extra_rob=extra_rob) }
          # compute Qval20pc
         qval_minAF = rep(0,nindiv)
         somatic_status = rep(".",nindiv)
@@ -513,7 +514,7 @@ for (i in 1:npos) {
             if(ref_inv) { genotype[homozygotes]="0/0" }  else { genotype[homozygotes]="1/1" }
             if(isTNpairs){
                 #no tumor variant but low power -> "./."
-                genotype[(reg_res$GQ < GQ_threshold)&(qval_minAF<GQ_threshold) ]="./." 
+                genotype[(reg_res$GQ < GQ_threshold)&(qval_minAF<GQ_threshold) ]="./."
             }
 
             for (cur_sample in 1:nindiv) {
