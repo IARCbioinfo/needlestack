@@ -69,7 +69,7 @@ if(is.null(args$plot_labels)) {args$plot_labels=FALSE} else {args$plot_labels=as
 if(is.null(args$add_contours)) {args$add_contours=FALSE} else {args$add_contours=as.logical(args$add_contours)}
 if(is.null(args$extra_rob)) {args$extra_rob=FALSE} else {args$extra_rob=as.logical(args$extra_rob)}
 if(is.null(args$pairs_file)) {args$pairs_file=FALSE}
-if(is.null(args$afmin_power)) {args$afmin_power=0.01} else {args$afmin_power=as.numeric(args$afmin_power)}
+if(is.null(args$afmin_power)) {args$afmin_power=-1} else {args$afmin_power=as.numeric(args$afmin_power)}
 if(is.null(args$sigma)) {args$sigma=0.1} else {args$sigma=as.numeric(args$sigma)}
 
 samtools=args$samtools
@@ -107,6 +107,7 @@ isTNpairs = FALSE #activates Tumor-Normal pairs mode
 if(pairs_file != FALSE) { #if user gives a pairs_file to needlestack
   isTNpairs = file.exists(pairs_file) #checks existence of tumour-normal pairs file => will be redundant once this is checked in the workflow
   if( isTNpairs ){
+      if(afmin_power==-1) afmin_power = 0.01 #put default value
       pairsname = scan(pairs_file,nmax = 2,what = "character")
       TNpairs=read.table(pairs_file,h=T)
       names(TNpairs)[grep("TU",pairsname)] = "TUMOR" #set columns names (to avoid problems due to spelling variations or typos)
@@ -268,7 +269,7 @@ for (i in 1:npos) {
       # compute Qval for minAF
       qval_minAF= rep(0,nindiv)
       somatic_status = rep(".",nindiv)
-      if(isTNpairs){
+      if(isTNpairs){#pairs file supplied
           qval_minAF[Nindex] = sapply(1:length(Nindex),function(ii) toQvalueN(DP[Nindex][ii],reg_res,sigma) )
           qval_minAF[Tindex] = sapply(1:length(Tindex),function(ii) toQvalueT(DP[Tindex][ii],reg_res,afmin_power) )
           if( length(onlyNindex)>0 ) qval_minAF[onlyNindex] = sapply(1:length(onlyNindex),function(ii) toQvalueN(DP[onlyNindex][ii],reg_res,sigma) )
@@ -287,6 +288,12 @@ for (i in 1:npos) {
 
           #flag possible contamination
           if( sum(somatic_status[Tindex]=="GERMLINE")>0 ) somatic_status[Tindex][somatic_status[Tindex] == "SOMATIC"] = "POSSIBLE_CONTAMINATION"
+      }else{# no pairs file supplied
+          if(afmin_power==-1 ){#no minimum frequency supplied -> use a negative binomial distribution to check the power
+              qval_minAF = sapply(1:nindiv,function(ii) toQvalueN(DP[ii],reg_res,sigma) )
+          }else{#minimum frequency supplied -> use a binomial distribution centered around afmin_power to check the power
+              qval_minAF = sapply(1:nindiv,function(ii) toQvalueT(DP[ii],reg_res,afmin_power) )
+          }
       }
 
       if (output_all_SNVs | (!is.na(reg_res$coef["slope"]) & sum(reg_res$GQ>=GQ_threshold,na.rm=TRUE)>0)) {
@@ -314,11 +321,9 @@ for (i in 1:npos) {
           genotype[heterozygotes]="0/1"
           homozygotes=which(reg_res$GQ>=GQ_threshold & sbs<=SB_threshold_SNV & reg_res$ma_count/reg_res$coverage >= 0.75)
           if(ref_inv) { genotype[homozygotes]="0/0" }  else { genotype[homozygotes]="1/1" }
-          if(isTNpairs){
-              #no tumor variant but low power -> "./."
-              genotype[(reg_res$GQ < GQ_threshold)&(qval_minAF<GQ_threshold) ]="./."
-          }
-
+          #no tumor variant but low power -> "./."
+          genotype[(reg_res$GQ < GQ_threshold)&(qval_minAF<GQ_threshold) ]="./."
+          
           for (cur_sample in 1:nindiv) {
               cat("\t",genotype[cur_sample],":",reg_res$GQ[cur_sample],":",DP[cur_sample],":",(Rp+Rm)[cur_sample],":",ma_count[cur_sample],":",(ma_count/DP)[cur_sample],":",Rp[cur_sample],",",Rm[cur_sample],",",Vp[cur_sample],",",Vm[cur_sample],":",sors[cur_sample],":",rvsbs[cur_sample],":",FisherStrand[cur_sample],":",qval_minAF[cur_sample],":",somatic_status[cur_sample],sep = "",file=out_file,append=T)
           }
