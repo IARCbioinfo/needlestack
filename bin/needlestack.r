@@ -387,8 +387,14 @@ for (i in 1:npos) {
 
           #flag possible contamination
             if( sum(somatic_status[Tindex]=="GERMLINE")>0 ) somatic_status[Tindex][somatic_status[Tindex] == "SOMATIC"] = "POSSIBLE_CONTAMINATION"
+        }else{# no pairs file supplied
+            if(afmin_power==-1 ){#no minimum frequency supplied -> use a negative binomial distribution to check the power
+                qval_minAF = sapply(1:nindiv,function(ii) toQvalueN(DP[ii],reg_res,sigma) )
+            }else{#minimum frequency supplied -> use a binomial distribution centered around afmin_power to check the power
+                qval_minAF = sapply(1:nindiv,function(ii) toQvalueT(DP[ii],reg_res,afmin_power) )
+            }
         }
-
+        
         if (!is.na(reg_res$coef["slope"]) & sum(reg_res$GQ>=GQ_threshold,na.rm=TRUE)>0) {
           all_AO=sum(ma_count)
           all_DP=sum(coverage_matrix[i,])+sum(ma_count)
@@ -415,10 +421,8 @@ for (i in 1:npos) {
             genotype[heterozygotes]="0/1"
             homozygotes=which(reg_res$GQ>=GQ_threshold & sbs<=SB_threshold_SNV & reg_res$ma_count/reg_res$coverage >= 0.75)
             if(ref_inv) { genotype[homozygotes]="0/0" }  else { genotype[homozygotes]="1/1" }
-            if(isTNpairs){
-              #no tumor variant but low power -> "./."
-                genotype[(reg_res$GQ < GQ_threshold)&(qval_minAF<GQ_threshold) ]="./."
-            }
+           #no tumor variant but low power -> "./."
+            genotype[(reg_res$GQ < GQ_threshold)&(qval_minAF<GQ_threshold) ]="./."
 
             for (cur_sample in 1:nindiv) {
                 cat("\t",genotype[cur_sample],":",reg_res$GQ[cur_sample],":",DP[cur_sample],":",(Rp+Rm)[cur_sample],":",ma_count[cur_sample],":",(ma_count/DP)[cur_sample],":",Rp[cur_sample],",",Rm[cur_sample],",",Vp[cur_sample],",",Vm[cur_sample],":",sors[cur_sample],":",rvsbs[cur_sample],":",FisherStrand[cur_sample],":",qval_minAF[cur_sample],":",somatic_status[cur_sample],sep = "",file=out_file,append=T)
@@ -489,9 +493,14 @@ for (i in 1:npos) {
 
             #flag possible contamination
             if( sum(somatic_status[Tindex]=="GERMLINE")>0 ) somatic_status[Tindex][somatic_status[Tindex] == "SOMATIC"] = "POSSIBLE_CONTAMINATION"
+        }else{# no pairs file supplied
+            if(afmin_power==-1 ){#no minimum frequency supplied -> use a negative binomial distribution to check the power
+                qval_minAF = sapply(1:nindiv,function(ii) toQvalueN(DP[ii],reg_res,sigma) )
+            }else{#minimum frequency supplied -> use a binomial distribution centered around afmin_power to check the power
+                qval_minAF = sapply(1:nindiv,function(ii) toQvalueT(DP[ii],reg_res,afmin_power) )
+            }
         }
-
-
+        
         if (!is.na(reg_res$coef["slope"]) & sum(reg_res$GQ>=GQ_threshold,na.rm=TRUE)>0) {
           all_AO=sum(ma_count)
           all_DP=sum(coverage_matrix[i,])+sum(ma_count)
@@ -517,11 +526,9 @@ for (i in 1:npos) {
             genotype[heterozygotes]="0/1"
             homozygotes=which(reg_res$GQ>=GQ_threshold & sbs<=SB_threshold_SNV & reg_res$ma_count/reg_res$coverage >= 0.75)
             if(ref_inv) { genotype[homozygotes]="0/0" }  else { genotype[homozygotes]="1/1" }
-            if(isTNpairs){
-                #no tumor variant but low power -> "./."
-                genotype[(reg_res$GQ < GQ_threshold)&(qval_minAF<GQ_threshold) ]="./."
-            }
-
+           #no tumor variant but low power -> "./."
+            genotype[(reg_res$GQ < GQ_threshold)&(qval_minAF<GQ_threshold) ]="./."
+            
             for (cur_sample in 1:nindiv) {
                 cat("\t",genotype[cur_sample],":",reg_res$GQ[cur_sample],":",DP[cur_sample],":",(Rp+Rm)[cur_sample],":",ma_count[cur_sample],":",(ma_count/DP)[cur_sample],":",Rp[cur_sample],",",Rm[cur_sample],",",Vp[cur_sample],",",Vm[cur_sample],":",sors[cur_sample],":",rvsbs[cur_sample],":",FisherStrand[cur_sample],":",qval_minAF[cur_sample],":",somatic_status[cur_sample],sep = "",file=out_file,append=T)
             }
