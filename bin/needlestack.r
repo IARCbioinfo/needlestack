@@ -110,8 +110,8 @@ if(pairs_file != FALSE) { #if user gives a pairs_file to needlestack
       if(afmin_power==-1) afmin_power = 0.01 #put default value
       pairsname = scan(pairs_file,nmax = 2,what = "character")
       TNpairs=read.table(pairs_file,h=T)
-      names(TNpairs)[grep("TU",pairsname)] = "TUMOR" #set columns names (to avoid problems due to spelling variations or typos)
-      names(TNpairs)[grep("NO",pairsname)] = "NORMAL"
+      names(TNpairs)[grep("TU",pairsname,ignore.case =T)] = "TUMOR" #set columns names (to avoid problems due to spelling variations or typos)
+      names(TNpairs)[grep("NO",pairsname,ignore.case =T)] = "NORMAL"
       onlyNindex = which(indiv_run[,2]==TNpairs$NORMAL[is.na(TNpairs$TUMOR)]) #normal samples without matching tumor
       onlyTindex = which(indiv_run[,2]==TNpairs$TUMOR[is.na(TNpairs$NORMAL)]) #tumor samples without matching normal
       TNpairs.complete = TNpairs[!(is.na(TNpairs$TUMOR)|is.na(TNpairs$NORMAL) ),] # all complete T-N pairs
