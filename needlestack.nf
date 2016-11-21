@@ -24,6 +24,12 @@
 // - needlestack.r (in bin folder)
 // - pileup2baseindel.pl (in bin folder) (+ perl)
 
+params.help = null
+params.input_vcf = null
+params.out_vcf = null
+params.region = null
+params.bed = null
+params.out_annotated_vcf = null
 params.min_dp = 30 // minimum median coverage to consider a site
 params.min_ao = 3 // minimum number of non-ref reads in at least one sample to consider a site
 params.nsplit = 1 // split the positions for calling in nsplit pieces and run in parallel
