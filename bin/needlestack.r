@@ -112,8 +112,9 @@ if(pairs_file != FALSE) { #if user gives a pairs_file to needlestack
       TNpairs=read.table(pairs_file,h=T)
       names(TNpairs)[grep("TU",pairsname,ignore.case =T)] = "TUMOR" #set columns names (to avoid problems due to spelling variations or typos)
       names(TNpairs)[grep("NO",pairsname,ignore.case =T)] = "NORMAL"
-      onlyNindex = which(indiv_run[,2]==TNpairs$NORMAL[is.na(TNpairs$TUMOR)]) #normal samples without matching tumor
-      onlyTindex = which(indiv_run[,2]==TNpairs$TUMOR[is.na(TNpairs$NORMAL)]) #tumor samples without matching normal
+      onlyNindex = which( sapply(indiv_run[,2], function(x) x%in%TNpairs$NORMAL[is.na(TNpairs$TUMOR)] ) )
+      onlyTindex = which( sapply(indiv_run[,2], function(x) x%in%TNpairs$TUMOR[is.na(TNpairs$NORMAL)] ) )
+      #onlyTindex = which(indiv_run[,2]==TNpairs$TUMOR[is.na(TNpairs$NORMAL)]) #tumor samples without matching normal
       TNpairs.complete = TNpairs[!(is.na(TNpairs$TUMOR)|is.na(TNpairs$NORMAL) ),] # all complete T-N pairs
       Tindex = sapply( 1:nrow(TNpairs.complete) , function(k) return(which( indiv_run[,2]==TNpairs.complete$TUMOR[k])) )
       Nindex = sapply( 1:nrow(TNpairs.complete) , function(k) return(which( indiv_run[,2]==TNpairs.complete$NORMAL[k])) )
