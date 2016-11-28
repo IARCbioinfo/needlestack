@@ -176,18 +176,19 @@ if(params.input_vcf) {
 
   process annotate_vcf {
 
-    publishDir params.out_folder+'/PDF/', mode: 'move',  pattern: "*[ATCG-]*.pdf"
+    if(!params.no_plots) {
+          publishDir params.out_folder+'/PDF/', mode: 'move', pattern: '*.pdf'
+    }
 
     input:
     file svcf from splitted_vcf
 
     output:
-    file '*.pdf' into PDF
+    file '*.pdf' optional true into PDF
     file '*.vcf' into annotated
 
     shell:
     '''
-    touch empty.pdf
     tabix -p vcf !{svcf}
     Rscript !{baseDir}/bin/annotate_vcf.r --source_path=!{baseDir}/bin/ --input_vcf=!{svcf} --chunk_size=!{params.chunk_size} --do_plots=!{!params.no_plots} --plot_labels=!{!params.no_labels} --add_contours=!{!params.no_contours} --min_coverage=!{params.min_dp} --min_reads=!{params.min_ao} --GQ_threshold=!{params.min_qval} --extra_rob=!{params.extra_robust_gl}
     '''
@@ -299,7 +300,7 @@ if(params.input_vcf) {
   log.info "Strand bias measure (--sb_type)                                 : ${params.sb_type}"
   log.info "Strand bias threshold for SNVs (--sb_snv)                       : ${params.sb_snv}"
   log.info "Strand bias threshold for indels (--sb_indel)                   : ${params.sb_indel}"
-  log.info "Minimum allelic fraction for power computations (--power_min_af)           : ${params.power_min_af}"
+  log.info "Minimum allelic fraction for power computations (--power_min_af): ${params.power_min_af}"
   log.info "Sigma parameter for germline (--sigma)                          : ${params.sigma_normal}"
   log.info "Samtools minimum mapping quality (--map_qual)                   : ${params.map_qual}"
   log.info "Samtools minimum base quality (--base_qual)                     : ${params.base_qual}"
@@ -425,7 +426,9 @@ if(params.input_vcf) {
   // perform regression in R
   process R_regression {
 
-      publishDir params.out_folder+'/PDF/', mode: 'move', pattern: "*[ATCG-]*.pdf"
+      if(!params.no_plots) {
+          publishDir params.out_folder+'/PDF/', mode: 'move', pattern: '*.pdf'
+      }
 
       tag { region_tag }
 
@@ -438,12 +441,10 @@ if(params.input_vcf) {
 
       output:
       file "${region_tag}.vcf" into vcf
-      file '*.pdf' into PDF
+      file '*.pdf' optional true into PDF
 
       shell:
       '''
-      # create a dummy empty pdf to avoid an error in the process when no variant is found
-      touch empty.pdf
       needlestack.r --pairs_file=!{params.pairs_file} --source_path=!{baseDir}/bin/ --out_file=!{region_tag}.vcf --fasta_ref=!{fasta_ref} --GQ_threshold=!{params.min_qval} --min_coverage=!{params.min_dp} --min_reads=!{params.min_ao} --SB_type=!{params.sb_type} --SB_threshold_SNV=!{params.sb_snv} --SB_threshold_indel=!{params.sb_indel} --output_all_SNVs=!{params.all_SNVs} --do_plots=!{!params.no_plots} --plot_labels=!{!params.no_labels} --add_contours=!{!params.no_contours} --extra_rob=!{params.extra_robust_gl} --afmin_power=!{params.power_min_af} --sigma=!{params.sigma_normal}
       '''
   }
