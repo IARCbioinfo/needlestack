@@ -299,7 +299,7 @@ for (i in 1:npos) {
           
           #flag possible contamination
           wh.germ = grep("GERMLINE",somatic_status)
-          if( length(wh.germ)>0 ) somatic_status[Tindex][somatic_status[Tindex] == "SOMATIC"] = paste("POSSIBLE_CONTAMINATION_FROM", indiv_run[wh.germ,2],sep="_",collapse=T)
+          if( length(wh.germ)>0 ) somatic_status[Tindex][somatic_status[Tindex] == "SOMATIC"] = paste("POSSIBLE_CONTAMINATION_FROM", indiv_run[wh.germ,2],sep="_",collapse="_")
       }else{# no pairs file supplied
           if(afmin_power==-1 ){#no minimum frequency supplied -> use a negative binomial distribution to check the power
               qval_minAF = sapply(1:nindiv,function(ii) toQvalueN(DP[ii],reg_res,sigma) )
@@ -410,7 +410,7 @@ for (i in 1:npos) {
           
           #flag possible contamination
           wh.germ = grep("GERMLINE",somatic_status)
-          if( length(wh.germ)>0 ) somatic_status[Tindex][somatic_status[Tindex] == "SOMATIC"] = paste("POSSIBLE_CONTAMINATION_FROM", indiv_run[wh.germ,2],sep="_",collapse=T)
+          if( length(wh.germ)>0 ) somatic_status[Tindex][somatic_status[Tindex] == "SOMATIC"] = paste("POSSIBLE_CONTAMINATION_FROM", indiv_run[wh.germ,2],sep="_",collapse="_")
         }else{# no pairs file supplied
             if(afmin_power==-1 ){#no minimum frequency supplied -> use a negative binomial distribution to check the power
                 qval_minAF = sapply(1:nindiv,function(ii) toQvalueN(DP[ii],reg_res,sigma) )
@@ -528,7 +528,7 @@ for (i in 1:npos) {
           
           #flag possible contamination
             wh.germ = grep("GERMLINE",somatic_status)
-            if( length(wh.germ)>0 ) somatic_status[Tindex][somatic_status[Tindex] == "SOMATIC"] = paste("POSSIBLE_CONTAMINATION_FROM", indiv_run[wh.germ,2],sep="_",collapse=T)
+            if( length(wh.germ)>0 ) somatic_status[Tindex][somatic_status[Tindex] == "SOMATIC"] = paste("POSSIBLE_CONTAMINATION_FROM", indiv_run[wh.germ,2],sep="_",collapse="_")
         }else{# no pairs file supplied
             if(afmin_power==-1 ){#no minimum frequency supplied -> use a negative binomial distribution to check the power
                 qval_minAF = sapply(1:nindiv,function(ii) toQvalueN(DP[ii],reg_res,sigma) )
