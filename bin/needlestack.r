@@ -298,7 +298,7 @@ for (i in 1:npos) {
           somatic_status[Tindex][(reg_res$GQ[Tindex] > GQ_threshold)&(qval_minAF[Nindex]>GQ_threshold)&(reg_res$GQ[Nindex]<GQ_threshold) ] = "SOMATIC"
           
           #flag possible contamination
-          wh.germ = grep("GERMLINE",somatic_status)
+          wh.germ = grep("GERMLINE|UNKNOWN",somatic_status)
           if( length(wh.germ)>0 ) somatic_status[Tindex][somatic_status[Tindex] == "SOMATIC"] = paste("POSSIBLE_CONTAMINATION_FROM", paste(indiv_run[wh.germ,2],sep="_",collapse="_"),sep="_")
       }else{# no pairs file supplied
           if(afmin_power==-1 ){#no minimum frequency supplied -> use a negative binomial distribution to check the power
@@ -409,7 +409,7 @@ for (i in 1:npos) {
           somatic_status[Tindex][(reg_res$GQ[Tindex] > GQ_threshold)&(qval_minAF[Nindex]>GQ_threshold)&(reg_res$GQ[Nindex]<GQ_threshold) ] = "SOMATIC"
           
           #flag possible contamination
-          wh.germ = grep("GERMLINE",somatic_status)
+          wh.germ = grep("GERMLINE|UNKNOWN",somatic_status)
           if( length(wh.germ)>0 ) somatic_status[Tindex][somatic_status[Tindex] == "SOMATIC"] = paste("POSSIBLE_CONTAMINATION_FROM", paste(indiv_run[wh.germ,2],sep="_",collapse="_"),sep="_")
         }else{# no pairs file supplied
             if(afmin_power==-1 ){#no minimum frequency supplied -> use a negative binomial distribution to check the power
@@ -527,7 +527,7 @@ for (i in 1:npos) {
             somatic_status[Tindex][(reg_res$GQ[Tindex] > GQ_threshold)&(qval_minAF[Nindex]>GQ_threshold)&(reg_res$GQ[Nindex]<GQ_threshold) ] = "SOMATIC"
           
           #flag possible contamination
-            wh.germ = grep("GERMLINE",somatic_status)
+            wh.germ = grep("GERMLINE|UNKNOWN",somatic_status)
             if( length(wh.germ)>0 ) somatic_status[Tindex][somatic_status[Tindex] == "SOMATIC"] = paste("POSSIBLE_CONTAMINATION_FROM", paste(indiv_run[wh.germ,2],sep="_",collapse="_"),sep="_")
         }else{# no pairs file supplied
             if(afmin_power==-1 ){#no minimum frequency supplied -> use a negative binomial distribution to check the power
