@@ -299,7 +299,7 @@ for (i in 1:npos) {
           
           #flag possible contamination
           wh.germ = grep("GERMLINE",somatic_status)
-          if( length(wh.germ)>0 ) somatic_status[Tindex][somatic_status[Tindex] == "SOMATIC"] = "POSSIBLE_CONTAMINATION"
+          if( length(wh.germ)>0 ) somatic_status[Tindex][somatic_status[Tindex] == "SOMATIC"] = paste("POSSIBLE_CONTAMINATION_FROM", indiv_run[wh.germ,2],sep="_",collapse=T)
       }else{# no pairs file supplied
           if(afmin_power==-1 ){#no minimum frequency supplied -> use a negative binomial distribution to check the power
               qval_minAF = sapply(1:nindiv,function(ii) toQvalueN(DP[ii],reg_res,sigma) )
@@ -381,24 +381,36 @@ for (i in 1:npos) {
         qval_minAF = rep(0,nindiv)
         somatic_status = rep(".",nindiv)
         if(isTNpairs){
-            qval_minAF[Nindex] = sapply(1:length(Nindex),function(ii) toQvalueN(DP[Nindex][ii],reg_res,sigma) )
-            qval_minAF[Tindex] = sapply(1:length(Tindex),function(ii) toQvalueT(DP[Tindex][ii],reg_res,afmin_power) )
-            if( length(onlyNindex)>0 ) qval_minAF[onlyNindex] = sapply(1:length(onlyNindex),function(ii) toQvalueN(DP[onlyNindex][ii],reg_res,sigma) )
-            if( length(onlyTindex)>0 ) qval_minAF[onlyTindex] = sapply(1:length(onlyTindex),function(ii) toQvalueT(DP[onlyTindex][ii],reg_res,afmin_power) )
+          qval_minAF[Nindex] = sapply(1:length(Nindex),function(ii) toQvalueN(DP[Nindex][ii],reg_res,sigma) )
+          qval_minAF[Tindex] = sapply(1:length(Tindex),function(ii) toQvalueT(DP[Tindex][ii],reg_res,afmin_power) )
+          if( length(onlyNindex)>0 ) qval_minAF[onlyNindex] = sapply(1:length(onlyNindex),function(ii) toQvalueN(DP[onlyNindex][ii],reg_res,sigma) )
+          if( length(onlyTindex)>0 ) qval_minAF[onlyTindex] = sapply(1:length(onlyTindex),function(ii) toQvalueT(DP[onlyTindex][ii],reg_res,afmin_power) )
           #no matching normal -> UNKNOWN (impossible to call somatic status)
-            somatic_status[onlyTindex][(reg_res$GQ[onlyTindex] > GQ_threshold) ] = "UNKNOWN"
-          #no tumor variant -> "."; already set by default
-          #tumor variant, no normal variant but without enough power -> UNKNOWN
-            somatic_status[Tindex][(reg_res$GQ[Tindex] > GQ_threshold)&(qval_minAF[Nindex]<GQ_threshold)&(reg_res$GQ[Nindex]<GQ_threshold) ] = "UNKNOWN"
-          #tumor variant, normal variant despite low power -> GERMLINE
-            somatic_status[Tindex][ (reg_res$GQ[Tindex] > GQ_threshold)&(qval_minAF[Nindex]<GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE"
-          #tumor variant, no normal variant despite good power -> SOMATIC
-            somatic_status[Tindex][(reg_res$GQ[Tindex] > GQ_threshold)&(qval_minAF[Nindex]>GQ_threshold)&(reg_res$GQ[Nindex]<GQ_threshold) ] = "SOMATIC"
-          #tumor variant, normal variant -> GERMLINE
-            somatic_status[Tindex][ (reg_res$GQ[Tindex] > GQ_threshold)&(qval_minAF[Nindex]>GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE"
+          somatic_status[onlyTindex][(reg_res$GQ[onlyTindex] > GQ_threshold) ] = "UNKNOWN"
+          #no matching tumor -> GERMLINE_UNCONFIRMABLE (impossible to call somatic status)
+          somatic_status[onlyNindex][(reg_res$GQ[onlyNindex] > GQ_threshold) ] = "GERMLINE_UNCONFIRMABLE"
+          #no tumor variant, no normal variant despite good power in both -> ".", confirmed; already set by default 
+          #no tumor variant, no normal variant but low power in N and T-> ".", unknown; already set by default
+          #no tumor variant, no normal variant but low power in N or T-> ".", unconfirmed ; already set by default
+          #no tumor variant, normal variant with good power in T (with or without good power in N)-> "GERMLINE_UNCONFIRMED"
+          somatic_status[Tindex][(reg_res$GQ[Tindex] < GQ_threshold)&(qval_minAF[Tindex]>GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE_UNCONFIRMED"
+          somatic_status[Nindex][(reg_res$GQ[Tindex] < GQ_threshold)&(qval_minAF[Tindex]>GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE_UNCONFIRMED"
+          #no tumor variant, normal variant with low power in T (with or without good power in N)-> "GERMLINE_UNCONFIRMABLE"
+          somatic_status[Tindex][(reg_res$GQ[Tindex] < GQ_threshold)&(qval_minAF[Tindex]<GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE_UNCONFIRMABLE"
+          somatic_status[Nindex][(reg_res$GQ[Tindex] < GQ_threshold)&(qval_minAF[Tindex]<GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE_UNCONFIRMABLE"
 
+          #tumor variant, no normal variant but without enough power -> UNKNOWN for both Tumor and Normal
+          somatic_status[Tindex][(reg_res$GQ[Tindex] > GQ_threshold)&(qval_minAF[Nindex]<GQ_threshold)&(reg_res$GQ[Nindex]<GQ_threshold) ] = "UNKNOWN"
+          somatic_status[Nindex][(reg_res$GQ[Tindex] > GQ_threshold)&(qval_minAF[Nindex]<GQ_threshold)&(reg_res$GQ[Nindex]<GQ_threshold) ] = "UNKNOWN"
+          #tumor variant, normal variant (with or without good power in T and N) -> GERMLINE_CONFIRMED
+          somatic_status[Tindex][ (reg_res$GQ[Tindex] > GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE_CONFIRMED"
+          somatic_status[Nindex][ (reg_res$GQ[Tindex] > GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE_CONFIRMED"
+          #tumor variant, no normal variant despite good power -> SOMATIC
+          somatic_status[Tindex][(reg_res$GQ[Tindex] > GQ_threshold)&(qval_minAF[Nindex]>GQ_threshold)&(reg_res$GQ[Nindex]<GQ_threshold) ] = "SOMATIC"
+          
           #flag possible contamination
-            if( sum(somatic_status[Tindex]=="GERMLINE")>0 ) somatic_status[Tindex][somatic_status[Tindex] == "SOMATIC"] = "POSSIBLE_CONTAMINATION"
+          wh.germ = grep("GERMLINE",somatic_status)
+          if( length(wh.germ)>0 ) somatic_status[Tindex][somatic_status[Tindex] == "SOMATIC"] = paste("POSSIBLE_CONTAMINATION_FROM", indiv_run[wh.germ,2],sep="_",collapse=T)
         }else{# no pairs file supplied
             if(afmin_power==-1 ){#no minimum frequency supplied -> use a negative binomial distribution to check the power
                 qval_minAF = sapply(1:nindiv,function(ii) toQvalueN(DP[ii],reg_res,sigma) )
@@ -491,20 +503,32 @@ for (i in 1:npos) {
             qval_minAF[Tindex] = sapply(1:length(Tindex),function(ii) toQvalueT(DP[Tindex][ii],reg_res,afmin_power) )
             if( length(onlyNindex)>0 ) qval_minAF[onlyNindex] = sapply(1:length(onlyNindex),function(ii) toQvalueN(DP[onlyNindex][ii],reg_res,sigma) )
             if( length(onlyTindex)>0 ) qval_minAF[onlyTindex] = sapply(1:length(onlyTindex),function(ii) toQvalueT(DP[onlyTindex][ii],reg_res,afmin_power) )
-            #no matching normal -> UNKNOWN (impossible to call somatic status)
+          #no matching normal -> UNKNOWN (impossible to call somatic status)
             somatic_status[onlyTindex][(reg_res$GQ[onlyTindex] > GQ_threshold) ] = "UNKNOWN"
-            #no tumor variant -> "."; already set by default
-            #tumor variant, no normal variant but without enough power -> UNKNOWN
-            somatic_status[Tindex][(reg_res$GQ[Tindex] > GQ_threshold)&(qval_minAF[Nindex]<GQ_threshold)&(reg_res$GQ[Nindex]<GQ_threshold) ] = "UNKNOWN"
-            #tumor variant, normal variant despite low power -> GERMLINE
-            somatic_status[Tindex][ (reg_res$GQ[Tindex] > GQ_threshold)&(qval_minAF[Nindex]<GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE"
-            #tumor variant, no normal variant despite good power -> SOMATIC
-            somatic_status[Tindex][(reg_res$GQ[Tindex] > GQ_threshold)&(qval_minAF[Nindex]>GQ_threshold)&(reg_res$GQ[Nindex]<GQ_threshold) ] = "SOMATIC"
-            #tumor variant, normal variant -> GERMLINE
-            somatic_status[Tindex][ (reg_res$GQ[Tindex] > GQ_threshold)&(qval_minAF[Nindex]>GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE"
+          #no matching tumor -> GERMLINE_UNCONFIRMABLE (impossible to call somatic status)
+            somatic_status[onlyNindex][(reg_res$GQ[onlyNindex] > GQ_threshold) ] = "GERMLINE_UNCONFIRMABLE"
+          #no tumor variant, no normal variant despite good power in both -> ".", confirmed; already set by default 
+          #no tumor variant, no normal variant but low power in N and T-> ".", unknown; already set by default
+          #no tumor variant, no normal variant but low power in N or T-> ".", unconfirmed ; already set by default
+          #no tumor variant, normal variant with good power in T (with or without good power in N)-> "GERMLINE_UNCONFIRMED"
+            somatic_status[Tindex][(reg_res$GQ[Tindex] < GQ_threshold)&(qval_minAF[Tindex]>GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE_UNCONFIRMED"
+            somatic_status[Nindex][(reg_res$GQ[Tindex] < GQ_threshold)&(qval_minAF[Tindex]>GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE_UNCONFIRMED"
+          #no tumor variant, normal variant with low power in T (with or without good power in N)-> "GERMLINE_UNCONFIRMABLE"
+            somatic_status[Tindex][(reg_res$GQ[Tindex] < GQ_threshold)&(qval_minAF[Tindex]<GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE_UNCONFIRMABLE"
+            somatic_status[Nindex][(reg_res$GQ[Tindex] < GQ_threshold)&(qval_minAF[Tindex]<GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE_UNCONFIRMABLE"
 
-            #flag possible contamination
-            if( sum(somatic_status[Tindex]=="GERMLINE")>0 ) somatic_status[Tindex][somatic_status[Tindex] == "SOMATIC"] = "POSSIBLE_CONTAMINATION"
+          #tumor variant, no normal variant but without enough power -> UNKNOWN for both Tumor and Normal
+            somatic_status[Tindex][(reg_res$GQ[Tindex] > GQ_threshold)&(qval_minAF[Nindex]<GQ_threshold)&(reg_res$GQ[Nindex]<GQ_threshold) ] = "UNKNOWN"
+            somatic_status[Nindex][(reg_res$GQ[Tindex] > GQ_threshold)&(qval_minAF[Nindex]<GQ_threshold)&(reg_res$GQ[Nindex]<GQ_threshold) ] = "UNKNOWN"
+          #tumor variant, normal variant (with or without good power in T and N) -> GERMLINE_CONFIRMED
+            somatic_status[Tindex][ (reg_res$GQ[Tindex] > GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE_CONFIRMED"
+            somatic_status[Nindex][ (reg_res$GQ[Tindex] > GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE_CONFIRMED"
+          #tumor variant, no normal variant despite good power -> SOMATIC
+            somatic_status[Tindex][(reg_res$GQ[Tindex] > GQ_threshold)&(qval_minAF[Nindex]>GQ_threshold)&(reg_res$GQ[Nindex]<GQ_threshold) ] = "SOMATIC"
+          
+          #flag possible contamination
+            wh.germ = grep("GERMLINE",somatic_status)
+            if( length(wh.germ)>0 ) somatic_status[Tindex][somatic_status[Tindex] == "SOMATIC"] = paste("POSSIBLE_CONTAMINATION_FROM", indiv_run[wh.germ,2],sep="_",collapse=T)
         }else{# no pairs file supplied
             if(afmin_power==-1 ){#no minimum frequency supplied -> use a negative binomial distribution to check the power
                 qval_minAF = sapply(1:nindiv,function(ii) toQvalueN(DP[ii],reg_res,sigma) )
