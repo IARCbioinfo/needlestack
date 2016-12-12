@@ -1,0 +1,130 @@
+%& -shell-escape
+\documentclass[11pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+
+%\usepackage[latin1]{inputenc}
+\usepackage[english]{babel}
+\usepackage[paperwidth=18cm, paperheight=10cm,margin=0.5cm]{geometry}
+\usepackage{helvet}
+\usepackage{times}
+%\usepackage{subfigure}
+\usepackage{enumitem}
+
+%\usepackage{unnumberedcaption}
+\usepackage{multirow}
+\usepackage{graphics,graphicx,epsfig,rotating}
+\usepackage{amsfonts,amsmath,supertabular,tabularx,amstext}
+\usepackage[table]{xcolor}
+\usepackage{color}
+\usepackage{verbatim}
+\usepackage{stmaryrd} 
+\usepackage{array}
+\usepackage{subfig}
+%\usepackage[noae]{Sweave}
+
+\usepackage{longtable}
+\usepackage{threeparttable}
+
+\usepackage[]{natbib}
+\bibpunct{(}{)}{;}{author-year}{}{,} 
+
+\RequirePackage{fancyvrb}
+\RequirePackage{listings}
+
+\usepackage{hyperref}
+\usepackage[right]{lineno}
+
+\rmfamily
+
+\definecolor{lightgray}{rgb}{0.75,0.75,0.75}
+
+%\oddsidemargin 0cm
+%\evensidemargin 0cm
+%%\textwidth 17.2cm
+%\topmargin 0cm
+%\textheight 10.2cm
+%\textwidth 18cm
+%\marginparsep 0pt
+\renewcommand{\baselinestretch}{1} 
+%color
+
+\usepackage{titlesec}
+\titleformat{\section}{\Large\bfseries}{}{0pt}{}
+\titleformat{\subsection}{\Large\itshape}{}{0pt}{}
+
+
+
+
+\begin{document}
+\definecolor{red2}{rgb}{1,0.5,0.5}
+\definecolor{lightred}{rgb}{1,0.8,0.8}
+
+\definecolor{lightblue}{rgb}{0,0.60,0.86}
+
+\definecolor{redblue}{rgb}{0.3,0.7,0.43}
+
+\definecolor{darkgreen}{rgb}{0.1,0.6,0.1}
+\definecolor{Lightgray}{rgb}{0.95,0.95,0.95}
+\definecolor{lightgray}{rgb}{0.75,0.75,0.75}
+\definecolor{darkgray}{rgb}{0.35,0.35,0.35}
+\definecolor{darkgray2}{rgb}{0.90,0.90,0.90}
+\definecolor{darkred}{rgb}{0.6,0.1,0.1}
+
+%\begin{titlepage}
+
+
+
+
+\setcounter{page}{1}
+
+%\tableofcontents
+%\newpage
+
+
+%\newpage
+%%%%%%%%%%%%%%%%%  citations %%%%%%%%%%%%%%%%%%%
+\setcounter{equation}{0}
+\setcounter{figure}{0}
+\setcounter{section}{0}
+\renewcommand{\thefigure}{S\arabic{figure}}
+\renewcommand{\thetable}{S\arabic{table}}
+\renewcommand{\theequation}{S\arabic{equation}}
+
+%\newpage
+
+
+\begin{footnotesize}
+\begin{threeparttable}
+\begin{tabular}[htp!]{m{1.4cm} m{1.7cm} m{1.4cm} m{1.7cm} m{4.5cm} m{1.4cm} m{1.4cm}}
+\caption{\textbf{Table of variant STATUS and GT (genotype), as a function of variant detection and the power to detect variants in matched normal and tumor samples.}}\\
+\hline
+\textbf{Variant in Normal} & \textbf{Power to detect variant in Normal} & \textbf{Variant in Tumor} & \textbf{Power to detect variant in Tumor} & \textbf{STATUS} & \textbf{Normal GT} & \textbf{Tumor GT}\\
+\hline
+\rowcolor{lightgray}no & no & no& no& . & ./. & ./. \\
+no & no & no& \textbf{YES}& . & ./. & 0/0 \\
+\rowcolor{lightgray}no & no & \textbf{YES}& \textbf{YES} or no  & UNKNOWN & ./. & 0/1 or 1/1 \\
+no & \textbf{YES} & no& no& . & 0/0 & ./. \tnote{*}\\
+\rowcolor{lightgray}no & \textbf{YES} & no& \textbf{YES}& . & 0/0 & 0/0 \\
+no & \textbf{YES} & \textbf{YES}& \textbf{YES} or no & SOMATIC \tnote{\textdagger} & 0/0 & 0/1 or 1/1\tnote{*} \\
+\rowcolor{lightgray}\textbf{YES} & \textbf{YES} or no & no& no& GERMLINE\_UNCONFIRMABLE & 0/1 or 1/1 & ./. \\
+\textbf{YES} & \textbf{YES} or no & no& \textbf{YES}& GERMLINE\_UNCONFIRMED & 0/1 or 1/1 & 0/0 \\
+\rowcolor{lightgray}\textbf{YES} & \textbf{YES} or no & \textbf{YES}& \textbf{YES} or no & GERMLINE\_CONFIRMED & 0/1 or 1/1 & 0/1 or 1/1\\
+\hline
+\label{tab:sumstats}
+\end{tabular}
+\begin{tablenotes}
+\item[*] power is computed using a binomial distribution with mean $power\_min\_af$ (default value is 0.01)
+\item[\textdagger] only in Tumor; Normal STATUS is ``."
+\end{tablenotes}
+
+\end{threeparttable}
+
+\end{footnotesize}
+
+
+
+\end{document}
+
