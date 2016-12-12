@@ -103,12 +103,12 @@
 \hline
 \textbf{Variant in Normal} & \textbf{Power to detect variant in Normal} & \textbf{Variant in Tumor} & \textbf{Power to detect variant in Tumor} & \textbf{STATUS} & \textbf{Normal GT} & \textbf{Tumor GT}\\
 \hline
-\rowcolor{lightgray}no & no & no& no& . & ./. & ./. \\
-no & no & no& \textbf{YES}& . & ./. & 0/0 \\
+\rowcolor{lightgray}no & no & no& no& . & ./. & ./. \tnote{*}\\
+no & no & no& \textbf{YES}& . & ./. & 0/0 \tnote{*}\\
 \rowcolor{lightgray}no & no & \textbf{YES}& \textbf{YES} or no  & UNKNOWN & ./. & 0/1 or 1/1 \\
 no & \textbf{YES} & no& no& . & 0/0 & ./. \tnote{*}\\
-\rowcolor{lightgray}no & \textbf{YES} & no& \textbf{YES}& . & 0/0 & 0/0 \\
-no & \textbf{YES} & \textbf{YES}& \textbf{YES} or no & SOMATIC \tnote{\textdagger} & 0/0 & 0/1 or 1/1\tnote{*} \\
+\rowcolor{lightgray}no & \textbf{YES} & no& \textbf{YES}& . & 0/0 & 0/0 \tnote{*}\\
+no & \textbf{YES} & \textbf{YES}& \textbf{YES} or no & SOMATIC \tnote{\textdagger} & 0/0 & 0/1 or 1/1 \\
 \rowcolor{lightgray}\textbf{YES} & \textbf{YES} or no & no& no& GERMLINE\_UNCONFIRMABLE & 0/1 or 1/1 & ./. \\
 \textbf{YES} & \textbf{YES} or no & no& \textbf{YES}& GERMLINE\_UNCONFIRMED & 0/1 or 1/1 & 0/0 \\
 \rowcolor{lightgray}\textbf{YES} & \textbf{YES} or no & \textbf{YES}& \textbf{YES} or no & GERMLINE\_CONFIRMED & 0/1 or 1/1 & 0/1 or 1/1\\
