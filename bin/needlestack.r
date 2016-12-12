@@ -274,6 +274,9 @@ for (i in 1:npos) {
           qval_minAF[Tindex] = sapply(1:length(Tindex),function(ii) toQvalueT(DP[Tindex][ii],reg_res,afmin_power) )
           if( length(onlyNindex)>0 ) qval_minAF[onlyNindex] = sapply(1:length(onlyNindex),function(ii) toQvalueN(DP[onlyNindex][ii],reg_res,sigma) )
           if( length(onlyTindex)>0 ) qval_minAF[onlyTindex] = sapply(1:length(onlyTindex),function(ii) toQvalueT(DP[onlyTindex][ii],reg_res,afmin_power) )
+          #for germline confirmation: compute QVAL min AF of Tumors as if they were normal
+          qval_minAF_conf = sapply(1:length(Tindex),function(ii) toQvalueN(DP[Tindex][ii],reg_res,sigma) )
+          
           #no matching normal -> UNKNOWN (impossible to call somatic status)
           somatic_status[onlyTindex][(reg_res$GQ[onlyTindex] > GQ_threshold) ] = "UNKNOWN"
           #no matching tumor -> GERMLINE_UNCONFIRMABLE (impossible to call somatic status)
@@ -282,11 +285,11 @@ for (i in 1:npos) {
           #no tumor variant, no normal variant but low power in N and T-> ".", unknown; already set by default
           #no tumor variant, no normal variant but low power in N or T-> ".", unconfirmed ; already set by default
           #no tumor variant, normal variant with good power in T (with or without good power in N)-> "GERMLINE_UNCONFIRMED"
-          somatic_status[Tindex][(reg_res$GQ[Tindex] < GQ_threshold)&(qval_minAF[Tindex]>GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE_UNCONFIRMED"
-          somatic_status[Nindex][(reg_res$GQ[Tindex] < GQ_threshold)&(qval_minAF[Tindex]>GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE_UNCONFIRMED"
+          somatic_status[Tindex][(reg_res$GQ[Tindex] < GQ_threshold)&(qval_minAF_conf>GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE_UNCONFIRMED"
+          somatic_status[Nindex][(reg_res$GQ[Tindex] < GQ_threshold)&(qval_minAF_conf>GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE_UNCONFIRMED"
           #no tumor variant, normal variant with low power in T (with or without good power in N)-> "GERMLINE_UNCONFIRMABLE"
-          somatic_status[Tindex][(reg_res$GQ[Tindex] < GQ_threshold)&(qval_minAF[Tindex]<GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE_UNCONFIRMABLE"
-          somatic_status[Nindex][(reg_res$GQ[Tindex] < GQ_threshold)&(qval_minAF[Tindex]<GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE_UNCONFIRMABLE"
+          somatic_status[Tindex][(reg_res$GQ[Tindex] < GQ_threshold)&(qval_minAF_conf<GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE_UNCONFIRMABLE"
+          somatic_status[Nindex][(reg_res$GQ[Tindex] < GQ_threshold)&(qval_minAF_conf<GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE_UNCONFIRMABLE"
 
           #tumor variant, no normal variant but without enough power -> UNKNOWN for both Tumor and Normal
           somatic_status[Tindex][(reg_res$GQ[Tindex] > GQ_threshold)&(qval_minAF[Nindex]<GQ_threshold)&(reg_res$GQ[Nindex]<GQ_threshold) ] = "UNKNOWN"
@@ -385,6 +388,8 @@ for (i in 1:npos) {
           qval_minAF[Tindex] = sapply(1:length(Tindex),function(ii) toQvalueT(DP[Tindex][ii],reg_res,afmin_power) )
           if( length(onlyNindex)>0 ) qval_minAF[onlyNindex] = sapply(1:length(onlyNindex),function(ii) toQvalueN(DP[onlyNindex][ii],reg_res,sigma) )
           if( length(onlyTindex)>0 ) qval_minAF[onlyTindex] = sapply(1:length(onlyTindex),function(ii) toQvalueT(DP[onlyTindex][ii],reg_res,afmin_power) )
+          qval_minAF_conf = sapply(1:length(Tindex),function(ii) toQvalueN(DP[Tindex][ii],reg_res,sigma) )
+          
           #no matching normal -> UNKNOWN (impossible to call somatic status)
           somatic_status[onlyTindex][(reg_res$GQ[onlyTindex] > GQ_threshold) ] = "UNKNOWN"
           #no matching tumor -> GERMLINE_UNCONFIRMABLE (impossible to call somatic status)
@@ -393,11 +398,11 @@ for (i in 1:npos) {
           #no tumor variant, no normal variant but low power in N and T-> ".", unknown; already set by default
           #no tumor variant, no normal variant but low power in N or T-> ".", unconfirmed ; already set by default
           #no tumor variant, normal variant with good power in T (with or without good power in N)-> "GERMLINE_UNCONFIRMED"
-          somatic_status[Tindex][(reg_res$GQ[Tindex] < GQ_threshold)&(qval_minAF[Tindex]>GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE_UNCONFIRMED"
-          somatic_status[Nindex][(reg_res$GQ[Tindex] < GQ_threshold)&(qval_minAF[Tindex]>GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE_UNCONFIRMED"
+          somatic_status[Tindex][(reg_res$GQ[Tindex] < GQ_threshold)&(qval_minAF_conf>GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE_UNCONFIRMED"
+          somatic_status[Nindex][(reg_res$GQ[Tindex] < GQ_threshold)&(qval_minAF_conf>GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE_UNCONFIRMED"
           #no tumor variant, normal variant with low power in T (with or without good power in N)-> "GERMLINE_UNCONFIRMABLE"
-          somatic_status[Tindex][(reg_res$GQ[Tindex] < GQ_threshold)&(qval_minAF[Tindex]<GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE_UNCONFIRMABLE"
-          somatic_status[Nindex][(reg_res$GQ[Tindex] < GQ_threshold)&(qval_minAF[Tindex]<GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE_UNCONFIRMABLE"
+          somatic_status[Tindex][(reg_res$GQ[Tindex] < GQ_threshold)&(qval_minAF_conf<GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE_UNCONFIRMABLE"
+          somatic_status[Nindex][(reg_res$GQ[Tindex] < GQ_threshold)&(qval_minAF_conf<GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE_UNCONFIRMABLE"
 
           #tumor variant, no normal variant but without enough power -> UNKNOWN for both Tumor and Normal
           somatic_status[Tindex][(reg_res$GQ[Tindex] > GQ_threshold)&(qval_minAF[Nindex]<GQ_threshold)&(reg_res$GQ[Nindex]<GQ_threshold) ] = "UNKNOWN"
@@ -503,6 +508,8 @@ for (i in 1:npos) {
             qval_minAF[Tindex] = sapply(1:length(Tindex),function(ii) toQvalueT(DP[Tindex][ii],reg_res,afmin_power) )
             if( length(onlyNindex)>0 ) qval_minAF[onlyNindex] = sapply(1:length(onlyNindex),function(ii) toQvalueN(DP[onlyNindex][ii],reg_res,sigma) )
             if( length(onlyTindex)>0 ) qval_minAF[onlyTindex] = sapply(1:length(onlyTindex),function(ii) toQvalueT(DP[onlyTindex][ii],reg_res,afmin_power) )
+            qval_minAF_conf = sapply(1:length(Tindex),function(ii) toQvalueN(DP[Tindex][ii],reg_res,sigma) )
+            
           #no matching normal -> UNKNOWN (impossible to call somatic status)
             somatic_status[onlyTindex][(reg_res$GQ[onlyTindex] > GQ_threshold) ] = "UNKNOWN"
           #no matching tumor -> GERMLINE_UNCONFIRMABLE (impossible to call somatic status)
@@ -511,11 +518,11 @@ for (i in 1:npos) {
           #no tumor variant, no normal variant but low power in N and T-> ".", unknown; already set by default
           #no tumor variant, no normal variant but low power in N or T-> ".", unconfirmed ; already set by default
           #no tumor variant, normal variant with good power in T (with or without good power in N)-> "GERMLINE_UNCONFIRMED"
-            somatic_status[Tindex][(reg_res$GQ[Tindex] < GQ_threshold)&(qval_minAF[Tindex]>GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE_UNCONFIRMED"
-            somatic_status[Nindex][(reg_res$GQ[Tindex] < GQ_threshold)&(qval_minAF[Tindex]>GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE_UNCONFIRMED"
+            somatic_status[Tindex][(reg_res$GQ[Tindex] < GQ_threshold)&(qval_minAF_conf>GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE_UNCONFIRMED"
+            somatic_status[Nindex][(reg_res$GQ[Tindex] < GQ_threshold)&(qval_minAF_conf>GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE_UNCONFIRMED"
           #no tumor variant, normal variant with low power in T (with or without good power in N)-> "GERMLINE_UNCONFIRMABLE"
-            somatic_status[Tindex][(reg_res$GQ[Tindex] < GQ_threshold)&(qval_minAF[Tindex]<GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE_UNCONFIRMABLE"
-            somatic_status[Nindex][(reg_res$GQ[Tindex] < GQ_threshold)&(qval_minAF[Tindex]<GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE_UNCONFIRMABLE"
+            somatic_status[Tindex][(reg_res$GQ[Tindex] < GQ_threshold)&(qval_minAF_conf<GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE_UNCONFIRMABLE"
+            somatic_status[Nindex][(reg_res$GQ[Tindex] < GQ_threshold)&(qval_minAF_conf<GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE_UNCONFIRMABLE"
 
           #tumor variant, no normal variant but without enough power -> UNKNOWN for both Tumor and Normal
             somatic_status[Tindex][(reg_res$GQ[Tindex] > GQ_threshold)&(qval_minAF[Nindex]<GQ_threshold)&(reg_res$GQ[Nindex]<GQ_threshold) ] = "UNKNOWN"
