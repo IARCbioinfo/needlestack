@@ -133,6 +133,7 @@ if(params.input_vcf) {
   params.out_folder = "annotated_vcf"
   params.chunk_size = 10000
   input_vcf = file(params.input_vcf)
+  params.out_annotated_vcf = null
   out_annotated_vcf = params.out_annotated_vcf ? params.out_annotated_vcf : "annotated.vcf"
   assert params.extra_robust_gl in [true,false] : "do not assign a value to --extra_robust_gl"
 
