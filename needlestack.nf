@@ -262,7 +262,7 @@ if(params.input_vcf) {
       baiID = file(params.bam_folder).listFiles().findAll { it.name ==~ /.*bam.bai/ }.collect { it.getName() }.collect { it.replace('.bam.bai','') }
       assert baiID.containsAll(bamID) : "check that every bam file has an index (.bam.bai)"
   }
-  assert (params.min_dp > 0) : "minimum coverage must be higher than 0 (--min_dp)"
+  assert (params.min_dp >= 0) : "minimum coverage must be higher than or equal to 0 (--min_dp)"
   assert (params.max_DP > 1) : "maximum coverage before downsampling must be higher than 1 (--max_DP)"
   assert (params.min_ao >= 0) : "minimum alternative reads must be higher than or equal to 0 (--min_ao)"
   assert (params.nsplit > 0) : "number of regions to split must be higher than 0 (--nsplit)"
@@ -415,7 +415,7 @@ if(params.input_vcf) {
                   SM="$(echo -e "${bam_file_name}" | tr -d '[[:space:]]')"
               else
                   # extract sample name from bam file read group info field
-                  SM=$(samtools view -H $cur_bam | grep @RG | head -1 | sed "s/.*SM:\\([^	]*\\).*/\\1/" | tr -d '[:space:]')
+                  SM=$(samtools view -H $cur_bam | grep "^@RG" | tail -n1 | sed "s/.*SM:\\([^	]*\\).*/\\1/" | tr -d '[:space:]')
               fi
               printf "sample$i	$SM\\n" >> names.txt
               i=$((i+1))
