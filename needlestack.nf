@@ -64,7 +64,7 @@ pairs_file = file(params.pairs_file)
 if (params.help) {
     log.info ''
     log.info '--------------------------------------------------------'
-    log.info 'NEEDLESTACK v1.0: A MULTI-SAMPLE SOMATIC VARIANT CALLER'
+    log.info 'NEEDLESTACK v1.1b: A MULTI-SAMPLE SOMATIC VARIANT CALLER'
     log.info '--------------------------------------------------------'
     log.info 'Copyright (C) 2017 Matthieu Foll, Tiffany Delhomme and Nicolas Alcala'
     log.info 'This program comes with ABSOLUTELY NO WARRANTY; for details see LICENSE.txt'
@@ -113,7 +113,7 @@ if (params.help) {
 /* Software information */
 log.info ''
 log.info '--------------------------------------------------------'
-log.info 'NEEDLESTACK v1.0: A MULTI-SAMPLE SOMATIC VARIANT CALLER'
+log.info 'NEEDLESTACK v1.1b: A MULTI-SAMPLE SOMATIC VARIANT CALLER'
 log.info '--------------------------------------------------------'
 log.info 'Copyright (C) 2017 Matthieu Foll, Tiffany Delhomme and Nicolas Alcala'
 log.info 'This program comes with ABSOLUTELY NO WARRANTY; for details see LICENSE.txt'
