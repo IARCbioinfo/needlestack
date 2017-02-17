@@ -1,4 +1,4 @@
-This code is copyright (C) 2015 Matthieu Foll and Tiffany Delhomme, with the following exceptions:
+This code is copyright (C) 2017 Matthieu Foll, Tiffany Delhomme and Nicolas Alcala, with the following exceptions:
 
 The perl script bin/pileup2baseindel.pl has been originally written by Jiang Li (original code here: https://github.com/riverlee/pileup2base).
 
