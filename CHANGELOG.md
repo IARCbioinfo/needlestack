@@ -1,21 +1,42 @@
 # Change Log
 
+## [v1.0](https://github.com/IARCbioinfo/needlestack/tree/v1.0) (2016-08-03)
+[Full Changelog](https://github.com/IARCbioinfo/needlestack/compare/v0.3...v1.0)
+
+**Implemented enhancements:**
+
+- Manage the three possible genotypes in vcf [\#130](https://github.com/IARCbioinfo/needlestack/issues/130)
+- The graph showing AF vs log10\(qval\) should show phred-scaled qvalues [\#121](https://github.com/IARCbioinfo/needlestack/issues/121)
+
+**Fixed bugs:**
+
+- Contours seem to be incorrect [\#128](https://github.com/IARCbioinfo/needlestack/issues/128)
+- correct file name extraction for sample name [\#126](https://github.com/IARCbioinfo/needlestack/issues/126)
+- Let min\_qval be equal to 0 [\#119](https://github.com/IARCbioinfo/needlestack/issues/119)
+- plot improved error rate confidence interval  [\#117](https://github.com/IARCbioinfo/needlestack/issues/117)
+
+**Closed issues:**
+
+- QUAL should not be reported as Inf in VCF when q-value=0 [\#125](https://github.com/IARCbioinfo/needlestack/issues/125)
+- Add pipeline execution DAG in README [\#123](https://github.com/IARCbioinfo/needlestack/issues/123)
+
 ## [v0.3](https://github.com/IARCbioinfo/needlestack/tree/v0.3) (2016-05-03)
 [Full Changelog](https://github.com/IARCbioinfo/needlestack/compare/v0.2...v0.3)
 
 **Implemented enhancements:**
 
+- color points by qvalues in regression plot [\#85](https://github.com/IARCbioinfo/needlestack/issues/85)
+- Add an option to directly input a region for calling in the command line [\#71](https://github.com/IARCbioinfo/needlestack/issues/71)
+- Improve the bed split method [\#47](https://github.com/IARCbioinfo/needlestack/issues/47)
 - Change the number of entry in the INFO and FORMAT VCF fields [\#108](https://github.com/IARCbioinfo/needlestack/issues/108)
 - Add contour lines for a set of qvalues in the plot [\#100](https://github.com/IARCbioinfo/needlestack/issues/100)
-- color points by qvalues in regression plot [\#85](https://github.com/IARCbioinfo/needlestack/issues/85)
 - Add an option to choose output VCF file name \(--out\_vcf?\) [\#81](https://github.com/IARCbioinfo/needlestack/issues/81)
-- Add an option to directly input a region for calling in the command line [\#71](https://github.com/IARCbioinfo/needlestack/issues/71)
 - Change the way we publish new version [\#69](https://github.com/IARCbioinfo/needlestack/issues/69)
 - Make the stable docker file more stable [\#68](https://github.com/IARCbioinfo/needlestack/issues/68)
 - Add more tests in CircleCI [\#55](https://github.com/IARCbioinfo/needlestack/issues/55)
 - Remove unnecessary intermediate outputs [\#51](https://github.com/IARCbioinfo/needlestack/issues/51)
-- Improve the bed split method [\#47](https://github.com/IARCbioinfo/needlestack/issues/47)
 - In the absence of a bed file the pipeline should run on the full reference genome [\#39](https://github.com/IARCbioinfo/needlestack/issues/39)
+- Improve R script command line parsing [\#38](https://github.com/IARCbioinfo/needlestack/issues/38)
 - Add version numbers in VCF output [\#20](https://github.com/IARCbioinfo/needlestack/issues/20)
 
 **Fixed bugs:**
@@ -34,7 +55,6 @@
 **Implemented enhancements:**
 
 - Add logo image [\#62](https://github.com/IARCbioinfo/needlestack/issues/62)
-- Improve R script command line parsing [\#38](https://github.com/IARCbioinfo/needlestack/issues/38)
 - add --no\_indel option [\#56](https://github.com/IARCbioinfo/needlestack/issues/56)
 - Correct english typos in readme, help and log [\#53](https://github.com/IARCbioinfo/needlestack/issues/53)
 - The pipeline randomly crashes with java.nio.file.NoSuchFileException: XXX\_empty.pdf [\#49](https://github.com/IARCbioinfo/needlestack/issues/49)
