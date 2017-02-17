@@ -1,7 +1,7 @@
 #! /usr/bin/env nextflow
 
 // needlestack: a multi-sample somatic variant caller
-// Copyright (C) 2015 Matthieu Foll and Tiffany Delhomme
+// Copyright (C) 2017 Matthieu Foll, Tiffany Delhomme and Nicolas Alcala
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -64,9 +64,9 @@ pairs_file = file(params.pairs_file)
 if (params.help) {
     log.info ''
     log.info '--------------------------------------------------------'
-    log.info 'NEEDLESTACK v1.0b: A MULTI-SAMPLE SOMATIC VARIANT CALLER'
+    log.info 'NEEDLESTACK v1.0: A MULTI-SAMPLE SOMATIC VARIANT CALLER'
     log.info '--------------------------------------------------------'
-    log.info 'Copyright (C) 2015 Matthieu Foll and Tiffany Delhomme'
+    log.info 'Copyright (C) 2017 Matthieu Foll, Tiffany Delhomme and Nicolas Alcala'
     log.info 'This program comes with ABSOLUTELY NO WARRANTY; for details see LICENSE.txt'
     log.info 'This is free software, and you are welcome to redistribute it'
     log.info 'under certain conditions; see LICENSE.txt for details.'
@@ -89,7 +89,7 @@ if (params.help) {
     log.info '    --sb_snv         VALUE                    Strand bias threshold for SNVs.'
     log.info '    --sb_indel       VALUE                    Strand bias threshold for indels.'
     log.info '    --power_min_af   VALUE                    Minimum allelic fraction for power computations.'
-    log.info '    --sigma_normal   VALUE                    Sigma parameter for negative binomial modeling germline mutations.'
+    log.info '    --sigma_normal   VALUE                    Sigma parameter for negative binomial modeling of expected germline allelic fraction.'
     log.info '    --map_qual       VALUE                    Samtools minimum mapping quality.'
     log.info '    --base_qual      VALUE                    Samtools minimum base quality.'
     log.info '    --max_DP         INTEGER                  Samtools maximum coverage before downsampling.'
@@ -101,6 +101,7 @@ if (params.help) {
     log.info '    --no_indels                               Do not call indels.'
     log.info '    --no_contours                             Do not add contours to plots and do not plot min(AF)~DP.'
     log.info '    --out_folder     OUTPUT FOLDER            Output directory, by default input bam folder.'
+    log.info '    --out_vcf        OUTPUT VCF NAME          Output VCF name, by default all_variants.vcf.'
     log.info '    --bed            BED FILE                 A BED file for calling.'
     log.info '    --region         CHR:START-END            A region for calling.'
     log.info '    --pairs_file     TEXT FILE                A tab-delimited file containing two columns (normal and tumor sample name) for each sample in line.'
@@ -112,9 +113,9 @@ if (params.help) {
 /* Software information */
 log.info ''
 log.info '--------------------------------------------------------'
-log.info 'NEEDLESTACK v1.0b: A MULTI-SAMPLE SOMATIC VARIANT CALLER'
+log.info 'NEEDLESTACK v1.0: A MULTI-SAMPLE SOMATIC VARIANT CALLER'
 log.info '--------------------------------------------------------'
-log.info 'Copyright (C) 2015 Matthieu Foll and Tiffany Delhomme'
+log.info 'Copyright (C) 2017 Matthieu Foll, Tiffany Delhomme and Nicolas Alcala'
 log.info 'This program comes with ABSOLUTELY NO WARRANTY; for details see LICENSE.txt'
 log.info 'This is free software, and you are welcome to redistribute it'
 log.info 'under certain conditions; see LICENSE.txt for details.'
@@ -143,6 +144,7 @@ if(params.input_vcf) {
   log.info "Output annotated file (--out_annotated_vcf)                     : ${out_annotated_vcf}"
   log.info(params.extra_robust_gl == true ? "Perform an extra-robust regression (--extra_robust_gl)          : yes" : "Perform an extra-robust regression (--extra_robust_gl)          : no" )
   log.info "output folder (--out_folder)                                    : ${params.out_folder}"
+  
   log.info "\n"
 
   process split_vcf {
@@ -295,6 +297,7 @@ if(params.input_vcf) {
 
   log.info "Input BAM folder (--bam_folder)                                 : ${params.bam_folder}"
   log.info "output folder (--out_folder)                                    : ${params.out_folder}"
+  log.info "output VCF (--out_vcf)                                          : ${params.out_vcf}"  
   log.info "Reference in fasta format (--fasta_ref)                         : ${params.fasta_ref}"
   log.info "Intervals for calling (--bed)                                   : ${input_region}"
   log.info "Number of regions to split (--nsplit)                           : ${params.nsplit}"

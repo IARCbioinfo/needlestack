@@ -1,7 +1,7 @@
 #! /usr/bin/env Rscript
 
 # needlestack: a multi-sample somatic variant caller
-# Copyright (C) 2015 Matthieu Foll and Tiffany Delhomme
+# Copyright (C) 2017 Matthieu Foll, Tiffany Delhomme and Nicolas Alcala
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -107,7 +107,7 @@ isTNpairs = FALSE #activates Tumor-Normal pairs mode
 if(pairs_file != FALSE) { #if user gives a pairs_file to needlestack
   isTNpairs = file.exists(pairs_file) #checks existence of tumour-normal pairs file => will be redundant once this is checked in the workflow
   if( isTNpairs ){
-      if(afmin_power==-1) afmin_power = 0.01 #put default value
+      if(afmin_power==-1) afmin_power = 0.1 #put default value
       pairsname = scan(pairs_file,nmax = 2,what = "character")
       TNpairs=read.table(pairs_file,h=T)
       names(TNpairs)[grep("TU",pairsname,ignore.case =T)] = "TUMOR" #set columns names (to avoid problems due to spelling variations or typos)
@@ -208,7 +208,7 @@ write_out=function(...) {
 }
 write_out("##fileformat=VCFv4.1")
 write_out("##fileDate=",format(Sys.Date(), "%Y%m%d"))
-write_out("##source=needlestack v1.0b")
+write_out("##source=needlestack v1.0")
 write_out("##reference=",fasta_ref)
 write_out("##phasing=none")
 write_out("##filter=\"QVAL > ",GQ_threshold," & ",SB_type,"_SNV < ",SB_threshold_SNV," & ",SB_type,"_INDEL < ",SB_threshold_indel," & min(AO) >= ",min_reads," & min(DP) >= ",min_coverage,"\"")
