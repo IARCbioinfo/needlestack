@@ -1,7 +1,7 @@
 #! /usr/bin/env nextflow
 
 // needlestack: a multi-sample somatic variant caller
-// Copyright (C) 2017 Matthieu Foll, Tiffany Delhomme and Nicolas Alcala
+// Copyright (C) 2015 Matthieu Foll and Tiffany Delhomme
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@
 // - bed_cut.r (in bin folder)
 // - needlestack.r (in bin folder)
 // - pileup2baseindel.pl (in bin folder) (+ perl)
+// - mpileup2readcounts.cc (in bin folder) (c++)
 
 params.help = null
 params.input_vcf = null
@@ -64,9 +65,9 @@ pairs_file = file(params.pairs_file)
 if (params.help) {
     log.info ''
     log.info '--------------------------------------------------------'
-    log.info 'NEEDLESTACK v1.1b: A MULTI-SAMPLE SOMATIC VARIANT CALLER'
+    log.info 'NEEDLESTACK v1.0b: A MULTI-SAMPLE SOMATIC VARIANT CALLER'
     log.info '--------------------------------------------------------'
-    log.info 'Copyright (C) 2017 Matthieu Foll, Tiffany Delhomme and Nicolas Alcala'
+    log.info 'Copyright (C) 2015 Matthieu Foll and Tiffany Delhomme'
     log.info 'This program comes with ABSOLUTELY NO WARRANTY; for details see LICENSE.txt'
     log.info 'This is free software, and you are welcome to redistribute it'
     log.info 'under certain conditions; see LICENSE.txt for details.'
@@ -89,7 +90,7 @@ if (params.help) {
     log.info '    --sb_snv         VALUE                    Strand bias threshold for SNVs.'
     log.info '    --sb_indel       VALUE                    Strand bias threshold for indels.'
     log.info '    --power_min_af   VALUE                    Minimum allelic fraction for power computations.'
-    log.info '    --sigma_normal   VALUE                    Sigma parameter for negative binomial modeling of expected germline allelic fraction.'
+    log.info '    --sigma_normal   VALUE                    Sigma parameter for negative binomial modeling germline mutations.'
     log.info '    --map_qual       VALUE                    Samtools minimum mapping quality.'
     log.info '    --base_qual      VALUE                    Samtools minimum base quality.'
     log.info '    --max_DP         INTEGER                  Samtools maximum coverage before downsampling.'
@@ -101,7 +102,6 @@ if (params.help) {
     log.info '    --no_indels                               Do not call indels.'
     log.info '    --no_contours                             Do not add contours to plots and do not plot min(AF)~DP.'
     log.info '    --out_folder     OUTPUT FOLDER            Output directory, by default input bam folder.'
-    log.info '    --out_vcf        OUTPUT VCF NAME          Output VCF name, by default all_variants.vcf.'
     log.info '    --bed            BED FILE                 A BED file for calling.'
     log.info '    --region         CHR:START-END            A region for calling.'
     log.info '    --pairs_file     TEXT FILE                A tab-delimited file containing two columns (normal and tumor sample name) for each sample in line.'
@@ -113,9 +113,9 @@ if (params.help) {
 /* Software information */
 log.info ''
 log.info '--------------------------------------------------------'
-log.info 'NEEDLESTACK v1.1b: A MULTI-SAMPLE SOMATIC VARIANT CALLER'
+log.info 'NEEDLESTACK v1.0b: A MULTI-SAMPLE SOMATIC VARIANT CALLER'
 log.info '--------------------------------------------------------'
-log.info 'Copyright (C) 2017 Matthieu Foll, Tiffany Delhomme and Nicolas Alcala'
+log.info 'Copyright (C) 2015 Matthieu Foll and Tiffany Delhomme'
 log.info 'This program comes with ABSOLUTELY NO WARRANTY; for details see LICENSE.txt'
 log.info 'This is free software, and you are welcome to redistribute it'
 log.info 'under certain conditions; see LICENSE.txt for details.'
@@ -144,7 +144,6 @@ if(params.input_vcf) {
   log.info "Output annotated file (--out_annotated_vcf)                     : ${out_annotated_vcf}"
   log.info(params.extra_robust_gl == true ? "Perform an extra-robust regression (--extra_robust_gl)          : yes" : "Perform an extra-robust regression (--extra_robust_gl)          : no" )
   log.info "output folder (--out_folder)                                    : ${params.out_folder}"
-  
   log.info "\n"
 
   process split_vcf {
@@ -297,7 +296,6 @@ if(params.input_vcf) {
 
   log.info "Input BAM folder (--bam_folder)                                 : ${params.bam_folder}"
   log.info "output folder (--out_folder)                                    : ${params.out_folder}"
-  log.info "output VCF (--out_vcf)                                          : ${params.out_vcf}"  
   log.info "Reference in fasta format (--fasta_ref)                         : ${params.fasta_ref}"
   log.info "Intervals for calling (--bed)                                   : ${input_region}"
   log.info "Number of regions to split (--nsplit)                           : ${params.nsplit}"
@@ -356,9 +354,13 @@ if(params.input_vcf) {
       '''
   }
 
-  // create mpileup file + sed to have "*" when there is no coverage (otherwise pileup2baseindel.pl is unhappy)
-  process samtools_mpileup {
+  // create mpileup file + parse mpileup file to send it to Rscript
+  process mpileup2vcf {
 
+	  if(!params.no_plots) {
+          publishDir params.out_folder+'/PDF/', mode: 'move', pattern: '*.pdf'
+      }
+      
       tag { region_tag }
 
       input:
@@ -368,90 +370,52 @@ if(params.input_vcf) {
       file fasta_ref
       file fasta_ref_fai
       file fasta_ref_gzi
-
-      output:
-      set val(region_tag), file("${region_tag}.pileup") into pileup
-
-      shell:
-      region_tag = split_bed.baseName
-      '''
-      set -o pipefail
-      while read bed_line; do
-          samtools mpileup --fasta-ref !{fasta_ref} --region $bed_line --ignore-RG --min-BQ !{params.base_qual} --min-MQ !{params.map_qual} --max-idepth 1000000 --max-depth !{params.max_DP} BAM/*.bam | sed 's/		/	*	*/g' >> !{region_tag}.pileup
-      done < !{split_bed}
-      '''
-  }
-
-  // split mpileup file and convert to table
-  process mpileup2table {
-
-      tag { region_tag }
-
-      input:
-      set val(region_tag), file("${region_tag}.pileup") from pileup.filter { tag, file -> !file.isEmpty() }
-      file 'BAM/*' from bam
       val sample_names
-
-      output:
-      set val(region_tag), file('TABLE/sample*.txt'), file('names.txt') into table
-
-      shell:
-      if ( params.no_indels ) {
-          indel_par = "-no-indels"
-      } else {
-          indel_par = " "
-      }
-      '''
-      nb_pos=$(wc -l < !{region_tag}.pileup)
-      if [ $nb_pos -gt 0 ]; then
-          # split and convert pileup file
-          pileup2baseindel.pl -i !{region_tag}.pileup !{indel_par}
-          mkdir TABLE
-          mv sample*.txt TABLE
-          i=1
-          for cur_bam in BAM/*.bam
-          do
-              if [ "!{sample_names}" == "FILE" ]; then
-                  # use bam file name as sample name
-                  bam_file_name=$(basename "${cur_bam%.*}")
-                  # remove whitespaces from name
-                  SM="$(echo -e "${bam_file_name}" | tr -d '[[:space:]]')"
-              else
-                  # extract sample name from bam file read group info field
-                  SM=$(samtools view -H $cur_bam | grep "^@RG" | tail -n1 | sed "s/.*SM:\\([^	]*\\).*/\\1/" | tr -d '[:space:]')
-              fi
-              printf "sample$i	$SM\\n" >> names.txt
-              i=$((i+1))
-          done
-      fi
-      '''
-  }
-
-  // perform regression in R
-  process R_regression {
-
-      if(!params.no_plots) {
-          publishDir params.out_folder+'/PDF/', mode: 'move', pattern: '*.pdf'
-      }
-
-      tag { region_tag }
-
-      input:
-      set val(region_tag), file('TABLE/*'), file('names.txt') from table
-      file fasta_ref
-      file fasta_ref_fai
-      file fasta_ref_gzi
       file pairs_file
 
       output:
       file "${region_tag}.vcf" into vcf
       file '*.pdf' optional true into PDF
 
+
       shell:
+      region_tag = split_bed.baseName
+      if ( params.no_indels ) {
+          indel_par = "true"
+      } else {
+          indel_par = "false"
+      }
+      
       '''
-      needlestack.r --pairs_file=!{params.pairs_file} --source_path=!{baseDir}/bin/ --out_file=!{region_tag}.vcf --fasta_ref=!{fasta_ref} --GQ_threshold=!{params.min_qval} --min_coverage=!{params.min_dp} --min_reads=!{params.min_ao} --SB_type=!{params.sb_type} --SB_threshold_SNV=!{params.sb_snv} --SB_threshold_indel=!{params.sb_indel} --output_all_SNVs=!{params.all_SNVs} --do_plots=!{!params.no_plots} --plot_labels=!{!params.no_labels} --add_contours=!{!params.no_contours} --extra_rob=!{params.extra_robust_gl} --afmin_power=!{params.power_min_af} --sigma=!{params.sigma_normal}
+      i=1
+      for cur_bam in BAM/*.bam
+      do
+          if [ "!{sample_names}" == "FILE" ]; then
+              # use bam file name as sample name
+              bam_file_name=$(basename "${cur_bam%.*}")
+              # remove whitespaces from name
+              SM="$(echo -e "${bam_file_name}" | tr -d '[[:space:]]')"
+          else
+              # extract sample name from bam file read group info field
+              SM=$(samtools view -H $cur_bam | grep "^@RG" | tail -n1 | sed "s/.*SM:\\([^	]*\\).*/\\1/" | tr -d '[:space:]')
+          fi
+          printf "sample$i	$SM\\n" >> names.txt
+          i=$((i+1))
+      done
+
+      set -o pipefail
+      i=1
+      while read bed_line; do
+          if test $i -eq 1; then
+              samtools mpileup --fasta-ref !{fasta_ref} --region $bed_line --ignore-RG --min-BQ !{params.base_qual} --min-MQ !{params.map_qual} --max-idepth 1000000 --max-depth !{params.max_DP} BAM/*.bam | sed 's/		/	*	*/g' | !{baseDir}/bin/mpileup2readcounts 0 -5 !{indel_par}| Rscript !{baseDir}/bin/needlestack.r --writeHeader=1 --pairs_file=!{params.pairs_file} --source_path=!{baseDir}/bin/ --out_file=!{region_tag}.vcf --fasta_ref=!{fasta_ref} --GQ_threshold=!{params.min_qval} --min_coverage=!{params.min_dp} --min_reads=!{params.min_ao} --SB_type=!{params.sb_type} --SB_threshold_SNV=!{params.sb_snv} --SB_threshold_indel=!{params.sb_indel} --output_all_SNVs=!{params.all_SNVs} --do_plots=!{!params.no_plots} --plot_labels=!{!params.no_labels} --add_contours=!{!params.no_contours} --extra_rob=!{params.extra_robust_gl} --afmin_power=!{params.power_min_af} --sigma=!{params.sigma_normal}
+		  else
+              samtools mpileup --fasta-ref !{fasta_ref} --region $bed_line --ignore-RG --min-BQ !{params.base_qual} --min-MQ !{params.map_qual} --max-idepth 1000000 --max-depth !{params.max_DP} BAM/*.bam | sed 's/		/	*	*/g' | !{baseDir}/bin/mpileup2readcounts 0 -5 !{indel_par}| Rscript !{baseDir}/bin/needlestack.r --writeHeader=0 --pairs_file=!{params.pairs_file} --source_path=!{baseDir}/bin/ --out_file=!{region_tag}.vcf --fasta_ref=!{fasta_ref} --GQ_threshold=!{params.min_qval} --min_coverage=!{params.min_dp} --min_reads=!{params.min_ao} --SB_type=!{params.sb_type} --SB_threshold_SNV=!{params.sb_snv} --SB_threshold_indel=!{params.sb_indel} --output_all_SNVs=!{params.all_SNVs} --do_plots=!{!params.no_plots} --plot_labels=!{!params.no_labels} --add_contours=!{!params.no_contours} --extra_rob=!{params.extra_robust_gl} --afmin_power=!{params.power_min_af} --sigma=!{params.sigma_normal}
+		  fi
+          i=$((i+1))
+      done < !{split_bed}
       '''
   }
+
 
   // merge all vcf files in one big file
   process collect_vcf_result {
