@@ -26,6 +26,8 @@ if("--help" %in% args | is.null(args$out_file) | is.null(args$fasta_ref) | is.nu
       --GQ_threshold=value           - phred scale qvalue threshold for variants, default=50
       --output_all_SNVs=boolean      - output all SNVs, even when no variant is detected, default=FALSE
       --do_plots=boolean             - output regression plots, default=TRUE
+      --do_alignments=boolean        - output alignment plots, default=FALSE
+      --ref_genome=string            - reference genome for alignments plot, examples : Hsapiens.UCSC.hg19, Hsapiens.UCSC.hg18, Hsapiens.1000genomes.hs37d5, Mmusculus.UCSC.mm10...
       --extra_rob=boolean            - perform an extra-robust regression, default=FALSE
       --pairs_file=file_name         - name of file containing the list of matched Tumor/Normal pairs for somatic variant calling
       --afmin_power=value            - minimum allelic fraction in mean for somatic mutations, default=0.01
@@ -44,7 +46,8 @@ if(is.null(args$min_coverage)) {args$min_coverage=30} else {args$min_coverage=as
 if(is.null(args$min_reads)) {args$min_reads=20} else {args$min_reads=as.numeric(args$min_reads)}
 if(is.null(args$GQ_threshold)) {args$GQ_threshold=50} else {args$GQ_threshold=as.numeric(args$GQ_threshold)}
 if(is.null(args$output_all_SNVs)) {args$output_all_SNVs=FALSE} else {args$output_all_SNVs=as.logical(args$output_all_SNVs)}
-if(is.null(args$do_plots)) {args$do_plots=FALSE} else {args$do_plots=as.logical(args$do_plots)}
+if(is.null(args$do_plots)) {args$do_plots=TRUE} else {args$do_plots=as.logical(args$do_plots)}
+if(is.null(args$do_alignments)) {args$do_alignments=FALSE} else {args$do_alignments=as.logical(args$do_alignments)}
 if(is.null(args$plot_labels)) {args$plot_labels=FALSE} else {args$plot_labels=as.logical(args$plot_labels)}
 if(is.null(args$add_contours)) {args$add_contours=FALSE} else {args$add_contours=as.logical(args$add_contours)}
 if(is.null(args$extra_rob)) {args$extra_rob=FALSE} else {args$extra_rob=as.logical(args$extra_rob)}
@@ -52,10 +55,12 @@ if(is.null(args$pairs_file)) {args$pairs_file=FALSE}
 if(is.null(args$afmin_power)) {args$afmin_power=-1} else {args$afmin_power=as.numeric(args$afmin_power)}
 if(is.null(args$sigma)) {args$sigma=0.1} else {args$sigma=as.numeric(args$sigma)}
 
+
 samtools=args$samtools
 writeHeader=args$writeHeader
 out_file=args$out_file
 fasta_ref=args$fasta_ref
+bam_folder=args$bam_folder
 GQ_threshold=args$GQ_threshold
 min_coverage=args$min_coverage
 min_reads=args$min_reads
@@ -66,16 +71,59 @@ SB_threshold_SNV=args$SB_threshold_SNV
 SB_threshold_indel=args$SB_threshold_indel
 output_all_SNVs=args$output_all_SNVs
 do_plots=args$do_plots
+do_alignments=args$do_alignments
+ref_genome=args$ref_genome
 plot_labels=args$plot_labels
 add_contours=args$add_contours
 extra_rob=args$extra_rob
 pairs_file=args$pairs_file
 sigma=args$sigma
 afmin_power=args$afmin_power
-# in case the argument is not given
+
+
+if( !(do_plots) & (do_alignments)){
+  cat("Error : do_alignments can not be TRUE since do_plots=FALSE")
+  q(save="no")
+}
 
 source(paste(args$source_path,"glm_rob_nb.r",sep=""))
 source(paste(args$source_path,"plot_rob_nb.r",sep=""))
+
+
+if(do_alignments==TRUE){
+  
+  library("Gviz")
+  ref_string=paste0("BSgenome.",ref_genome)
+  library(ref_string,character.only=TRUE)
+  
+  assign("g",get(ref_string))
+  
+  if(ref_genome!="Hsapiens.1000genomes.hs37d5"){
+    
+    #define SequenceTrack (reference genome)
+    library(paste0("TxDb.",ref_genome,".knownGene"),character.only=TRUE)
+    assign("txdb",get(paste0("TxDb.",ref_genome,".knownGene")))
+    sTrack <- SequenceTrack(g,cex = 0.6)
+    print(sTrack)
+    
+    annotation=paste0("org.",substr(ref_genome,1,2),".eg.db")
+    library(annotation,character.only=TRUE)
+    assign("annotation",get(annotation))
+    print(annotation)
+    UCSC=TRUE #UCSC reference genome
+
+  }else if(ref_genome=="Hsapiens.1000genomes.hs37d5"){
+    UCSC=FALSE #non UCSC reference genome
+    options(ucscChromosomeNames=FALSE)
+    
+    #define SequenceTrack (reference genome)
+    sTrack <- SequenceTrack(g,cex = 0.6)
+    
+  }else{
+    cat("Reference genome unrecognized")
+    q(save="no")
+  }
+}
 
 ############################################################
 
@@ -84,6 +132,7 @@ options("scipen"=100)
 indiv_run=read.table("names.txt",stringsAsFactors=F,colClasses = "character")
 indiv_run[,2]=make.unique(indiv_run[,2],sep="_")
 nindiv=nrow(indiv_run)
+id_samples=seq(1,nindiv) #samples IDs (integers) 
 
 isTNpairs = FALSE #activates Tumor-Normal pairs mode
 if(pairs_file != FALSE) { #if user gives a pairs_file to needlestack
@@ -168,6 +217,82 @@ toQvalueT <- function(x,rob_nb_res,afmin_power){ #change afmin_power to
   unlist(-10*log10(p.adjust((dnbinom(c(rob_nb_res$ma_count,y),size=1/rob_nb_res$coef[[1]],mu=rob_nb_res$coef[[2]]*c(rob_nb_res$coverage,x)) +
                                pnbinom(c(rob_nb_res$ma_count,y),size=1/rob_nb_res$coef[[1]],mu=rob_nb_res$coef[[2]]*c(rob_nb_res$coverage,x),lower.tail = F)))[length(rob_nb_res$coverage)+1]))
 }
+
+plotGviz <- function(sTrack,ref_genome,annotation,UCSC,indiv_run,linepos,genotype,ref_inv,bam_folder,ipos,w=50,w_zoomout=1000,paired=TRUE,nb_toplot=5){
+  chr=linepos[1]
+  pos=as.numeric(linepos[2])
+  #select samples with the variant
+  samples_with_var=id_samples[(genotype=="0/1")|(genotype=="1/1")]
+  samples_without_var=id_samples[(genotype=="./.")|(genotype=="0/0")]
+  
+  gtrack <- GenomeAxisTrack()
+  if(UCSC){
+    sTrack@chromosome <- chr
+    ideoTrack <- IdeogramTrack(genome = unlist(strsplit(ref_genome,".",fixed=TRUE))[3], chromosome = chr)
+    grtrack <- GeneRegionTrack(txdb,chromosome = chr,start = pos-w, end = pos-w,exonAnnotation = "exon",collapseTranscripts = "longest",shape = "arrow",showTitle=FALSE,alpha=0.95)
+    displayPars(grtrack) <- list(background.title = "white")
+    grtrack_zoomout <- GeneRegionTrack(txdb,chromosome = chr,start = pos-w_zoomout, end = pos+w_zoomout,transcriptAnnotation = "symbol",collapseTranscripts = "longest",alpha=0.95,showTitle=FALSE)
+    symbols <- unlist(mapIds(annotation, gene(grtrack_zoomout), "SYMBOL", "ENTREZID", multiVals = "first"))
+    symbol(grtrack_zoomout) <- symbols[gene(grtrack_zoomout)]
+    ht_zoomout <- HighlightTrack(trackList = list(grtrack_zoomout,gtrack), start = c(pos), width =0,chromosome = chr)
+  }else{
+    sTrack@chromosome <- chr
+    ideoTrack <- IdeogramTrack(genome = "hg19", chromosome = paste0("chr",chr))
+    levels(ideoTrack@bandTable$chrom) <- sub("^chr", "", levels(ideoTrack@bandTable$chrom), ignore.case=T)
+    ideoTrack@chromosome<-chr
+  }
+  
+  
+  bam_files=indiv_run[,1]
+  j=1
+  for(i in bam_files[samples_with_var]){
+    alTrack <- AlignmentsTrack(paste0(bam_folder,i,".bam"), isPaired = paired,stacking = "squish",alpha=0.95,chromosome=chr,cex.mismatch=0.5,name="Alignment",cex.title=1.5)
+    if(UCSC){
+      ht <- HighlightTrack(trackList = list(alTrack, sTrack, grtrack), start = c(pos), width =0,chromosome = chr)
+      grid.newpage()
+      pushViewport(viewport(x=0,y=1, height=0.85, width=1, just=c("left","top"))) 
+      plotTracks(c(ideoTrack,gtrack,ht),sizes=c(0.05,0.1,0.72,0.05,0.08),from = pos-w, to = pos+w,add = TRUE, add53=TRUE,min.height=4, main=paste0(indiv_run[samples_with_var[j],2]),title.width=0.7,littleTicks = TRUE,cex.main=1.5)
+      popViewport(1)
+      pushViewport(viewport(x=0,y=0, height=0.15, width=1, just=c("left","bottom")))
+      plotTracks(list(ht_zoomout),chromosome = chr, add = TRUE)
+      popViewport(0)
+    }else{
+      ht <- HighlightTrack(trackList = list(alTrack, sTrack), start = c(pos), width =0,chromosome = chr)
+      plotTracks(c(ideoTrack,gtrack,ht),sizes=c(0.05,0.1,0.8,0.05),from = pos-w, to = pos+w, add53=TRUE,min.height=4, main=paste0(indiv_run[samples_with_var[j],2]),title.width=0.7,littleTicks = TRUE,cex.main=1.5)
+    }
+    j=j+1
+  }
+  
+  if(length(samples_without_var)!=0){
+    if(length(samples_without_var)<nb_toplot){
+      set.seed(ipos)
+      samples_without_var_toplot=sample(samples_without_var,length(samples_without_var))
+    }else{
+      set.seed(ipos)
+      samples_without_var_toplot=sample(samples_without_var,nb_toplot)
+    }
+    j=1
+    for(i in bam_files[samples_without_var_toplot]){
+      alTrack <- AlignmentsTrack(paste0(bam_folder,i,".bam"), isPaired = paired,stacking = "squish",alpha=0.95,chromosome=chr,cex.mismatch=0.5,name="Alignment",cex.title=1.5)
+      if(UCSC){
+        ht <- HighlightTrack(trackList = list(alTrack, sTrack, grtrack), start = c(pos), width =0,chromosome = chr)
+        grid.newpage()
+        pushViewport(viewport(x=0,y=1, height=0.85, width=1, just=c("left","top"))) 
+        plotTracks(c(ideoTrack,gtrack,ht),sizes=c(0.05,0.1,0.72,0.05,0.08),from = pos-w, to = pos+w, add = TRUE, add53=TRUE,min.height=4, main=paste0(indiv_run[samples_without_var[j],2],"*"),title.width=0.7,littleTicks = TRUE,cex.main=1.5)
+        popViewport(1)
+        pushViewport(viewport(x=0,y=0, height=0.15, width=1, just=c("left","bottom")))
+        plotTracks(list(ht_zoomout),chromosome = chr, add = TRUE)
+        popViewport(0)
+      }else{
+        ht <- HighlightTrack(trackList = list(alTrack, sTrack), start = c(pos), width =0,chromosome = chr)
+        plotTracks(c(ideoTrack,gtrack,ht),sizes=c(0.05,0.1,0.8,0.05),from = pos-w, to = pos+w, add53=TRUE,min.height=4, main=paste0(indiv_run[samples_without_var[j],2],"*"),title.width=0.7,littleTicks = TRUE,cex.main=1.5)
+      }
+      j=j+1
+    }
+  }
+}
+
+
 ###############################################################################################
 
 
@@ -245,7 +370,6 @@ while(length(line <- readLines(f,n=1, warn = FALSE)) > 0) {
         Vp=as.numeric(linepos[eval(as.name(paste(alt,"_cols",sep="")))])
         Vm=as.numeric(linepos[eval(as.name(paste(tolower(alt),"_cols",sep="")))])
         ma_count=Vp+Vm
-
         DP=as.numeric(linepos[eval(depth)])
         if( sum( (ma_count/DP) > 0.8 , na.rm = T) > 0.5*length(ma_count) ){  #here we need to reverse alt and ref for the regression (use ma_count of the ref)
           alt_inv=linepos[3]
@@ -333,9 +457,27 @@ while(length(line <- readLines(f,n=1, warn = FALSE)) > 0) {
             }
             cat("\n",sep = "",file=out_file,append=T)
             if (do_plots) {
-              pdf(paste(linepos[1],"_",linepos[2],"_",linepos[2],"_",ref,"_",alt,ifelse(ref_inv,"_inv_ref",""),ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),7,6)
-              plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(linepos[1]),":",.(linepos[2])," (",.(ref) %->% .(alt),")",.(ifelse(ref_inv," INV REF","")),.(ifelse(reg_res$extra_rob," EXTRA ROBUST","")),sep="")), sbs=sbs, SB_threshold=SB_threshold_SNV,plot_labels=plot_labels,add_contours=add_contours,names=indiv_run[,2])
-              dev.off()
+              if(do_alignments==TRUE){
+                #regression plots
+                #pdf("regression.pdf",7,6)
+                pdf(paste(linepos[1],"_",linepos[2],"_",linepos[2],"_",ref,"_",alt,ifelse(ref_inv,"_inv_ref",""),ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),9,8)
+                par(mar=c(7,8,7,8))
+                plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(linepos[1]),":",.(linepos[2])," (",.(ref) %->% .(alt),")",.(ifelse(ref_inv," INV REF","")),.(ifelse(reg_res$extra_rob," EXTRA ROBUST","")),sep="")), sbs=sbs, SB_threshold=SB_threshold_SNV,plot_labels=plot_labels,add_contours=add_contours,names=indiv_run[,2])
+                # dev.off()
+                # #alignments plots
+                # pdf("alignments.pdf",10,12)
+                par(mar=c(1,1,1,1))
+                plotGviz(sTrack,ref_genome,annotation,UCSC,indiv_run,linepos,genotype,ref_inv,bam_folder,i)
+                dev.off()
+                #merge pdfs
+                # title_merge=paste(linepos[1],"_",linepos[2],"_",linepos[2],"_",ref,"_",alt,ifelse(ref_inv,"_inv_ref",""),ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep="")
+                # system(paste0("pdftk regression.pdf alignments.pdf cat output ",title_merge))
+                # system("rm alignments.pdf regression.pdf")
+              }else{
+                pdf(paste(linepos[1],"_",linepos[2],"_",linepos[2],"_",ref,"_",alt,ifelse(ref_inv,"_inv_ref",""),ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),7,6)
+                plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(linepos[1]),":",.(linepos[2])," (",.(ref) %->% .(alt),")",.(ifelse(ref_inv," INV REF","")),.(ifelse(reg_res$extra_rob," EXTRA ROBUST","")),sep="")), sbs=sbs, SB_threshold=SB_threshold_SNV,plot_labels=plot_labels,add_contours=add_contours,names=indiv_run[,2])
+                dev.off()
+              }
             }
           }
         }
@@ -343,7 +485,7 @@ while(length(line <- readLines(f,n=1, warn = FALSE)) > 0) {
 
       #DEL
       ldel=linepos[deletion_cols]
-      names(ldel)=indiv_run[,1]
+      names(ldel)=id_samples
       all_del=ldel[!(ldel=="NA")]
       if (length(all_del)>0) {
         all_del=as.data.frame(strsplit(unlist(strsplit(paste(all_del),split = "|",fixed=T)),split = ":",fixed=T),stringsAsFactors=F,)
@@ -351,7 +493,7 @@ while(length(line <- readLines(f,n=1, warn = FALSE)) > 0) {
         coverage_all_del=sum(as.numeric(all_del[1,]))
         for (cur_del in uniq_del) {
           Vp=rep(0,nindiv)
-          names(Vp)=indiv_run[,1]
+          names(Vp)=id_samples
           Vm=Vp
           all_cur_del=strsplit(grep(cur_del,ldel,ignore.case=T,value=T),split="|",fixed=T)
           all_cur_del_p=lapply(all_cur_del,function(x) {grep(paste(":",cur_del,"$",sep=""),x,value=T)})
@@ -450,12 +592,32 @@ while(length(line <- readLines(f,n=1, warn = FALSE)) > 0) {
               
               cat("\n",sep = "",file=out_file,append=T)
               if (do_plots) {
-                # deletions are shifted in samtools mpileup by 1bp, so put them at the right place by adding + to pos_ref[i,"loc"] everywhere in what follows
-                if(!ref_inv & nchar(cur_del)>50) cur_del = paste(substr(cur_del,1,5+match(cur_del,uniq_del)),substr(cur_del,nchar(cur_del)-(5+match(cur_del,uniq_del)),nchar(cur_del)),sep="...")
-                if(ref_inv & nchar(ref)>50) ref = paste(substr(ref,1,5+match(ref,uniq_del)),substr(ref,nchar(ref)-(5+match(ref,uniq_del)),nchar(ref)),sep="...")
-                pdf(paste(linepos[1],"_",linepos[2],"_",as.numeric(linepos[2])+nchar(cur_del)-1,"_",paste(prev_bp,cur_del,sep=""),"_",prev_bp,ifelse(ref_inv,"_inv_ref",""),ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),7,6)
-                plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(linepos[1]),":",.(as.numeric(linepos[2]))," (",.(paste(prev_bp,cur_del,sep="")) %->% .(prev_bp),")",.(ifelse(ref_inv," INV REF","")),.(ifelse(reg_res$extra_rob," EXTRA ROBUST","")),sep="")),sbs=sbs, SB_threshold=SB_threshold_indel,plot_labels=plot_labels,add_contours=add_contours,names=indiv_run[,2])
-                dev.off()
+                if(do_alignments==TRUE){
+                  
+                  # deletions are shifted in samtools mpileup by 1bp, so put them at the right place by adding + to pos_ref[i,"loc"] everywhere in what follows
+                  if(!ref_inv & nchar(cur_del)>50) cur_del = paste(substr(cur_del,1,5+match(cur_del,uniq_del)),substr(cur_del,nchar(cur_del)-(5+match(cur_del,uniq_del)),nchar(cur_del)),sep="...")
+                  if(ref_inv & nchar(ref)>50) ref = paste(substr(ref,1,5+match(ref,uniq_del)),substr(ref,nchar(ref)-(5+match(ref,uniq_del)),nchar(ref)),sep="...")
+                  
+                  #regression plots
+                  #pdf("regression.pdf",7,6)
+                  pdf(paste(linepos[1],"_",linepos[2],"_",as.numeric(linepos[2])+nchar(cur_del)-1,"_",paste(prev_bp,cur_del,sep=""),"_",prev_bp,ifelse(ref_inv,"_inv_ref",""),ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),7,6)
+                  par(mar=c(7,7,7,7))
+                  plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(linepos[1]),":",.(as.numeric(linepos[2]))," (",.(paste(prev_bp,cur_del,sep="")) %->% .(prev_bp),")",.(ifelse(ref_inv," INV REF","")),.(ifelse(reg_res$extra_rob," EXTRA ROBUST","")),sep="")),sbs=sbs, SB_threshold=SB_threshold_indel,plot_labels=plot_labels,add_contours=add_contours,names=indiv_run[,2])
+                  # dev.off()
+                  # #alignments plots
+                  # pdf("alignments.pdf",10,12)
+                  par(mar=c(1,1,1,1))
+                  plotGviz(sTrack,ref_genome,annotation,UCSC,indiv_run,linepos,genotype,ref_inv,bam_folder,i)
+                  dev.off()
+                  #merge pdfs
+                  # title_merge=paste(linepos[1],"_",linepos[2],"_",as.numeric(linepos[2])+nchar(cur_del)-1,"_",paste(prev_bp,cur_del,sep=""),"_",prev_bp,ifelse(ref_inv,"_inv_ref",""),ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep="")
+                  # system(paste0("pdftk regression.pdf alignments.pdf cat output ",title_merge))
+                  # system("rm alignments.pdf regression.pdf")
+                }else{
+                  pdf(paste(linepos[1],"_",linepos[2],"_",as.numeric(linepos[2])+nchar(cur_del)-1,"_",paste(prev_bp,cur_del,sep=""),"_",prev_bp,ifelse(ref_inv,"_inv_ref",""),ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),7,6)
+                  plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(linepos[1]),":",.(as.numeric(linepos[2]))," (",.(paste(prev_bp,cur_del,sep="")) %->% .(prev_bp),")",.(ifelse(ref_inv," INV REF","")),.(ifelse(reg_res$extra_rob," EXTRA ROBUST","")),sep="")),sbs=sbs, SB_threshold=SB_threshold_indel,plot_labels=plot_labels,add_contours=add_contours,names=indiv_run[,2])
+                  dev.off()
+                }
               }
             }
           }
@@ -465,7 +627,7 @@ while(length(line <- readLines(f,n=1, warn = FALSE)) > 0) {
       
       # INS
       lins=linepos[insertion_cols]
-      names(lins)=indiv_run[,1]
+      names(lins)=id_samples
       all_ins=lins[!(lins=="NA")]
       if (length(all_ins)>0) {
         all_ins=as.data.frame(strsplit(unlist(strsplit(paste(all_ins),split = "|",fixed=T)),split = ":",fixed=T),stringsAsFactors=F,)
@@ -473,7 +635,7 @@ while(length(line <- readLines(f,n=1, warn = FALSE)) > 0) {
         coverage_all_ins=sum(as.numeric(all_ins[1,]))
         for (cur_ins in uniq_ins) {
           Vp=rep(0,nindiv)
-          names(Vp)=indiv_run[,1]
+          names(Vp)=id_samples
           Vm=Vp
           all_cur_ins=strsplit(grep(cur_ins,lins,ignore.case=T,value=T),split="|",fixed=T)
           all_cur_ins_p=lapply(all_cur_ins,function(x) {grep(paste(":",cur_ins,"$",sep=""),x,value=T)})
@@ -572,11 +734,32 @@ while(length(line <- readLines(f,n=1, warn = FALSE)) > 0) {
 
               cat("\n",sep = "",file=out_file,append=T)
               if (do_plots) {
-                if(!ref_inv & nchar(cur_ins)>50) cur_ins = paste(substr(cur_ins,1,5+match(cur_ins,uniq_ins)),substr(cur_ins,nchar(cur_ins)-(5+match(cur_ins,uniq_ins)),nchar(cur_ins)),sep="...")
-                if(ref_inv & nchar(ref)>50) ref = paste(substr(ref,1,5+match(ref,uniq_ins)),substr(ref,nchar(ref)-(5+match(ref,uniq_ins)),nchar(ref)),sep="...")
-                pdf(paste(linepos[1],"_",linepos[2],"_",as.numeric(linepos[2]),"_",prev_bp,"_",paste(prev_bp,cur_ins,sep=""),ifelse(ref_inv,"_inv_ref",""),ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),7,6)
-                plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(linepos[1]),":",.(linepos[2])," (",.(prev_bp) %->% .(paste(prev_bp,cur_ins,sep="")),")",.(ifelse(ref_inv," INV REF","")),.(ifelse(reg_res$extra_rob," EXTRA ROBUST","")),sep="")),sbs=sbs, SB_threshold=SB_threshold_indel,plot_labels=plot_labels,add_contours=add_contours,names=indiv_run[,2])
-                dev.off()
+                
+                if(do_alignments==TRUE){
+                  
+                  if(!ref_inv & nchar(cur_ins)>50) cur_ins = paste(substr(cur_ins,1,5+match(cur_ins,uniq_ins)),substr(cur_ins,nchar(cur_ins)-(5+match(cur_ins,uniq_ins)),nchar(cur_ins)),sep="...")
+                  if(ref_inv & nchar(ref)>50) ref = paste(substr(ref,1,5+match(ref,uniq_ins)),substr(ref,nchar(ref)-(5+match(ref,uniq_ins)),nchar(ref)),sep="...")
+                  
+                  #regression plots
+                  #pdf("regression.pdf",7,6)
+                  pdf(paste(linepos[1],"_",linepos[2],"_",as.numeric(linepos[2]),"_",prev_bp,"_",paste(prev_bp,cur_ins,sep=""),ifelse(ref_inv,"_inv_ref",""),ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),7,6)
+                  par(mar=c(7,7,7,7))
+                  plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(linepos[1]),":",.(linepos[2])," (",.(prev_bp) %->% .(paste(prev_bp,cur_ins,sep="")),")",.(ifelse(ref_inv," INV REF","")),.(ifelse(reg_res$extra_rob," EXTRA ROBUST","")),sep="")),sbs=sbs, SB_threshold=SB_threshold_indel,plot_labels=plot_labels,add_contours=add_contours,names=indiv_run[,2])
+                  # dev.off()
+                  # #alignments plots
+                  # pdf("alignments.pdf",10,12)
+                  par(mar=c(1,1,1,1))
+                  plotGviz(sTrack,ref_genome,annotation,UCSC,indiv_run,linepos,genotype,ref_inv,bam_folder,i)
+                  dev.off()
+                  #merge pdfs
+                  # title_merge=paste(linepos[1],"_",linepos[2],"_",as.numeric(linepos[2]),"_",prev_bp,"_",paste(prev_bp,cur_ins,sep=""),ifelse(ref_inv,"_inv_ref",""),ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep="")
+                  # system(paste0("pdftk regression.pdf alignments.pdf cat output ",title_merge))
+                  # system("rm alignments.pdf regression.pdf")
+                }else{
+                  pdf(paste(linepos[1],"_",linepos[2],"_",as.numeric(linepos[2]),"_",prev_bp,"_",paste(prev_bp,cur_ins,sep=""),ifelse(ref_inv,"_inv_ref",""),ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),7,6)
+                  plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(linepos[1]),":",.(linepos[2])," (",.(prev_bp) %->% .(paste(prev_bp,cur_ins,sep="")),")",.(ifelse(ref_inv," INV REF","")),.(ifelse(reg_res$extra_rob," EXTRA ROBUST","")),sep="")),sbs=sbs, SB_threshold=SB_threshold_indel,plot_labels=plot_labels,add_contours=add_contours,names=indiv_run[,2])
+                  dev.off()
+                }
               }
             }
           }

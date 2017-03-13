@@ -30,6 +30,7 @@ params.out_vcf = null
 params.region = null
 params.bed = null
 params.out_annotated_vcf = null
+params.ref_genome = null
 params.min_dp = 30 // minimum median coverage to consider a site
 params.min_ao = 3 // minimum number of non-ref reads in at least one sample to consider a site
 params.nsplit = 1 // split the positions for calling in nsplit pieces and run in parallel
@@ -51,6 +52,7 @@ params.use_file_name = false //put these argument to use the bam file names as s
 params.all_SNVs = false //  output all sites, even when no variant is detected
 params.extra_robust_gl = false //  perform an extra robust regression basically for germline variants
 params.no_plots = false  // do not produce pdf plots of regressions
+params.no_alignments = true // do not produce alignment plots in the pdf
 params.no_indels = false // do not skip indels
 params.no_labels = false // label outliers
 params.no_contours = false // add contours to the plots and plot min(AF)~DP
@@ -97,6 +99,7 @@ if (params.help) {
     log.info '    --all_SNVs                                Output all SNVs, even when no variant found.'
     log.info '    --extra_robust_gl                         Perform an extra robust regression, basically for germline variants'
     log.info '    --no_plots                                Do not output PDF regression plots.'
+    log.info '    --no_alignments                           Do not add alignment plots.'
     log.info '    --no_labels                               Do not add labels to outliers in regression plots.'
     log.info '    --no_indels                               Do not call indels.'
     log.info '    --no_contours                             Do not add contours to plots and do not plot min(AF)~DP.'
@@ -104,6 +107,7 @@ if (params.help) {
     log.info '    --bed            BED FILE                 A BED file for calling.'
     log.info '    --region         CHR:START-END            A region for calling.'
     log.info '    --pairs_file     TEXT FILE                A tab-delimited file containing two columns (normal and tumor sample name) for each sample in line.'
+    log.info '    --ref_genome                     Reference genome for alignments plot'
     log.info ''
     exit 1
 }
@@ -125,6 +129,7 @@ log.info "     minimum median coverage (--min_dp)                         : ${pa
 log.info "     minimum of alternative reads (--min_ao)                    : ${params.min_ao}"
 log.info "Phred-scale qvalue threshold (--min_qval)                       : ${params.min_qval}"
 log.info(params.no_plots == true ? "PDF regression plots (--no_plots)                               : no"  : "PDF regression plots (--no_plots)                               : yes" )
+log.info(params.no_alignments == true ? "Alignment plots (--no_alignments)                               : no"  : "Alignment plots (--no_alignments)                               : yes" )
 log.info(params.no_labels == true ? "Labeling outliers in regression plots (--no_labels)             : no"  : "Labeling outliers in regression plots (--no_labels)             : yes" )
 log.info(params.no_contours == true ? "Add contours in plots and plot min(AF)~DP (--no_contours)       : no"  : "Add contours in plots and plot min(AF)~DP (--no_contours)       : yes" )
 
@@ -247,8 +252,18 @@ if(params.input_vcf) {
   assert params.all_SNVs in [true,false] : "do not assign a value to --all_SNVs"
   assert params.extra_robust_gl in [true,false] : "do not assign a value to --extra_robust_gl"
   assert params.no_plots in [true,false] : "do not assign a value to --no_plots"
+  assert params.no_alignments in [true,false] : "do not assign a value to --no_alignments"
   assert params.no_indels in [true,false] : "do not assign a value to --no_indels"
   assert params.use_file_name in [true,false] : "do not assign a value to --use_file_name"
+  if ( (params.no_plots == true) && (params.no_alignments == false) ) {
+      println "\n ERROR : --no_alignments can not be false since --no_plots is true, exit."; System.exit(0)
+  }
+  if ( (params.no_alignments == false) && (params.ref_genome == null) ) {
+      println "\n ERROR : --no_alignments is false, --ref_genome can not be null, exit."; System.exit(0)
+  }
+  if ( (params.no_alignments == true) && (params.ref_genome != null) ) {
+    println "\n WARNING : value assign to --ref_genome although no_alignments is true."
+  }
   if (params.bed) { try { assert file(params.bed).exists() : "\n WARNING : input bed file not located in execution directory" } catch (AssertionError e) { println e.getMessage() } }
   try { assert fasta_ref.exists() : "\n WARNING : fasta reference not located in execution directory. Make sure reference index is in the same folder as fasta reference" } catch (AssertionError e) { println e.getMessage() }
   if (fasta_ref.exists()) {assert fasta_ref_fai.exists() : "input fasta reference does not seem to have a .fai index (use samtools faidx)"}
@@ -280,7 +295,6 @@ if(params.input_vcf) {
   assert (params.map_qual >= 0) : "minimum mapping quality (samtools) must be higher than or equal to 0"
   assert (params.base_qual >= 0) : "minimum base quality (samtools) must be higher than or equal to 0"
 
-  sample_names = params.use_file_name ? "FILE" : "BAM"
   out_vcf = params.out_vcf ? params.out_vcf : "all_variants.vcf"
 
   /* manage input positions to call (bed or region or whole-genome) */
@@ -296,6 +310,7 @@ if(params.input_vcf) {
   log.info "Input BAM folder (--bam_folder)                                 : ${params.bam_folder}"
   log.info "output folder (--out_folder)                                    : ${params.out_folder}"
   log.info "Reference in fasta format (--fasta_ref)                         : ${params.fasta_ref}"
+  /* log.info "Reference genome (--ref_genome)                                 : ${params.ref_genome}"*/
   log.info "Intervals for calling (--bed)                                   : ${input_region}"
   log.info "Number of regions to split (--nsplit)                           : ${params.nsplit}"
   log.info "Strand bias measure (--sb_type)                                 : ${params.sb_type}"
@@ -306,7 +321,6 @@ if(params.input_vcf) {
   log.info "Samtools minimum mapping quality (--map_qual)                   : ${params.map_qual}"
   log.info "Samtools minimum base quality (--base_qual)                     : ${params.base_qual}"
   log.info "Samtools maximum coverage before downsampling (--max_DP)        : ${params.max_DP}"
-  log.info "Sample names definition (--use_file_name)                       : ${sample_names}"
   log.info(params.all_SNVs == true ? "Output all SNVs (--all_SNVs)                                    : yes" : "Output all SNVs (--all_SNVs)                                    : no" )
   log.info(params.extra_robust_gl == true ? "Perform an extra-robust regression (--extra_robust_gl)          : yes" : "Perform an extra-robust regression (--extra_robust_gl)          : no" )
   log.info(params.no_indels == true ? "Skip indels (--no_indels)                                       : yes" : "Skip indels (--no_indels)                                       : no" )
@@ -370,7 +384,6 @@ if(params.input_vcf) {
       file fasta_ref
       file fasta_ref_fai
       file fasta_ref_gzi
-      val sample_names
       file pairs_file
 
       output:
@@ -390,16 +403,15 @@ if(params.input_vcf) {
       i=1
       for cur_bam in BAM/*.bam
       do
-          if [ "!{sample_names}" == "FILE" ]; then
-              # use bam file name as sample name
-              bam_file_name=$(basename "${cur_bam%.*}")
-              # remove whitespaces from name
-              SM="$(echo -e "${bam_file_name}" | tr -d '[[:space:]]')"
-          else
-              # extract sample name from bam file read group info field
-              SM=$(samtools view -H $cur_bam | grep "^@RG" | tail -n1 | sed "s/.*SM:\\([^	]*\\).*/\\1/" | tr -d '[:space:]')
-          fi
-          printf "sample$i	$SM\\n" >> names.txt
+          # use bam file name as sample name
+          bam_file_name=$(basename "${cur_bam%.*}")
+          # remove whitespaces from name
+          SM1="$(echo -e "${bam_file_name}" | tr -d '[[:space:]]')"
+
+          # extract sample name from bam file read group info field
+          SM2=$(samtools view -H $cur_bam | grep "^@RG" | tail -n1 | sed "s/.*SM:\\([^	]*\\).*/\\1/" | tr -d '[:space:]')
+
+          printf "$SM1	$SM2\\n" >> names.txt
           i=$((i+1))
       done
 
@@ -407,9 +419,9 @@ if(params.input_vcf) {
       i=1
       while read bed_line; do
           if test $i -eq 1; then
-              samtools mpileup --fasta-ref !{fasta_ref} --region $bed_line --ignore-RG --min-BQ !{params.base_qual} --min-MQ !{params.map_qual} --max-idepth 1000000 --max-depth !{params.max_DP} BAM/*.bam | sed 's/		/	*	*/g' | mpileup2readcounts 0 -5 !{indel_par}| Rscript !{baseDir}/bin/needlestack.r --writeHeader=1 --pairs_file=!{params.pairs_file} --source_path=!{baseDir}/bin/ --out_file=!{region_tag}.vcf --fasta_ref=!{fasta_ref} --GQ_threshold=!{params.min_qval} --min_coverage=!{params.min_dp} --min_reads=!{params.min_ao} --SB_type=!{params.sb_type} --SB_threshold_SNV=!{params.sb_snv} --SB_threshold_indel=!{params.sb_indel} --output_all_SNVs=!{params.all_SNVs} --do_plots=!{!params.no_plots} --plot_labels=!{!params.no_labels} --add_contours=!{!params.no_contours} --extra_rob=!{params.extra_robust_gl} --afmin_power=!{params.power_min_af} --sigma=!{params.sigma_normal}
+              samtools mpileup --fasta-ref !{fasta_ref} --region $bed_line --ignore-RG --min-BQ !{params.base_qual} --min-MQ !{params.map_qual} --max-idepth 1000000 --max-depth !{params.max_DP} BAM/*.bam | sed 's/		/	*	*/g' | mpileup2readcounts 0 -5 !{indel_par}| Rscript !{baseDir}/bin/needlestack.r --writeHeader=1 --pairs_file=!{params.pairs_file} --source_path=!{baseDir}/bin/ --out_file=!{region_tag}.vcf --fasta_ref=!{fasta_ref} --bam_folder=!{params.bam_folder} --ref_genome=!{params.ref_genome} --GQ_threshold=!{params.min_qval} --min_coverage=!{params.min_dp} --min_reads=!{params.min_ao} --SB_type=!{params.sb_type} --SB_threshold_SNV=!{params.sb_snv} --SB_threshold_indel=!{params.sb_indel} --output_all_SNVs=!{params.all_SNVs} --do_plots=!{!params.no_plots} --do_alignments=!{!params.no_alignments} --plot_labels=!{!params.no_labels} --add_contours=!{!params.no_contours} --extra_rob=!{params.extra_robust_gl} --afmin_power=!{params.power_min_af} --sigma=!{params.sigma_normal}
 		  else
-              samtools mpileup --fasta-ref !{fasta_ref} --region $bed_line --ignore-RG --min-BQ !{params.base_qual} --min-MQ !{params.map_qual} --max-idepth 1000000 --max-depth !{params.max_DP} BAM/*.bam | sed 's/		/	*	*/g' | mpileup2readcounts 0 -5 !{indel_par}| Rscript !{baseDir}/bin/needlestack.r --writeHeader=0 --pairs_file=!{params.pairs_file} --source_path=!{baseDir}/bin/ --out_file=!{region_tag}.vcf --fasta_ref=!{fasta_ref} --GQ_threshold=!{params.min_qval} --min_coverage=!{params.min_dp} --min_reads=!{params.min_ao} --SB_type=!{params.sb_type} --SB_threshold_SNV=!{params.sb_snv} --SB_threshold_indel=!{params.sb_indel} --output_all_SNVs=!{params.all_SNVs} --do_plots=!{!params.no_plots} --plot_labels=!{!params.no_labels} --add_contours=!{!params.no_contours} --extra_rob=!{params.extra_robust_gl} --afmin_power=!{params.power_min_af} --sigma=!{params.sigma_normal}
+              samtools mpileup --fasta-ref !{fasta_ref} --region $bed_line --ignore-RG --min-BQ !{params.base_qual} --min-MQ !{params.map_qual} --max-idepth 1000000 --max-depth !{params.max_DP} BAM/*.bam | sed 's/		/	*	*/g' | mpileup2readcounts 0 -5 !{indel_par}| Rscript !{baseDir}/bin/needlestack.r --writeHeader=0 --pairs_file=!{params.pairs_file} --source_path=!{baseDir}/bin/ --out_file=!{region_tag}.vcf --fasta_ref=!{fasta_ref} --bam_folder=!{params.bam_folder} --ref_genome=!{params.ref_genome} --GQ_threshold=!{params.min_qval} --min_coverage=!{params.min_dp} --min_reads=!{params.min_ao} --SB_type=!{params.sb_type} --SB_threshold_SNV=!{params.sb_snv} --SB_threshold_indel=!{params.sb_indel} --output_all_SNVs=!{params.all_SNVs} --do_plots=!{!params.no_plots} --do_alignments=!{!params.no_alignments} --plot_labels=!{!params.no_labels} --add_contours=!{!params.no_contours} --extra_rob=!{params.extra_robust_gl} --afmin_power=!{params.power_min_af} --sigma=!{params.sigma_normal}
 		  fi
           i=$((i+1))
       done < !{split_bed}
