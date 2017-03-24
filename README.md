@@ -190,7 +190,7 @@ The name of the reference genome as to be the same as the BSgenome data package 
 
 By default, when using matched tumor/normal (pairs_file option), needlestack will produce pdf plots of regressions only for somatic variants and without the alignment plots; when not, needlestack will produce them for all variants and without the alignment plots. 
 
-
+![Example of an alignment plot](alignments.png)
 
 ## Notes
 
