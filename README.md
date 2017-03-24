@@ -158,9 +158,12 @@ In other cases (when there is no `--pairs_file` parameter defined), genotypes ar
 ##### Two options to consider :
 
 1. --do_plots :
- ..*SOMATIC : To produce pdf regression plots for somatic variants only. Default value, when using matched tumor/normal.
- ..*ALL : To produce pdf regression plots for all variants. Default value, when not using matched tumor/normal.
- ..*NONE : To remove pdf regression plots from the output
+ ..* SOMATIC : To produce pdf regression plots for somatic variants only. Default value, when using matched tumor/normal.
+ 
+ ..* ALL : To produce pdf regression plots for all variants. Default value, when not using matched tumor/normal.
+ 
+ ..* NONE : To remove pdf regression plots from the output
+ 
 2. --do_alignments : To add the alignments plots to the regression plots. If this option is set to "true", the name of the reference genome required for the bam alignments (--ref_genome option) needs to be provided. False is the default value.
 
 ##### Bioconductor packages to install for plotting the alignments :
@@ -181,7 +184,7 @@ If one needs the UCSC version of the reference Human genome hg19, the fowolling 
 One can also generate the alignments plot for data issued from the mouse by installing : 
 - *BSgenome.Mmusculus.UCSC.mm10* (mm9 UCSC version can also be used)
 - *TxDb.Mmusculus.UCSC.mm10.knownGene*  
-- *org.Mm.eg.db* packages.
+- *org.Mm.eg.db*
 
 ##### --ref_genome option :
 
