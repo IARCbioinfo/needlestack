@@ -51,15 +51,22 @@ params.max_DP = 50000 // downsample coverage per sample (passed to samtools)
 params.use_file_name = false //put these argument to use the bam file names as sample names and do not to use the sample name filed from the bam files (SM tag)
 params.all_SNVs = false //  output all sites, even when no variant is detected
 params.extra_robust_gl = false //  perform an extra robust regression basically for germline variants
-params.no_plots = false  // do not produce pdf plots of regressions
-params.no_alignments = true // do not produce alignment plots in the pdf
-params.no_indels = false // do not skip indels
-params.no_labels = false // label outliers
-params.no_contours = false // add contours to the plots and plot min(AF)~DP
+
 params.pairs_file = "FALSE" // by default R will get a false boolean value for pairs_file option
 assert (params.pairs_file != true) : "please enter a file name when using --pairs_file option"
 if (params.pairs_file != "FALSE") { try { assert file(params.pairs_file).exists() : "\n WARNING : input tumor-normal pairs file not located in execution directory" } catch (AssertionError e) { println e.getMessage() } }
 pairs_file = file(params.pairs_file)
+
+if (params.pairs_file != "FALSE") {
+  params.do_plots = "SOMATIC"  // produce pdf plots of regressions for somatic variants
+}else {
+  params.do_plots = "ALL" // produce pdf plots of regressions for all variants
+}
+
+params.do_alignments = false // do not produce alignment plots in the pdf
+params.no_indels = false // do not skip indels
+params.no_labels = false // label outliers
+params.no_contours = false // add contours to the plots and plot min(AF)~DP
 
 /* If --help in parameters, print software usage */
 
@@ -98,8 +105,8 @@ if (params.help) {
     log.info '    --use_file_name                           Sample names are taken from file names, otherwise extracted from the bam file SM tag.'
     log.info '    --all_SNVs                                Output all SNVs, even when no variant found.'
     log.info '    --extra_robust_gl                         Perform an extra robust regression, basically for germline variants'
-    log.info '    --no_plots                                Do not output PDF regression plots.'
-    log.info '    --no_alignments                           Do not add alignment plots.'
+    log.info '    --do_plots                                Output PDF regression plots.'
+    log.info '    --do_alignments                           Add alignment plots.'
     log.info '    --no_labels                               Do not add labels to outliers in regression plots.'
     log.info '    --no_indels                               Do not call indels.'
     log.info '    --no_contours                             Do not add contours to plots and do not plot min(AF)~DP.'
@@ -128,8 +135,16 @@ log.info "To consider a site for calling:"
 log.info "     minimum median coverage (--min_dp)                         : ${params.min_dp}"
 log.info "     minimum of alternative reads (--min_ao)                    : ${params.min_ao}"
 log.info "Phred-scale qvalue threshold (--min_qval)                       : ${params.min_qval}"
-log.info(params.no_plots == true ? "PDF regression plots (--no_plots)                               : no"  : "PDF regression plots (--no_plots)                               : yes" )
-log.info(params.no_alignments == true ? "Alignment plots (--no_alignments)                               : no"  : "Alignment plots (--no_alignments)                               : yes" )
+
+if(params.do_plots == "ALL"){
+	log.info "PDF regression plots (--do_plots)                               : ALL"
+} else if (params.do_plots == "SOMATIC"){
+	log.info "PDF regression plots (--do_plots)                               : SOMATIC"
+} else {
+	log.info "PDF regression plots (--do_plots)                               : NONE"
+}
+
+log.info(params.do_alignments == true ? "Alignment plots (--do_alignments)                               : yes"  : "Alignment plots (--do_alignments)                               : no" )
 log.info(params.no_labels == true ? "Labeling outliers in regression plots (--no_labels)             : no"  : "Labeling outliers in regression plots (--no_labels)             : yes" )
 log.info(params.no_contours == true ? "Add contours in plots and plot min(AF)~DP (--no_contours)       : no"  : "Add contours in plots and plot min(AF)~DP (--no_contours)       : yes" )
 
@@ -196,7 +211,7 @@ if(params.input_vcf) {
     shell:
     '''
     tabix -p vcf !{svcf}
-    Rscript !{baseDir}/bin/annotate_vcf.r --source_path=!{baseDir}/bin/ --input_vcf=!{svcf} --chunk_size=!{params.chunk_size} --do_plots=!{!params.no_plots} --plot_labels=!{!params.no_labels} --add_contours=!{!params.no_contours} --min_coverage=!{params.min_dp} --min_reads=!{params.min_ao} --GQ_threshold=!{params.min_qval} --extra_rob=!{params.extra_robust_gl}
+    Rscript !{baseDir}/bin/annotate_vcf.r --source_path=!{baseDir}/bin/ --input_vcf=!{svcf} --chunk_size=!{params.chunk_size} --do_plots=!{params.do_plots} --plot_labels=!{!params.no_labels} --add_contours=!{!params.no_contours} --min_coverage=!{params.min_dp} --min_reads=!{params.min_ao} --GQ_threshold=!{params.min_qval} --extra_rob=!{params.extra_robust_gl}
     '''
   }
 
@@ -251,18 +266,21 @@ if(params.input_vcf) {
   assert params.sb_type in ["SOR","RVSB","FS"] : "--sb_type must be SOR, RVSB or FS "
   assert params.all_SNVs in [true,false] : "do not assign a value to --all_SNVs"
   assert params.extra_robust_gl in [true,false] : "do not assign a value to --extra_robust_gl"
-  assert params.no_plots in [true,false] : "do not assign a value to --no_plots"
-  assert params.no_alignments in [true,false] : "do not assign a value to --no_alignments"
+  assert params.do_plots in ["SOMATIC","ALL","NONE"] : "option not reconized for --do_plots (SOMATIC,ALL or NONE)"
+  assert params.do_alignments in [true,false] : "do not assign a value to --no_alignments"
   assert params.no_indels in [true,false] : "do not assign a value to --no_indels"
   assert params.use_file_name in [true,false] : "do not assign a value to --use_file_name"
-  if ( (params.no_plots == true) && (params.no_alignments == false) ) {
-      println "\n ERROR : --no_alignments can not be false since --no_plots is true, exit."; System.exit(0)
+  if ( (params.do_plots == "SOMATIC") && (params.pairs_file == "FALSE") ) {
+      println "\n ERROR : --do_plots can not be set to SOMATIC since no pairs_file was provided (--pairs_file option), exit."; System.exit(0)
   }
-  if ( (params.no_alignments == false) && (params.ref_genome == null) ) {
-      println "\n ERROR : --no_alignments is false, --ref_genome can not be null, exit."; System.exit(0)
+  if ( (params.do_plots == "NONE") && (params.do_alignments == true) ) {
+      println "\n ERROR : --do_alignments can not be true since --do_plots is set to NONE, exit."; System.exit(0)
   }
-  if ( (params.no_alignments == true) && (params.ref_genome != null) ) {
-    println "\n WARNING : value assign to --ref_genome although no_alignments is true."
+  if ( (params.do_alignments == true) && (params.ref_genome == null) ) {
+      println "\n ERROR : --do_alignments is true, --ref_genome can not be null, exit."; System.exit(0)
+  }
+  if ( (params.do_alignments == false) && (params.ref_genome != null) ) {
+    println "\n WARNING : value assign to --ref_genome although do_alignments is false."
   }
   if (params.bed) { try { assert file(params.bed).exists() : "\n WARNING : input bed file not located in execution directory" } catch (AssertionError e) { println e.getMessage() } }
   try { assert fasta_ref.exists() : "\n WARNING : fasta reference not located in execution directory. Make sure reference index is in the same folder as fasta reference" } catch (AssertionError e) { println e.getMessage() }
@@ -371,7 +389,7 @@ if(params.input_vcf) {
   // create mpileup file + parse mpileup file to send it to Rscript
   process mpileup2vcf {
 
-	  if(!params.no_plots) {
+	  if(params.do_plots) {
           publishDir params.out_folder+'/PDF/', mode: 'move', pattern: '*.pdf'
       }
       
@@ -422,7 +440,7 @@ if(params.input_vcf) {
           samtools mpileup --fasta-ref !{fasta_ref} --region $bed_line --ignore-RG --min-BQ !{params.base_qual} --min-MQ !{params.map_qual} --max-idepth 1000000 --max-depth !{params.max_DP} BAM/*.bam | sed 's/		/	*	*/g' 
           i=$((i+1))
       done < !{split_bed} 
-      } | mpileup2readcounts 0 -5 !{indel_par} !{params.min_ao} | Rscript !{baseDir}/bin/needlestack.r --pairs_file=!{params.pairs_file} --source_path=!{baseDir}/bin/ --out_file=!{region_tag}.vcf --fasta_ref=!{fasta_ref} --bam_folder=!{params.bam_folder} --ref_genome=!{params.ref_genome} --GQ_threshold=!{params.min_qval} --min_coverage=!{params.min_dp} --min_reads=!{params.min_ao} --SB_type=!{params.sb_type} --SB_threshold_SNV=!{params.sb_snv} --SB_threshold_indel=!{params.sb_indel} --output_all_SNVs=!{params.all_SNVs} --do_plots=!{!params.no_plots} --do_alignments=!{!params.no_alignments} --plot_labels=!{!params.no_labels} --add_contours=!{!params.no_contours} --extra_rob=!{params.extra_robust_gl} --afmin_power=!{params.power_min_af} --sigma=!{params.sigma_normal}
+      } | mpileup2readcounts 0 -5 !{indel_par} !{params.min_ao} | Rscript !{baseDir}/bin/needlestack.r --pairs_file=!{params.pairs_file} --source_path=!{baseDir}/bin/ --out_file=!{region_tag}.vcf --fasta_ref=!{fasta_ref} --bam_folder=!{params.bam_folder} --ref_genome=!{params.ref_genome} --GQ_threshold=!{params.min_qval} --min_coverage=!{params.min_dp} --min_reads=!{params.min_ao} --SB_type=!{params.sb_type} --SB_threshold_SNV=!{params.sb_snv} --SB_threshold_indel=!{params.sb_indel} --output_all_SNVs=!{params.all_SNVs} --do_plots=!{params.do_plots} --do_alignments=!{params.do_alignments} --plot_labels=!{!params.no_labels} --add_contours=!{!params.no_contours} --extra_rob=!{params.extra_robust_gl} --afmin_power=!{params.power_min_af} --sigma=!{params.sigma_normal}
       '''
   }
 

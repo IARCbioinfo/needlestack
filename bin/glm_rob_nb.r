@@ -1,4 +1,4 @@
-# Copyright (C) 2017 Matthieu Foll and Tiffany Delhomme
+# Copyright (C) 2015 Matthieu Foll and Tiffany Delhomme
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
