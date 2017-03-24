@@ -96,7 +96,7 @@ Needlestack works under most Linux distributions and Apple OS X.
 
 ### Nextflow and Docker
 
-If you can't install [docker](https://www.docker.com) or don't want to use it, the pipeline will also work if you install [perl](https://www.perl.org),  [bedtools](http://bedtools.readthedocs.org/en/latest/), [samtools](http://www.htslib.org) and Rscript from [R](https://www.r-project.org) and put them in your path (executables are assumed to be respectively called `perl`, `bedtools`, `samtools` and `Rscript`). In this case, remove the `-with-docker` option from step 5 above.
+If you can't install [docker](https://www.docker.com) or don't want to use it, the pipeline will also work if you install [bedtools](http://bedtools.readthedocs.org/en/latest/), [samtools](http://www.htslib.org), Rscript from [R](https://www.r-project.org) and g++ compiler to compile the file [mpileup2readcounts.cc](https://github.com/IARCbioinfo/mpileup2readcounts), put them in your path (executables are assumed to be respectively called `bedtools`, `samtools`, `Rscript` and `mpileup2readcounts`). In this case, remove the `-with-docker` option from step 5 above.
 
 The exact same pipeline can be run on your computer or on a HPC cluster, by adding a [nextflow configuration file](http://www.nextflow.io/docs/latest/config.html) to choose an appropriate [executor](http://www.nextflow.io/docs/latest/executor.html). For example to work on a cluster using [SGE scheduler](https://en.wikipedia.org/wiki/Oracle_Grid_Engine), simply add a file named `nextflow.config` in the current directory (or `~/.nextflow/config` to make global changes) containing:  
 ```java
