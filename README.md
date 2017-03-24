@@ -158,12 +158,9 @@ In other cases (when there is no `--pairs_file` parameter defined), genotypes ar
 ##### Two options to consider :
 
 1. --do_plots :
- ..* SOMATIC : To produce pdf regression plots for somatic variants only. Default value, when using matched tumor/normal.
- 
- ..* ALL : To produce pdf regression plots for all variants. Default value, when not using matched tumor/normal.
- 
- ..* NONE : To remove pdf regression plots from the output
- 
+	* SOMATIC : To produce pdf regression plots for somatic variants only. Default value, when using matched tumor/normal.
+	* ALL : To produce pdf regression plots for all variants. Default value, when not using matched tumor/normal.
+	* NONE : To remove pdf regression plots from the output
 2. --do_alignments : To add the alignments plots to the regression plots. If this option is set to "true", the name of the reference genome required for the bam alignments (--ref_genome option) needs to be provided. False is the default value.
 
 ##### Bioconductor packages to install for plotting the alignments :
