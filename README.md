@@ -190,7 +190,17 @@ The name of the reference genome as to be the same as the BSgenome data package 
 
 By default, when using matched tumor/normal (pairs_file option), needlestack will produce pdf plots of regressions only for somatic variants and without the alignment plots; when not, needlestack will produce them for all variants and without the alignment plots. 
 
-![Example of an alignment plot](alignments.png)
+![Example of an alignment plot](alignments.png "Example of an alignment plot")
+
+##### The alignment plot from top to bottom :
+
+- Chromosome representation : a red vertical line shows the position of the variant
+- Genomic axis associated with the alignment.
+- BAM alignment(s) (50 bases on both sides of the variant) : the variant position is highlighted in red.
+- The reference genome : the variant position is highlighted in red.
+- Genome annotation : the yellow blocks represent exons, the variant position is highlighted in red. The annotation is represented only if the variant is not in an intergenic region.
+- Zoom-out on the genome annotation : representation of the whole gene whose name is on the right side of the gene annotation. The annotation is represented only if the variant is not in an intergenic region. A red vertical line shows the position of the variant. 
+- Genomic axis corresponding to the last genome annotation. A red vertical line shows the position of the variant. 
 
 ## Notes
 
