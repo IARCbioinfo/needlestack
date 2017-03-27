@@ -36,7 +36,7 @@ RUN apt-get clean && \
 	DEBIAN_FRONTEND=noninteractive apt-get -y install libcurl4-openssl-dev && \	
 	
 	Rscript -e "source('http://bioconductor.org/biocLite.R'); \
-	biocLite('Gviz');" \	
+	biocLite('Gviz'); \	
 	biocLite('BSgenome.Hsapiens.UCSC.hg19'); \
 	biocLite('BSgenome.Hsapiens.UCSC.hg18'); \
 	biocLite('BSgenome.Hsapiens.UCSC.hg38'); \
