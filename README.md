@@ -1,5 +1,5 @@
 <img align="center" src="https://cloud.githubusercontent.com/assets/3366818/12507528/99afd6fa-c0f6-11e5-993b-5ac925d178fa.png" width="700">
-# A multi-sample somatic variant caller
+## A multi-sample somatic variant caller
 
 <img align="center" src="https://cloud.githubusercontent.com/assets/3366818/10489240/7da79144-729c-11e5-8cb3-0225106d9b06.jpg" width="600">
 
@@ -155,15 +155,17 @@ In other cases (when there is no `--pairs_file` parameter defined), genotypes ar
 
 ### Plot options
 
-##### Two options to consider :
+#### Two options to consider :
 
 1. --do_plots :
-	* SOMATIC : To produce pdf regression plots for somatic variants only. Default value, when using matched tumor/normal.
-	* ALL : To produce pdf regression plots for all variants. Default value, when not using matched tumor/normal.
+
+	* SOMATIC : To produce pdf regression plots only for somatic variants. Default value when using matched tumor/normal.
+	* ALL : To produce pdf regression plots for all variants. Default value when not using matched tumor/normal.
 	* NONE : To remove pdf regression plots from the output
+	
 2. --do_alignments : To add the alignments plots to the regression plots. If this option is set to "true", the name of the reference genome required for the bam alignments (--ref_genome option) needs to be provided. False is the default value.
 
-##### Bioconductor packages to install for plotting the alignments :
+#### Bioconductor packages to install for plotting the alignments :
 
 - The [Gviz](https://bioconductor.org/packages/release/bioc/html/Gviz.html) package
 - A [BSgenome data package](https://bioconductor.org/packages/release/BiocViews.html#___BSgenome) to provide a full genome sequence. This sequence can be, for Homo sapiens, provided by UCSC or based on NCBI GRCh37 for the 1000genomes Reference Genome Sequence ([hs37d5](https://bioconductor.org/packages/release/data/annotation/html/BSgenome.Hsapiens.1000genomes.hs37d5.html)). 
@@ -178,19 +180,33 @@ If one needs the UCSC version of the reference Human genome hg19, the fowolling 
 - *TxDb.Hsapiens.UCSC.hg19.knownGene* 
 - *org.Hs.eg.db* 
 
-One can also generate the alignments plot for data issued from the mouse by installing : 
+These packages exist for other organisms than Human but have not been tested.
+
+One can for example generate the alignments plot for data issued from the mouse by installing : 
 - *BSgenome.Mmusculus.UCSC.mm10* (mm9 UCSC version can also be used)
 - *TxDb.Mmusculus.UCSC.mm10.knownGene*  
 - *org.Mm.eg.db*
 
-##### --ref_genome option :
+For the other organisms the packages needs to have the same nomenclature as the ones listed above.
+
+#### --ref_genome option :
 
 The name of the reference genome as to be the same as the BSgenome data package name without "BSgenome.", for the UCSC version of the reference Human genome hg19, one needs to set --ref_genome to "*Hsapiens.UCSC.hg19*".
 
 
 By default, when using matched tumor/normal (pairs_file option), needlestack will produce pdf plots of regressions only for somatic variants and without the alignment plots; when not, needlestack will produce them for all variants and without the alignment plots. 
 
+![Example of an alignment plot](alignments.png "Example of an alignment plot")
 
+#### The alignment plot from top to bottom :
+
+- Chromosome representation : a red vertical line shows the position of the variant
+- Genomic axis associated with the alignment.
+- BAM alignment(s) (50 bases on both sides of the variant) : the variant position is highlighted in red.
+- The reference genome : the variant position is highlighted in red.
+- Genome annotation : the yellow blocks represent exons, the variant position is highlighted in red. The annotation is represented only if the variant is not in an intergenic region.
+- Zoom-out on the genome annotation : representation of the whole gene whose name is on the right side of the gene annotation. The annotation is represented only if the variant is not in an intergenic region. A red vertical line shows the position of the variant. 
+- Genomic axis corresponding to the previous genome annotation. A red vertical line shows the position of the variant. 
 
 ## Notes
 
