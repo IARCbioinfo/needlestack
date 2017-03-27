@@ -68,7 +68,7 @@ RUN apt-get clean && \
 	# mpileup2readcounts compilation
 	wget https://raw.githubusercontent.com/IARCbioinfo/mpileup2readcounts/master/mpileup2readcounts.cc && \
 	g++ -std=c++11 -O3 mpileup2readcounts.cc -o mpileup2readcounts && \
-	rm mpileup2readcounts.cc
+	rm mpileup2readcounts.cc && \
 	
 	
 	# Remove unnecessary dependences
