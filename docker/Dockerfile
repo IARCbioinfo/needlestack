@@ -25,6 +25,27 @@ RUN apt-get clean && \
 	wget \
 	bzip2 \
 	apt-utils && \
+	
+	# Install R 
+	DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y r-base && \
+
+	# Install Bioconductor packages
+	DEBIAN_FRONTEND=noninteractive apt-get -y install gfortran && \
+	DEBIAN_FRONTEND=noninteractive apt-get -y install libxml2-dev && \
+	DEBIAN_FRONTEND=noninteractive apt-get -y install libssl-dev && \
+	DEBIAN_FRONTEND=noninteractive apt-get -y install libcurl4-openssl-dev && \	
+	
+	Rscript -e "source('http://bioconductor.org/biocLite.R'); \
+	biocLite('Gviz');" \	
+	biocLite('BSgenome.Hsapiens.UCSC.hg19'); \
+	biocLite('BSgenome.Hsapiens.UCSC.hg18'); \
+	biocLite('BSgenome.Hsapiens.UCSC.hg38'); \
+	biocLite('BSgenome.Hsapiens.1000genomes.hs37d5'); \
+	biocLite('TxDb.Hsapiens.UCSC.hg19.knownGene'); \
+	biocLite('TxDb.Hsapiens.UCSC.hg18.knownGene'); \
+	biocLite('TxDb.Hsapiens.UCSC.hg38.knownGene'); \
+	biocLite('org.Hs.eg.db')" && \
+
 
 	# Install bedtools specific version manually
 	wget https://github.com/arq5x/bedtools2/releases/download/v2.25.0/bedtools-2.25.0.tar.gz && \
@@ -43,10 +64,13 @@ RUN apt-get clean && \
 	make install && \
 	cd .. && \
 	rm -rf samtools-1.3.1 samtools-1.3.1.tar.bz2 && \
-
-	# Install R 
-	DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y r-base && \
-
+	
+	# mpileup2readcounts compilation
+	wget https://raw.githubusercontent.com/IARCbioinfo/mpileup2readcounts/master/mpileup2readcounts.cc && \
+	g++ -std=c++11 -O3 mpileup2readcounts.cc -o mpileup2readcounts && \
+	rm mpileup2readcounts.cc
+	
+	
 	# Remove unnecessary dependences
 	DEBIAN_FRONTEND=noninteractive apt-get remove -y \
 	g++ \
@@ -59,8 +83,13 @@ RUN apt-get clean && \
 	apt-utils \
 	wget \
 	bzip2 \
+	gfortran \
+	libxml2-dev \
+	libssl-dev \
+	libcurl4-openssl-dev \
 	software-properties-common && \
 
 	# Clean
 	DEBIAN_FRONTEND=noninteractive apt-get autoremove -y && \ 
 	apt-get clean
+
