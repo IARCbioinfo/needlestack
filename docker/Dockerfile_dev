@@ -48,6 +48,20 @@ RUN apt-get clean && \
 	# Install R 
 	DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y r-base && \
 
+	# Install Bioconductor packages
+	DEBIAN_FRONTEND=noninteractive apt-get -y install gfortran && \
+	DEBIAN_FRONTEND=noninteractive apt-get -y install libxml2-dev && \
+	DEBIAN_FRONTEND=noninteractive apt-get -y install libssl-dev && \
+	DEBIAN_FRONTEND=noninteractive apt-get -y install libcurl4-openssl-dev && \	
+	
+	Rscript -e "source('http://bioconductor.org/biocLite.R'); biocLite('Gviz'); biocLite('BSgenome.Hsapiens.UCSC.hg19'); biocLite('BSgenome.Hsapiens.UCSC.hg18'); biocLite('BSgenome.Hsapiens.UCSC.hg38'); biocLite('BSgenome.Hsapiens.1000genomes.hs37d5'); biocLite('TxDb.Hsapiens.UCSC.hg19.knownGene'); biocLite('TxDb.Hsapiens.UCSC.hg18.knownGene'); biocLite('TxDb.Hsapiens.UCSC.hg38.knownGene'); biocLite('org.Hs.eg.db')" && \
+	
+	# mpileup2readcounts compilation
+	wget https://raw.githubusercontent.com/IARCbioinfo/mpileup2readcounts/master/mpileup2readcounts.cc && \
+	g++ -std=c++11 -O3 mpileup2readcounts.cc -o mpileup2readcounts && \
+	cp mpileup2readcounts /usr/local/bin && \
+	rm mpileup2readcounts.cc && \
+
 	# Remove unnecessary dependences
 	DEBIAN_FRONTEND=noninteractive apt-get remove -y \
 	g++ \
@@ -58,6 +72,9 @@ RUN apt-get clean && \
 	libncurses5-dev \
 	dialog \
 	apt-utils \
+	gfortran \
+	libssl-dev \
+	libcurl4-openssl-dev \
 	software-properties-common && \
 
 	# Clean
