@@ -35,17 +35,7 @@ RUN apt-get clean && \
 	DEBIAN_FRONTEND=noninteractive apt-get -y install libssl-dev && \
 	DEBIAN_FRONTEND=noninteractive apt-get -y install libcurl4-openssl-dev && \	
 	
-	Rscript -e "source('http://bioconductor.org/biocLite.R'); \
-	biocLite('Gviz'); \	
-	biocLite('BSgenome.Hsapiens.UCSC.hg19'); \
-	biocLite('BSgenome.Hsapiens.UCSC.hg18'); \
-	biocLite('BSgenome.Hsapiens.UCSC.hg38'); \
-	biocLite('BSgenome.Hsapiens.1000genomes.hs37d5'); \
-	biocLite('TxDb.Hsapiens.UCSC.hg19.knownGene'); \
-	biocLite('TxDb.Hsapiens.UCSC.hg18.knownGene'); \
-	biocLite('TxDb.Hsapiens.UCSC.hg38.knownGene'); \
-	biocLite('org.Hs.eg.db')" && \
-
+	Rscript -e "source('http://bioconductor.org/biocLite.R'); biocLite('Gviz'); biocLite('BSgenome.Hsapiens.UCSC.hg19'); biocLite('BSgenome.Hsapiens.UCSC.hg18'); biocLite('BSgenome.Hsapiens.UCSC.hg38'); biocLite('BSgenome.Hsapiens.1000genomes.hs37d5'); biocLite('TxDb.Hsapiens.UCSC.hg19.knownGene'); biocLite('TxDb.Hsapiens.UCSC.hg18.knownGene'); biocLite('TxDb.Hsapiens.UCSC.hg38.knownGene'); biocLite('org.Hs.eg.db')" && \
 
 	# Install bedtools specific version manually
 	wget https://github.com/arq5x/bedtools2/releases/download/v2.25.0/bedtools-2.25.0.tar.gz && \
@@ -68,6 +58,7 @@ RUN apt-get clean && \
 	# mpileup2readcounts compilation
 	wget https://raw.githubusercontent.com/IARCbioinfo/mpileup2readcounts/master/mpileup2readcounts.cc && \
 	g++ -std=c++11 -O3 mpileup2readcounts.cc -o mpileup2readcounts && \
+	cp mpileup2readcounts /usr/local/bin && \
 	rm mpileup2readcounts.cc && \
 	
 	
@@ -84,7 +75,6 @@ RUN apt-get clean && \
 	wget \
 	bzip2 \
 	gfortran \
-	libxml2-dev \
 	libssl-dev \
 	libcurl4-openssl-dev \
 	software-properties-common && \
