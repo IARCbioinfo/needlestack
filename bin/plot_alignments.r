@@ -12,12 +12,10 @@ if(do_alignments==TRUE){
     library(paste0("TxDb.",ref_genome,".knownGene"),character.only=TRUE)
     assign("txdb",get(paste0("TxDb.",ref_genome,".knownGene")))
     sTrack <- SequenceTrack(g,cex = 0.6)
-    print(sTrack)
     
     annotation=paste0("org.",substr(ref_genome,1,2),".eg.db")
     library(annotation,character.only=TRUE)
     assign("annotation",get(annotation))
-    print(annotation)
     UCSC=TRUE #UCSC reference genome
     
   }else if(ref_genome=="Hsapiens.1000genomes.hs37d5"){
@@ -27,23 +25,18 @@ if(do_alignments==TRUE){
     #define SequenceTrack (reference genome)
     sTrack <- SequenceTrack(g,cex = 0.6)
     
-  }else{
-    cat("Reference genome unrecognized")
-    q(save="no")
   }
 }
 
 get_htTrack <- function(isTNpairs,i,Tindex,Nindex,onlyTindex,onlyNindex,indiv_run,bam_folder,plot_grtracks,UCSC,sTrack,grtrack,chr,pos,paired=TRUE){
   if(isTNpairs){
     if(i %in% Tindex){
-      i_Tindex=seq(1,length(Tindex))
-      pair_index=i_Tindex[Tindex==i]
+      pair_index=which(Tindex==i)
       alTrack_T <- AlignmentsTrack(paste0(bam_folder,indiv_run[,1][Tindex[pair_index]],".bam"), isPaired = paired,stacking = "squish",alpha=0.95,chromosome=chr,cex.mismatch=0.5,name="Tumor",cex.title=1.5)
       alTrack_N <- AlignmentsTrack(paste0(bam_folder,indiv_run[,1][Nindex[pair_index]],".bam"), isPaired = paired,stacking = "squish",alpha=0.95,chromosome=chr,cex.mismatch=0.5,name="Normal",cex.title=1.5)
       unique=FALSE
     }else if(i %in% Nindex) {
-      i_Tindex=seq(1,length(Nindex))
-      pair_index=i_Tindex[Nindex==i]
+      pair_index=which(Nindex==i)
       alTrack_T <- AlignmentsTrack(paste0(bam_folder,indiv_run[,1][Tindex[pair_index]],".bam"), isPaired = paired,stacking = "squish",alpha=0.95,chromosome=chr,cex.mismatch=0.5,name="Tumor",cex.title=1.5)
       alTrack_N <- AlignmentsTrack(paste0(bam_folder,indiv_run[,1][Nindex[pair_index]],".bam"), isPaired = paired,stacking = "squish",alpha=0.95,chromosome=chr,cex.mismatch=0.5,name="Normal",cex.title=1.5)
       unique=FALSE
@@ -87,19 +80,47 @@ get_htTrack <- function(isTNpairs,i,Tindex,Nindex,onlyTindex,onlyNindex,indiv_ru
   return(list(ht,s))
 }
 
+check_pair_repetition <- function(s,Tindex,Nindex){
+  stock_pairs_index=vector()
+  i=1
+  while(i <= length(s)){
+    if(s[i] %in% Tindex){
+      pair_index=which(Tindex==s[i])
+      if ( (pair_index %in% stock_pairs_index) ){
+        s=s[-i]
+        i=i-1
+      }else{
+        stock_pairs_index = append(stock_pairs_index,pair_index)
+      }
+    }else if(s[i] %in% Nindex) {
+      pair_index=which(Nindex==s[i])
+      if ( (pair_index %in% stock_pairs_index) ){
+        s=s[-i]
+        i=i-1
+      }else{
+        stock_pairs_index = append(stock_pairs_index,pair_index)
+      }
+    }
+    i=i+1
+  }
+  return(s)
+}
 
 plotGviz <- function(isTNpairs,sTrack,ref_genome,txdb,annotation,UCSC,indiv_run,linepos,genotype,somatic_status,do_plots,Tindex,Nindex,onlyTindex,onlyNindex,bam_folder,w=50,w_zoomout=1000,paired=TRUE,nb_toplot=5){
   chr=linepos[1]
   pos=as.numeric(linepos[2])
   #select samples with the variant
   if(do_plots=="SOMATIC"){
-    samples_with_var=id_samples[somatic_status=="SOMATIC"]
+    samples_with_var=which(somatic_status=="SOMATIC")
+    samples_with_var = check_pair_repetition(samples_with_var,Tindex,Nindex)
     samples_without_var=vector()
   }else{
-    samples_with_var=id_samples[(genotype=="0/1")|(genotype=="1/1")]
-    samples_without_var=id_samples[(genotype=="./.")|(genotype=="0/0")]
-    print(samples_with_var)
+    samples_with_var=which((genotype=="0/1")|(genotype=="1/1"))
+    if(isTNpairs){samples_with_var = check_pair_repetition(samples_with_var,Tindex,Nindex)}
+    samples_without_var=which((genotype=="./.")|(genotype=="0/0"))
+    if(isTNpairs){samples_without_var = check_pair_repetition(samples_without_var,Tindex,Nindex)}
   }
+  
   
   gtrack <- GenomeAxisTrack()
   if(UCSC){
@@ -168,3 +189,4 @@ plotGviz <- function(isTNpairs,sTrack,ref_genome,txdb,annotation,UCSC,indiv_run,
   }
   
 }
+
