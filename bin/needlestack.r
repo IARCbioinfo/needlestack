@@ -6,7 +6,7 @@ parseArgs <- function(x) strsplit(sub("^--", "", x), "=")
 argsL <- as.list(as.character(as.data.frame(do.call("rbind", parseArgs(args)))$V2))
 names(argsL) <- as.data.frame(do.call("rbind", parseArgs(args)))$V1
 args <- argsL;rm(argsL)
-#print(args)
+
 if("--help" %in% args | is.null(args$out_file) | is.null(args$fasta_ref) | is.null(args$source_path) ) {
   cat("
       The R Script arguments_section.R
@@ -256,10 +256,8 @@ f <- file("stdin")
 open(f)
 i=1
 while(length(line <- readLines(f,n=1, warn = FALSE)) > 0) {
-  print("enter while")
   if(i!=1){
     linepos=unlist(strsplit(line,"\t"))
-    print(line)
     if (is.element(linepos[3],c("A","T","C","G"))) {
       # SNV
       for (alt in non_ref_bases(linepos[3])) { #for each base different from the reference 
