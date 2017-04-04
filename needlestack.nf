@@ -54,7 +54,7 @@ params.extra_robust_gl = false //  perform an extra robust regression basically 
 
 params.pairs_file = "FALSE" // by default R will get a false boolean value for pairs_file option
 assert (params.pairs_file != true) : "please enter a file name when using --pairs_file option"
-if (params.pairs_file != "FALSE") { try { assert file(params.pairs_file).exists() : "\n WARNING : input tumor-normal pairs file not located in execution directory" } catch (AssertionError e) { println e.getMessage() } }
+if (params.pairs_file != "FALSE") { try { assert file(params.pairs_file).exists() : "\n ERROR : input tumor-normal pairs file not located in execution directory, exit" } catch (AssertionError e) { println e.getMessage() ; System.exit(0)} }
 pairs_file = file(params.pairs_file)
 
 if (params.pairs_file != "FALSE") {

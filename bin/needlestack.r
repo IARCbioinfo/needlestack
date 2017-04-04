@@ -122,6 +122,9 @@ if(pairs_file != FALSE) { #if user gives a pairs_file to needlestack
     TNpairs.complete = TNpairs[!(is.na(TNpairs$TUMOR)|is.na(TNpairs$NORMAL) ),] # all complete T-N pairs
     Tindex = sapply( 1:nrow(TNpairs.complete) , function(k) return(which( indiv_run[,2]==TNpairs.complete$TUMOR[k])) )
     Nindex = sapply( 1:nrow(TNpairs.complete) , function(k) return(which( indiv_run[,2]==TNpairs.complete$NORMAL[k])) )
+  }else{
+    cat("Error : pairs_file not located in execution directory ")
+    q(save="no")
   }
 }
 
