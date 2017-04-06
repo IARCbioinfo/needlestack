@@ -117,6 +117,11 @@ if(pairs_file != FALSE) { #if user gives a pairs_file to needlestack
     TNpairs=read.table(pairs_file,h=T)
     names(TNpairs)[grep("TU",pairsname,ignore.case =T)] = "TUMOR" #set columns names (to avoid problems due to spelling variations or typos)
     names(TNpairs)[grep("NO",pairsname,ignore.case =T)] = "NORMAL"
+    
+    #Check that all sample names in the pairs_file file actually exist
+    names = c(as.vector(subset(TNpairs$NORMAL,TNpairs$NORMAL!="NA")),as.vector(subset(TNpairs$TUMOR,TNpairs$TUMOR!="NA")))
+    if(length(which((names %in% indiv_run[,2])==FALSE))!=0){cat("Error : sample name not present in names.txt"); q(save = "no")}
+    
     onlyNindex = which( sapply(indiv_run[,2], function(x) x%in%TNpairs$NORMAL[is.na(TNpairs$TUMOR)] ) )
     onlyTindex = which( sapply(indiv_run[,2], function(x) x%in%TNpairs$TUMOR[is.na(TNpairs$NORMAL)] ) )
     TNpairs.complete = TNpairs[!(is.na(TNpairs$TUMOR)|is.na(TNpairs$NORMAL) ),] # all complete T-N pairs
