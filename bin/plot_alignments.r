@@ -170,7 +170,7 @@ plotGviz <- function(isTNpairs,sTrack,ref_genome,txdb,annotation,UCSC,indiv_run,
     }else{
       samples_without_var_toplot=sample(samples_without_var,nb_toplot)
     }
-    j=1
+    
     for(i in samples_without_var_toplot){
       if(UCSC & plot_grtracks){
         res=get_htTrack(isTNpairs,i,Tindex,Nindex,onlyTindex,onlyNindex,indiv_run,bam_folder,plot_grtracks,UCSC,sTrack,grtrack,chr,pos,paired)
