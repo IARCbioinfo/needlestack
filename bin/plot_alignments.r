@@ -166,7 +166,7 @@ plotGviz <- function(isTNpairs,sTrack,ref_genome,txdb,annotation,UCSC,indiv_run,
   
   if(length(samples_without_var)!=0){
     if(length(samples_without_var)<nb_toplot){
-      samples_without_var_toplot=sample(samples_without_var,length(samples_without_var))
+      samples_without_var_toplot=samples_without_var
     }else{
       samples_without_var_toplot=sample(samples_without_var,nb_toplot)
     }
