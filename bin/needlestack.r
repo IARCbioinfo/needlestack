@@ -104,6 +104,7 @@ source(paste(args$source_path,"plot_alignments.r",sep=""))
 options("scipen"=100)
 
 indiv_run=read.table("names.txt",stringsAsFactors=F,colClasses = "character")
+if(ncol(indiv_run)!=2){cat("Error : names.txt contains only one column : samples names can't be obtained from the bam files : use --use_file_name option"); q(save="no")}
 indiv_run[,2]=make.unique(indiv_run[,2],sep="_")
 nindiv=nrow(indiv_run)
 id_samples=seq(1,nindiv) #samples IDs (integers) 

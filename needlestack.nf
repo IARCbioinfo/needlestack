@@ -313,6 +313,7 @@ if(params.input_vcf) {
   assert (params.map_qual >= 0) : "minimum mapping quality (samtools) must be higher than or equal to 0"
   assert (params.base_qual >= 0) : "minimum base quality (samtools) must be higher than or equal to 0"
 
+  sample_names = params.use_file_name ? "FILE" : "BAM" 
   out_vcf = params.out_vcf ? params.out_vcf : "all_variants.vcf"
 
   /* manage input positions to call (bed or region or whole-genome) */
@@ -339,6 +340,7 @@ if(params.input_vcf) {
   log.info "Samtools minimum mapping quality (--map_qual)                   : ${params.map_qual}"
   log.info "Samtools minimum base quality (--base_qual)                     : ${params.base_qual}"
   log.info "Samtools maximum coverage before downsampling (--max_DP)        : ${params.max_DP}"
+  log.info "Sample names definition (--use_file_name) : ${sample_names}"
   log.info(params.all_SNVs == true ? "Output all SNVs (--all_SNVs)                                    : yes" : "Output all SNVs (--all_SNVs)                                    : no" )
   log.info(params.extra_robust_gl == true ? "Perform an extra-robust regression (--extra_robust_gl)          : yes" : "Perform an extra-robust regression (--extra_robust_gl)          : no" )
   log.info(params.no_indels == true ? "Skip indels (--no_indels)                                       : yes" : "Skip indels (--no_indels)                                       : no" )
@@ -418,20 +420,28 @@ if(params.input_vcf) {
       }
       
       '''
-      i=1
       for cur_bam in BAM/*.bam
       do
-          # use bam file name as sample name
-          bam_file_name=$(basename "${cur_bam%.*}")
-          # remove whitespaces from name
-          SM1="$(echo -e "${bam_file_name}" | tr -d '[[:space:]]')"
+          if [ "!{sample_names}" == "FILE" ]; then
+                  # use bam file name as sample name
+                  bam_file_name=$(basename "${cur_bam%.*}")
+                  # remove whitespaces from name
+                  SM1="$(echo -e "${bam_file_name}" | tr -d '[[:space:]]')"
+                  SM2="$(echo -e "${bam_file_name}" | tr -d '[[:space:]]')"
+          else
+                  # get bam file names 
+				  bam_file_name=$(basename "${cur_bam%.*}")
+				  # remove whitespaces from name
+				  SM1="$(echo -e "${bam_file_name}" | tr -d '[[:space:]]')"
 
-          # extract sample name from bam file read group info field
-          SM2=$(samtools view -H $cur_bam | grep "^@RG" | tail -n1 | sed "s/.*SM:\\([^	]*\\).*/\\1/" | tr -d '[:space:]')
+				  # extract sample name from bam file read group info field
+				  SM2=$(samtools view -H $cur_bam | grep "^@RG" | tail -n1 | sed "s/.*SM:\\([^	]*\\).*/\\1/" | tr -d '[:space:]')
+          fi
+          
 
           printf "$SM1	$SM2\\n" >> names.txt
-          i=$((i+1))
       done
+
 
       set -o pipefail
       i=1
