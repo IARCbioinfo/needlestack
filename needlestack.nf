@@ -491,7 +491,6 @@ if(params.input_vcf) {
       echo '##samtools='$(samtools --version | tr '\n' ' ') >> versions.txt
       echo '##bedtools='$(bedtools --version) >> versions.txt
       echo '##Rscript='$(Rscript --version 2>&1) >> versions.txt
-      echo '##perl=v'$(perl -e 'print substr($^V, 1)') >> versions.txt
       sed -i '/##source=.*/ r versions.txt' header.txt
 
       # Check if sort command allows sorting in natural order (chr1 chr2 chr10 instead of chr1 chr10 chr2)
