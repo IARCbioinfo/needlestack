@@ -103,7 +103,7 @@ The exact same pipeline can be run on your computer or on a HPC cluster, by addi
 process.executor = 'sge'
 ```
 
-Other popular schedulers such as LSF, SLURM, PBS, TORQUE etc. are also compatible. See the nextflow documentation [here](http://www.nextflow.io/docs/latest/executor.html) for more details. Also have a look at the [other parameters for the executors](http://www.nextflow.io/docs/latest/config.html#scope-executor), in particular `queueSize` that defines the number of tasks the executor will handle in a parallel manner. Parallelism in needlestack is managed by splitting the genomic regions in pieces of equal sizes (`--nsplit`). Note that dealing with very large regions can take a large amount of memory, therefore splitting more is more memory-efficient. 
+Other popular schedulers such as LSF, SLURM, PBS, TORQUE etc. are also compatible. See the nextflow documentation [here](http://www.nextflow.io/docs/latest/executor.html) for more details. Also have a look at the [other parameters for the executors](http://www.nextflow.io/docs/latest/config.html#scope-executor), in particular `queueSize` that defines the number of tasks the executor will handle in a parallel manner. Parallelism in needlestack is managed by splitting the genomic regions in pieces of equal sizes (`--nsplit`). 
 
 ### Parameters
 
@@ -123,9 +123,9 @@ Type `--help` to get the full list of options. `--bam_folder` and `--fasta_ref` 
 | max_DP | 30000 | Downsample coverage per sample (passed to samtools) |
 | use_file_name |   | Put this argument to use the bam file names as sample names. By default the sample name is extracted from the bam file SM tag. |
 | all_SNVs |   | Put this argument to output all SNVs, even when no variant is detected. Note that positions with zero coverage for all samples might still be missing depending on how the region split is performed |
-| do_plots | SOMATIC if pairs_file provided ALL if not | Put this argument to create pdf plots of regressions in the output |
-| do_alignments | false | Put this argument to add alignments plots to the pdf plots of regressions |
-| ref_genome |   | Reference genome for the alignment plots |
+| do_plots | SOMATIC if pairs_file provided, ALL if not | To create pdf plots of regressions in the output. To remove pdf plots set --do_plot to NONE (See *Plot options* paragraph).|
+| do_alignments |  | Put this argument to add alignments plots to the pdf plots of regressions |
+| ref_genome |   | Reference genome for the alignment plots. Examples : *Hsapiens.UCSC.hg19*, *Hsapiens.UCSC.hg18*, *Hsapiens.1000genomes.hs37d5*, *Mmusculus.UCSC.mm10*. The right terminology is described below (*Plot options* paragraph).|
 | no_labels |   | Put this argument for not labeling the outliers on regression plots |
 | no_indels |   | Put this argument to do not perform the variant calling on insertions and deletions |
 | no_contours |   | Put this argument to do not plot qvalues contours (for qvalue threshold={10,30,50,70,100} by default) and do not plot minimum detectable allelic fraction in function of coverage |
@@ -163,7 +163,7 @@ In other cases (when there is no `--pairs_file` parameter defined), genotypes ar
 	* ALL : To produce pdf regression plots for all variants. Default value when not using matched tumor/normal.
 	* NONE : To remove pdf regression plots from the output
 	
-2. --do_alignments : To add the alignments plots to the regression plots. If this option is set to "true", the name of the reference genome required for the bam alignments (--ref_genome option) needs to be provided. False is the default value.
+2. --do_alignments : To add the alignments plots to the regression plots. If this option is set to "true", the name of the reference genome required for the bam alignments (--ref_genome option) needs to be provided (See *--ref_genome option* below). False is the default value.
 
 #### Bioconductor packages to install for plotting the alignments :
 
@@ -191,7 +191,7 @@ For the other organisms the packages needs to have the same nomenclature as the 
 
 #### --ref_genome option :
 
-The name of the reference genome as to be the same as the BSgenome data package name without "BSgenome.", for the UCSC version of the reference Human genome hg19, one needs to set --ref_genome to "*Hsapiens.UCSC.hg19*".
+The name of the reference genome has to be the same as the BSgenome data package name without "BSgenome.", for the UCSC version of the reference Human genome hg19, one needs to set --ref_genome to "*Hsapiens.UCSC.hg19*".
 
 
 By default, when using matched tumor/normal (pairs_file option), needlestack will produce pdf plots of regressions only for somatic variants and without the alignment plots; when not, needlestack will produce them for all variants and without the alignment plots. 
