@@ -126,12 +126,14 @@ plotGviz <- function(isTNpairs,sTrack,ref_genome,txdb,annotation,UCSC,indiv_run,
   if(UCSC){
     sTrack@chromosome <- chr
     ideoTrack <- IdeogramTrack(genome = unlist(strsplit(ref_genome,".",fixed=TRUE))[3], chromosome = chr)
-    grtrack <- GeneRegionTrack(txdb,chromosome = chr,start = pos-w, end = pos-w,exonAnnotation = "exon",collapseTranscripts = "longest",shape = "arrow",showTitle=FALSE,alpha=0.95)
+    grtrack <- GeneRegionTrack(txdb,chromosome = chr,start = pos-w, end = pos-w,exonAnnotation = "exon",collapseTranscripts = "longest",shape = "arrow",showTitle=FALSE,alpha=0.95,cex=0.7)
     displayPars(grtrack) <- list(background.title = "white")
     grtrack_zoomout <- GeneRegionTrack(txdb,chromosome = chr,start = pos-w_zoomout, end = pos+w_zoomout,transcriptAnnotation = "symbol",collapseTranscripts = "longest",alpha=0.95,showTitle=FALSE)
     if(length(gene(grtrack_zoomout))!=0){
-      symbols <- unlist(mapIds(annotation, gene(grtrack_zoomout), "SYMBOL", "ENTREZID", multiVals = "first"))
-      symbol(grtrack_zoomout) <- symbols[gene(grtrack_zoomout)]
+      if( length( which( unique(gene(grtrack_zoomout)) %in% keys(annotation,keytype="ENTREZID") == TRUE))==length(unique(gene(grtrack_zoomout))) ){
+          symbols <- unlist(mapIds(annotation, gene(grtrack_zoomout), "SYMBOL", "ENTREZID", multiVals = "first"))
+          symbol(grtrack_zoomout) <- symbols[gene(grtrack_zoomout)]
+      }
       plot_grtracks=TRUE
     }else{
       plot_grtracks=FALSE
