@@ -339,7 +339,7 @@ if(params.input_vcf) {
   log.info "Samtools minimum mapping quality (--map_qual)                   : ${params.map_qual}"
   log.info "Samtools minimum base quality (--base_qual)                     : ${params.base_qual}"
   log.info "Samtools maximum coverage before downsampling (--max_DP)        : ${params.max_DP}"
-  log.info "Sample names definition (--use_file_name) 			    : ${sample_names}"
+  log.info "Sample names definition (--use_file_name)                       : ${sample_names}"
   log.info(params.all_SNVs == true ? "Output all SNVs (--all_SNVs)                                    : yes" : "Output all SNVs (--all_SNVs)                                    : no" )
   log.info(params.extra_robust_gl == true ? "Perform an extra-robust regression (--extra_robust_gl)          : yes" : "Perform an extra-robust regression (--extra_robust_gl)          : no" )
   log.info(params.no_indels == true ? "Skip indels (--no_indels)                                       : yes" : "Skip indels (--no_indels)                                       : no" )
