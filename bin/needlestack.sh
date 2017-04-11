@@ -18,8 +18,6 @@ usage ()
     echo "Mandatory arguments:"
     echo "    --bam_folder     BAM_DIR                  BAM files directory."
     echo "    --fasta_ref      REF_IN_FASTA             Reference genome in fasta format."
-    echo "    OR "
-    echo "    --input_vcf      VCF FILE                 VCF file (basically from GATK pipeline) to annotate."
     echo "Options:"
     echo "    --min_dp         INTEGER                  Minimum median coverage (in addition, min_dp in at least 10 samples)."
     echo "    --min_ao         INTEGER                  Minimum number of non-ref reads in at least one sample to consider a site."
