@@ -273,7 +273,7 @@ echo "Sigma parameter for germline (--sigma)                          : $sigma_n
 echo "Samtools minimum mapping quality (--map_qual)                   : $map_qual"
 echo "Samtools minimum base quality (--base_qual)                     : $base_qual"
 echo "Samtools maximum coverage before downsampling (--max_DP)        : $max_DP"
-echo "Sample names definition (--use_file_name) : $sample_names"
+echo "Sample names definition (--use_file_name)                       : $sample_names"
 if [ $all_SNVs = true ]; then
 	echo "Output all SNVs (--all_SNVs)                                    : yes" 
 else
