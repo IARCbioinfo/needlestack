@@ -523,7 +523,7 @@ while(length(line <- readLines(f,n=1, warn = FALSE)) > 0) {
                     pdf(paste(linepos[1],"_",linepos[2],"_",as.numeric(linepos[2])+nchar(cur_del)-1,"_",paste(prev_bp,cur_del,sep=""),"_",prev_bp,ifelse(ref_inv,"_inv_ref",""),ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),11,12)
                     par(mar=c(12,7,12,7))
                   }else{
-                    pdf(paste(linepos[1],"_",linepos[2],"_",as.numeric(linepos[2])+nchar(cur_del)-1,"_",paste(prev_bp,cur_del,sep=""),"_",prev_bp,ifelse(ref_inv,"_inv_ref",""),ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),7,6)
+                    pdf(paste(linepos[1],"_",linepos[2],"_",as.numeric(linepos[2])+nchar(cur_del)-1,"_",paste(prev_bp,cur_del,sep=""),"_",prev_bp,ifelse(ref_inv,"_inv_ref",""),ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),9,8)
                     par(mar=c(8,7,8,7))
                   }
                   plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(linepos[1]),":",.(as.numeric(linepos[2]))," (",.(paste(prev_bp,cur_del,sep="")) %->% .(prev_bp),")",.(ifelse(ref_inv," INV REF","")),.(ifelse(reg_res$extra_rob," EXTRA ROBUST","")),sep="")),sbs=sbs, SB_threshold=SB_threshold_indel,plot_labels=plot_labels,add_contours=add_contours,names=indiv_run[,2])
@@ -678,7 +678,7 @@ while(length(line <- readLines(f,n=1, warn = FALSE)) > 0) {
                     pdf(paste(linepos[1],"_",linepos[2],"_",as.numeric(linepos[2]),"_",prev_bp,"_",paste(prev_bp,cur_ins,sep=""),ifelse(ref_inv,"_inv_ref",""),ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),11,12)
                     par(mar=c(12,7,12,7))
                   }else{
-                    pdf(paste(linepos[1],"_",linepos[2],"_",as.numeric(linepos[2]),"_",prev_bp,"_",paste(prev_bp,cur_ins,sep=""),ifelse(ref_inv,"_inv_ref",""),ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),7,6)
+                    pdf(paste(linepos[1],"_",linepos[2],"_",as.numeric(linepos[2]),"_",prev_bp,"_",paste(prev_bp,cur_ins,sep=""),ifelse(ref_inv,"_inv_ref",""),ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),9,8)
                     par(mar=c(8,7,8,7))
                   }
                   plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(linepos[1]),":",.(linepos[2])," (",.(prev_bp) %->% .(paste(prev_bp,cur_ins,sep="")),")",.(ifelse(ref_inv," INV REF","")),.(ifelse(reg_res$extra_rob," EXTRA ROBUST","")),sep="")),sbs=sbs, SB_threshold=SB_threshold_indel,plot_labels=plot_labels,add_contours=add_contours,names=indiv_run[,2])
