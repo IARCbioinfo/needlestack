@@ -106,7 +106,7 @@ check_pair_repetition <- function(s,Tindex,Nindex){
   return(s)
 }
 
-plotGviz <- function(isTNpairs,sTrack,ref_genome,txdb,annotation,UCSC,indiv_run,linepos,genotype,somatic_status,do_plots,Tindex,Nindex,onlyTindex,onlyNindex,bam_folder,w=50,w_zoomout=1000,paired=TRUE,nb_toplot=5){
+plotGviz <- function(isTNpairs,sTrack,ref_genome,txdb,annotation,UCSC,indiv_run,linepos,genotype,somatic_status,do_plots,Tindex,Nindex,onlyTindex,onlyNindex,bam_folder,w=50,w_zoomout=1000,paired=FALSE,nb_toplot=5){
   chr=linepos[1]
   pos=as.numeric(linepos[2])
   #select samples with the variant
