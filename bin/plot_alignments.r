@@ -28,7 +28,7 @@ if(do_alignments==TRUE){
   }
 }
 
-get_htTrack <- function(isTNpairs,i,Tindex,Nindex,onlyTindex,onlyNindex,indiv_run,bam_folder,plot_grtracks,UCSC,sTrack,grtrack,chr,pos,paired=TRUE){
+get_htTrack <- function(isTNpairs,i,Tindex,Nindex,onlyTindex,onlyNindex,indiv_run,bam_folder,plot_grtracks,UCSC,sTrack,grtrack,chr,pos,paired=FALSE){
   if(isTNpairs){
     if(i %in% Tindex){
       pair_index=which(Tindex==i)
