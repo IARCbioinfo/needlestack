@@ -150,17 +150,28 @@ plotGviz <- function(isTNpairs,sTrack,ref_genome,txdb,annotation,UCSC,indiv_run,
     sTrack@chromosome <- chr
     ideoTrack <- IdeogramTrack(genome = unlist(strsplit(ref_genome,".",fixed=TRUE))[3], chromosome = chr) #chromosome representation
     #genome annotation : 
-    grtrack <- GeneRegionTrack(txdb,chromosome = chr,start = pos-w, end = pos-w,exonAnnotation = "exon",collapseTranscripts = "longest",shape = "arrow",showTitle=FALSE,alpha=0.95,cex=0.7)
+    grtrack <- GeneRegionTrack(txdb,chromosome = chr,start = pos-w_zoomout, end = pos+w_zoomout,exonAnnotation = "exon",collapseTranscripts = "longest",shape = "arrow",showTitle=FALSE,alpha=0.95,cex=0.7)
+    if(length(unique(gene(grtrack)))>=6){
+      sampling=sample(unique(grtrack@range@elementMetadata$gene),5)
+      grtrack@range=grtrack@range[grtrack@range@elementMetadata$gene %in% sampling,]
+      displayPars(grtrack)$cex <- 0.6
+    }
     displayPars(grtrack) <- list(background.title = "white")
-    grtrack_zoomout <- GeneRegionTrack(txdb,chromosome = chr,start = pos-w_zoomout, end = pos+w_zoomout,transcriptAnnotation = "symbol",collapseTranscripts = "longest",alpha=0.95,showTitle=FALSE)
+    grtrack_zoomout=grtrack
+    displayPars(grtrack_zoomout)$transcriptAnnotation <- "symbol"
+    displayPars(grtrack_zoomout)$showExonId <- FALSE
+    displayPars(grtrack_zoomout)$shape <- c("smallArrow","box")
     if(length(gene(grtrack_zoomout))!=0){
       if( length( which( unique(gene(grtrack_zoomout)) %in% keys(annotation,keytype="ENTREZID") == TRUE))==length(unique(gene(grtrack_zoomout))) ){
-          symbols <- unlist(mapIds(annotation, gene(grtrack_zoomout), "SYMBOL", "ENTREZID", multiVals = "first"))
-          symbol(grtrack_zoomout) <- symbols[gene(grtrack_zoomout)]
+        symbols <- unlist(mapIds(annotation, gene(grtrack_zoomout), "SYMBOL", "ENTREZID", multiVals = "first"))
+        symbol(grtrack_zoomout) <- symbols[gene(grtrack_zoomout)]
       }
       plot_grtracks=TRUE
     }else{ #genome annotation can not be added if non UCSC genome
       plot_grtracks=FALSE
+    }
+    if(length(unique(gene(grtrack_zoomout)))>=6){
+      grtrack_zoomout@range=grtrack_zoomout@range[grtrack_zoomout@range@elementMetadata$gene %in% sampling,]
     }
     ht_zoomout <- HighlightTrack(trackList = list(grtrack_zoomout,gtrack), start = c(pos), width =0,chromosome = chr) #highlight the position of the variant on the genomic axis and the genome annotation
   }else{
