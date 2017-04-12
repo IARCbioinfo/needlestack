@@ -1,3 +1,4 @@
+#loading libraries
 if(do_alignments==TRUE){
   
   library("Gviz")
@@ -7,10 +8,10 @@ if(do_alignments==TRUE){
   assign("g",get(ref_string))
   
   if(ref_genome!="Hsapiens.1000genomes.hs37d5"){
-    
-    #define SequenceTrack (reference genome)
+    #genome annotation
     library(paste0("TxDb.",ref_genome,".knownGene"),character.only=TRUE)
     assign("txdb",get(paste0("TxDb.",ref_genome,".knownGene")))
+    #define SequenceTrack (reference genome)
     sTrack <- SequenceTrack(g,cex = 0.6)
     
     annotation=paste0("org.",substr(ref_genome,1,2),".eg.db")
@@ -28,13 +29,15 @@ if(do_alignments==TRUE){
   }
 }
 
+#create alignments tracks
 get_htTrack <- function(isTNpairs,i,Tindex,Nindex,onlyTindex,onlyNindex,indiv_run,bam_folder,plot_grtracks,UCSC,sTrack,grtrack,chr,pos,paired=FALSE){
+  #get bam alignments tracks (AlignmentsTrack())
   if(isTNpairs){
     if(i %in% Tindex){
       pair_index=which(Tindex==i)
       alTrack_T <- AlignmentsTrack(paste0(bam_folder,indiv_run[,1][Tindex[pair_index]],".bam"), isPaired = paired,stacking = "squish",alpha=0.95,chromosome=chr,cex.mismatch=0.5,name="Tumor",cex.title=1.5)
       alTrack_N <- AlignmentsTrack(paste0(bam_folder,indiv_run[,1][Nindex[pair_index]],".bam"), isPaired = paired,stacking = "squish",alpha=0.95,chromosome=chr,cex.mismatch=0.5,name="Normal",cex.title=1.5)
-      unique=FALSE
+      unique=FALSE #two alignments on the same plot
     }else if(i %in% Nindex) {
       pair_index=which(Nindex==i)
       alTrack_T <- AlignmentsTrack(paste0(bam_folder,indiv_run[,1][Tindex[pair_index]],".bam"), isPaired = paired,stacking = "squish",alpha=0.95,chromosome=chr,cex.mismatch=0.5,name="Tumor",cex.title=1.5)
@@ -42,7 +45,7 @@ get_htTrack <- function(isTNpairs,i,Tindex,Nindex,onlyTindex,onlyNindex,indiv_ru
       unique=FALSE
     }else if((i %in% onlyTindex)){
       alTrack_unique <- AlignmentsTrack(paste0(bam_folder,indiv_run[,1][i],".bam"), isPaired = paired,stacking = "squish",alpha=0.95,chromosome=chr,cex.mismatch=0.5,name="Normal",cex.title=1.5)
-      unique=TRUE
+      unique=TRUE #only one alignment 
     }else if((i %in% onlyNindex)){
       alTrack_unique <- AlignmentsTrack(paste0(bam_folder,indiv_run[,1][i],".bam"), isPaired = paired,stacking = "squish",alpha=0.95,chromosome=chr,cex.mismatch=0.5,name="Tumor",cex.title=1.5)
       unique=TRUE
@@ -51,8 +54,8 @@ get_htTrack <- function(isTNpairs,i,Tindex,Nindex,onlyTindex,onlyNindex,indiv_ru
     
     if(UCSC & plot_grtracks){
       if(unique){
-        ht <- HighlightTrack(trackList = list(alTrack_unique, sTrack, grtrack), start = c(pos), width =0,chromosome = chr)
-        s=c(0.05,0.1,0.72,0.05,0.08)
+        ht <- HighlightTrack(trackList = list(alTrack_unique, sTrack, grtrack), start = c(pos), width =0,chromosome = chr) #highlight the position of the variant
+        s=c(0.05,0.1,0.72,0.05,0.08) #tracks proportions
       }else{
         ht <- HighlightTrack(trackList = list(alTrack_T,alTrack_N, sTrack, grtrack), start = c(pos), width =0,chromosome = chr)
         s=c(0.05,0.1,0.36,0.36,0.05,0.08)
@@ -80,6 +83,7 @@ get_htTrack <- function(isTNpairs,i,Tindex,Nindex,onlyTindex,onlyNindex,indiv_ru
   return(list(ht,s))
 }
 
+#remove repetition : to avoid having two identical figures for each tumor/normal pair
 check_pair_repetition <- function(s,Tindex,Nindex){
   stock_pairs_index=vector()
   i=1
@@ -106,26 +110,28 @@ check_pair_repetition <- function(s,Tindex,Nindex){
   return(s)
 }
 
+#plot alignments
 plotGviz <- function(isTNpairs,sTrack,ref_genome,txdb,annotation,UCSC,indiv_run,linepos,genotype,somatic_status,do_plots,Tindex,Nindex,onlyTindex,onlyNindex,bam_folder,w=50,w_zoomout=1000,paired=FALSE,nb_toplot=5){
   chr=linepos[1]
   pos=as.numeric(linepos[2])
   #select samples with the variant
-  if(do_plots=="SOMATIC"){
+  if(do_plots=="SOMATIC"){ #select only the sample with a somatic variant
     samples_with_var=which(somatic_status=="SOMATIC")
-    samples_with_var = check_pair_repetition(samples_with_var,Tindex,Nindex)
+    samples_with_var = check_pair_repetition(samples_with_var,Tindex,Nindex) #remove repetitions
     samples_without_var=vector()
   }else{
     samples_with_var=which((genotype=="0/1")|(genotype=="1/1"))
-    if(isTNpairs){samples_with_var = check_pair_repetition(samples_with_var,Tindex,Nindex)}
+    if(isTNpairs){samples_with_var = check_pair_repetition(samples_with_var,Tindex,Nindex)} #remove repetitions
     samples_without_var=which((genotype=="./.")|(genotype=="0/0"))
-    if(isTNpairs){samples_without_var = check_pair_repetition(samples_without_var,Tindex,Nindex)}
+    if(isTNpairs){samples_without_var = check_pair_repetition(samples_without_var,Tindex,Nindex)} #remove repetitions
   }
   
-  
-  gtrack <- GenomeAxisTrack()
+  #Define tracks common to all samples (reference sequence, chromosome representation, genome annotation)
+  gtrack <- GenomeAxisTrack() #genomic axis
   if(UCSC){
     sTrack@chromosome <- chr
-    ideoTrack <- IdeogramTrack(genome = unlist(strsplit(ref_genome,".",fixed=TRUE))[3], chromosome = chr)
+    ideoTrack <- IdeogramTrack(genome = unlist(strsplit(ref_genome,".",fixed=TRUE))[3], chromosome = chr) #chromosome representation
+    #genome annotation : 
     grtrack <- GeneRegionTrack(txdb,chromosome = chr,start = pos-w, end = pos-w,exonAnnotation = "exon",collapseTranscripts = "longest",shape = "arrow",showTitle=FALSE,alpha=0.95,cex=0.7)
     displayPars(grtrack) <- list(background.title = "white")
     grtrack_zoomout <- GeneRegionTrack(txdb,chromosome = chr,start = pos-w_zoomout, end = pos+w_zoomout,transcriptAnnotation = "symbol",collapseTranscripts = "longest",alpha=0.95,showTitle=FALSE)
@@ -135,23 +141,23 @@ plotGviz <- function(isTNpairs,sTrack,ref_genome,txdb,annotation,UCSC,indiv_run,
           symbol(grtrack_zoomout) <- symbols[gene(grtrack_zoomout)]
       }
       plot_grtracks=TRUE
-    }else{
+    }else{ #genome annotation can not be added if non UCSC genome
       plot_grtracks=FALSE
     }
-    ht_zoomout <- HighlightTrack(trackList = list(grtrack_zoomout,gtrack), start = c(pos), width =0,chromosome = chr)
+    ht_zoomout <- HighlightTrack(trackList = list(grtrack_zoomout,gtrack), start = c(pos), width =0,chromosome = chr) #highlight the position of the variant on the genomic axis and the genome annotation
   }else{
     sTrack@chromosome <- chr
-    ideoTrack <- IdeogramTrack(genome = "hg19", chromosome = paste0("chr",chr))
+    ideoTrack <- IdeogramTrack(genome = "hg19", chromosome = paste0("chr",chr)) #chromosome representation
     levels(ideoTrack@bandTable$chrom) <- sub("^chr", "", levels(ideoTrack@bandTable$chrom), ignore.case=T)
     ideoTrack@chromosome<-chr
     plot_grtracks=FALSE
   }
   
-  
+  #plot alignments for the samples with the variant
   for(i in samples_with_var){
     
     if(UCSC & plot_grtracks){
-      res=get_htTrack(isTNpairs,i,Tindex,Nindex,onlyTindex,onlyNindex,indiv_run,bam_folder,plot_grtracks,UCSC,sTrack,grtrack,chr,pos,paired)
+      res=get_htTrack(isTNpairs,i,Tindex,Nindex,onlyTindex,onlyNindex,indiv_run,bam_folder,plot_grtracks,UCSC,sTrack,grtrack,chr,pos,paired) #create alignments tracks
       grid.newpage()
       pushViewport(viewport(x=0,y=1, height=0.85, width=1, just=c("left","top"))) 
       plotTracks(c(ideoTrack,gtrack,res[1]),sizes=unlist(res[2]),from = pos-w, to = pos+w,add = TRUE, add53=TRUE,min.height=4, main=paste0(indiv_run[i,2]),title.width=0.7,littleTicks = TRUE,cex.main=1.5)
@@ -160,13 +166,15 @@ plotGviz <- function(isTNpairs,sTrack,ref_genome,txdb,annotation,UCSC,indiv_run,
       plotTracks(list(ht_zoomout),chromosome = chr, add = TRUE)
       popViewport(0)
     }else if(UCSC==FALSE | plot_grtracks==FALSE){
-      res=get_htTrack(isTNpairs,i,Tindex,Nindex,onlyTindex,onlyNindex,indiv_run,bam_folder,plot_grtracks,UCSC,sTrack,grtrack,chr,pos,paired)
+      res=get_htTrack(isTNpairs,i,Tindex,Nindex,onlyTindex,onlyNindex,indiv_run,bam_folder,plot_grtracks,UCSC,sTrack,grtrack,chr,pos,paired) #create alignments tracks
       plotTracks(c(ideoTrack,gtrack,res[1]),sizes=unlist(res[2]),from = pos-w, to = pos+w, add53=TRUE,min.height=4, main=paste0(indiv_run[i,2]),title.width=0.7,littleTicks = TRUE,cex.main=1.5)
       
     }
   }
   
+  #plot alignments for the samples without the variant
   if(length(samples_without_var)!=0){
+    #sampling of the samples without the variant
     if(length(samples_without_var)<nb_toplot){
       samples_without_var_toplot=samples_without_var
     }else{
@@ -175,7 +183,7 @@ plotGviz <- function(isTNpairs,sTrack,ref_genome,txdb,annotation,UCSC,indiv_run,
     
     for(i in samples_without_var_toplot){
       if(UCSC & plot_grtracks){
-        res=get_htTrack(isTNpairs,i,Tindex,Nindex,onlyTindex,onlyNindex,indiv_run,bam_folder,plot_grtracks,UCSC,sTrack,grtrack,chr,pos,paired)
+        res=get_htTrack(isTNpairs,i,Tindex,Nindex,onlyTindex,onlyNindex,indiv_run,bam_folder,plot_grtracks,UCSC,sTrack,grtrack,chr,pos,paired) #create alignments tracks
         grid.newpage()
         pushViewport(viewport(x=0,y=1, height=0.85, width=1, just=c("left","top"))) 
         plotTracks(c(ideoTrack,gtrack,res[1]),sizes=unlist(res[2]),from = pos-w, to = pos+w,add = TRUE, add53=TRUE,min.height=4, main=paste0(indiv_run[i,2],"*"),title.width=0.7,littleTicks = TRUE,cex.main=1.5)
@@ -184,7 +192,7 @@ plotGviz <- function(isTNpairs,sTrack,ref_genome,txdb,annotation,UCSC,indiv_run,
         plotTracks(list(ht_zoomout),chromosome = chr, add = TRUE)
         popViewport(0)
       }else if(UCSC==FALSE | plot_grtracks==FALSE){
-        res=get_htTrack(isTNpairs,i,Tindex,Nindex,onlyTindex,onlyNindex,indiv_run,bam_folder,plot_grtracks,UCSC,sTrack,grtrack,chr,pos,paired)
+        res=get_htTrack(isTNpairs,i,Tindex,Nindex,onlyTindex,onlyNindex,indiv_run,bam_folder,plot_grtracks,UCSC,sTrack,grtrack,chr,pos,paired) #create alignments tracks
         plotTracks(c(ideoTrack,gtrack,res[1]),sizes=unlist(res[2]),from = pos-w, to = pos+w, add53=TRUE,min.height=4, main=paste0(indiv_run[i,2],"*"),title.width=0.7,littleTicks = TRUE,cex.main=1.5)
       }
     }

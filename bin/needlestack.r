@@ -104,6 +104,7 @@ source(paste(args$source_path,"plot_alignments.r",sep=""))
 options("scipen"=100)
 
 indiv_run=read.table("names.txt",stringsAsFactors=F,colClasses = "character")
+#check if samples names exist in names.txt file
 if(ncol(indiv_run)!=2){cat("Error : names.txt contains only one column : samples names can't be obtained from the bam files : use --use_file_name option"); q(save="no")}
 indiv_run[,2]=make.unique(indiv_run[,2],sep="_")
 nindiv=nrow(indiv_run)
@@ -257,9 +258,8 @@ write_out("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t",paste(indiv_
 
 ###############################################################################################
 
-############################## STDIN SECTION ##############################
+############################## REGRESSION SECTION ##############################
 
-#set.seed(round(runif(1, min=1, max=20000), digits=0))
 #Reading input from STDIN
 f <- file("stdin")
 open(f)
@@ -273,7 +273,7 @@ while(length(line <- readLines(f,n=1, warn = FALSE)) > 0) {
         #base on the reference
         ref=linepos[3]
         
-        #count the number of the alternative base (nonreference)
+        #count the number of alternative bases (nonreference)
         Vp=as.numeric(linepos[eval(as.name(paste(alt,"_cols",sep="")))])
         Vm=as.numeric(linepos[eval(as.name(paste(tolower(alt),"_cols",sep="")))])
         ma_count=Vp+Vm
@@ -363,8 +363,8 @@ while(length(line <- readLines(f,n=1, warn = FALSE)) > 0) {
             }
             cat("\n",sep = "",file=out_file,append=T)
             
-            if (do_plots=="ALL") {
-              if(do_alignments==TRUE){
+            if (do_plots=="ALL") { #output all variants
+              if(do_alignments==TRUE){ #add alignment plots
                 if(isTNpairs){
                   pdf(paste(linepos[1],"_",linepos[2],"_",linepos[2],"_",ref,"_",alt,ifelse(ref_inv,"_inv_ref",""),ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),11,12)
                   par(mar=c(12,7,12,7))
@@ -372,25 +372,31 @@ while(length(line <- readLines(f,n=1, warn = FALSE)) > 0) {
                   pdf(paste(linepos[1],"_",linepos[2],"_",linepos[2],"_",ref,"_",alt,ifelse(ref_inv,"_inv_ref",""),ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),9,8)
                   par(mar=c(8,7,8,7))
                 }
+                #add regression plots to the pdf output
                 plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(linepos[1]),":",.(linepos[2])," (",.(ref) %->% .(alt),")",.(ifelse(ref_inv," INV REF","")),.(ifelse(reg_res$extra_rob," EXTRA ROBUST","")),sep="")), sbs=sbs, SB_threshold=SB_threshold_SNV,plot_labels=plot_labels,add_contours=add_contours,names=indiv_run[,2])
                 par(mar=c(1,1,1,1))
+                #add alignment plots to the pdf output
                 plotGviz(isTNpairs,sTrack,ref_genome,txdb,annotation,UCSC,indiv_run,linepos,genotype,somatic_status,do_plots,Tindex,Nindex,onlyTindex,onlyNindex,bam_folder)
                 dev.off()
               }else{
+                #output only regression plots
                 pdf(paste(linepos[1],"_",linepos[2],"_",linepos[2],"_",ref,"_",alt,ifelse(ref_inv,"_inv_ref",""),ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),7,6)
                 plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(linepos[1]),":",.(linepos[2])," (",.(ref) %->% .(alt),")",.(ifelse(ref_inv," INV REF","")),.(ifelse(reg_res$extra_rob," EXTRA ROBUST","")),sep="")), sbs=sbs, SB_threshold=SB_threshold_SNV,plot_labels=plot_labels,add_contours=add_contours,names=indiv_run[,2])
                 dev.off()
               }
-            }else if(do_plots=="SOMATIC"){
+            }else if(do_plots=="SOMATIC"){ #output only somatic variants
               if("SOMATIC" %in% somatic_status){
-                if(do_alignments==TRUE){
+                if(do_alignments==TRUE){ #add alignment plots
                   pdf(paste(linepos[1],"_",linepos[2],"_",linepos[2],"_",ref,"_",alt,ifelse(ref_inv,"_inv_ref",""),ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),11,12)
                   par(mar=c(12,7,12,7))
+                  #add regression plots to the pdf output
                   plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(linepos[1]),":",.(linepos[2])," (",.(ref) %->% .(alt),")",.(ifelse(ref_inv," INV REF","")),.(ifelse(reg_res$extra_rob," EXTRA ROBUST","")),sep="")), sbs=sbs, SB_threshold=SB_threshold_SNV,plot_labels=plot_labels,add_contours=add_contours,names=indiv_run[,2])
                   par(mar=c(1,1,1,1))
+                  #add alignment plots to the pdf output
                   plotGviz(isTNpairs,sTrack,ref_genome,txdb,annotation,UCSC,indiv_run,linepos,genotype,somatic_status,do_plots,Tindex,Nindex,onlyTindex,onlyNindex,bam_folder)
                   dev.off()
                 }else{
+                  #output only regression plots
                   pdf(paste(linepos[1],"_",linepos[2],"_",linepos[2],"_",ref,"_",alt,ifelse(ref_inv,"_inv_ref",""),ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),7,6)
                   plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(linepos[1]),":",.(linepos[2])," (",.(ref) %->% .(alt),")",.(ifelse(ref_inv," INV REF","")),.(ifelse(reg_res$extra_rob," EXTRA ROBUST","")),sep="")), sbs=sbs, SB_threshold=SB_threshold_SNV,plot_labels=plot_labels,add_contours=add_contours,names=indiv_run[,2])
                   dev.off()
@@ -510,10 +516,10 @@ while(length(line <- readLines(f,n=1, warn = FALSE)) > 0) {
               }
               
               cat("\n",sep = "",file=out_file,append=T)
+            
               
-              
-              if (do_plots=="ALL") {
-                if(do_alignments==TRUE){
+              if (do_plots=="ALL") { #output all variants
+                if(do_alignments==TRUE){ #add alignment plots
                   
                   # deletions are shifted in samtools mpileup by 1bp, so put them at the right place by adding + to pos_ref[i,"loc"] everywhere in what follows
                   if(!ref_inv & nchar(cur_del)>50) cur_del = paste(substr(cur_del,1,5+match(cur_del,uniq_del)),substr(cur_del,nchar(cur_del)-(5+match(cur_del,uniq_del)),nchar(cur_del)),sep="...")
@@ -526,25 +532,31 @@ while(length(line <- readLines(f,n=1, warn = FALSE)) > 0) {
                     pdf(paste(linepos[1],"_",linepos[2],"_",as.numeric(linepos[2])+nchar(cur_del)-1,"_",paste(prev_bp,cur_del,sep=""),"_",prev_bp,ifelse(ref_inv,"_inv_ref",""),ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),9,8)
                     par(mar=c(8,7,8,7))
                   }
+                  #add regression plots to the pdf output
                   plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(linepos[1]),":",.(as.numeric(linepos[2]))," (",.(paste(prev_bp,cur_del,sep="")) %->% .(prev_bp),")",.(ifelse(ref_inv," INV REF","")),.(ifelse(reg_res$extra_rob," EXTRA ROBUST","")),sep="")),sbs=sbs, SB_threshold=SB_threshold_indel,plot_labels=plot_labels,add_contours=add_contours,names=indiv_run[,2])
                   par(mar=c(1,1,1,1))
+                  #add alignment plots to the pdf output
                   plotGviz(isTNpairs,sTrack,ref_genome,txdb,annotation,UCSC,indiv_run,linepos,genotype,somatic_status,do_plots,Tindex,Nindex,onlyTindex,onlyNindex,bam_folder)
                   dev.off()
                 }else{
+                  #output only regression plots
                   pdf(paste(linepos[1],"_",linepos[2],"_",as.numeric(linepos[2])+nchar(cur_del)-1,"_",paste(prev_bp,cur_del,sep=""),"_",prev_bp,ifelse(ref_inv,"_inv_ref",""),ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),7,6)
                   plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(linepos[1]),":",.(as.numeric(linepos[2]))," (",.(paste(prev_bp,cur_del,sep="")) %->% .(prev_bp),")",.(ifelse(ref_inv," INV REF","")),.(ifelse(reg_res$extra_rob," EXTRA ROBUST","")),sep="")),sbs=sbs, SB_threshold=SB_threshold_indel,plot_labels=plot_labels,add_contours=add_contours,names=indiv_run[,2])
                   dev.off()
                 }
-              }else if(do_plots=="SOMATIC"){
+              }else if(do_plots=="SOMATIC"){ #output only somatic variants
                 if("SOMATIC" %in% somatic_status){
-                  if(do_alignments==TRUE){
+                  if(do_alignments==TRUE){ #add alignment plots
                     pdf(paste(linepos[1],"_",linepos[2],"_",as.numeric(linepos[2])+nchar(cur_del)-1,"_",paste(prev_bp,cur_del,sep=""),"_",prev_bp,ifelse(ref_inv,"_inv_ref",""),ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),11,12)
                     par(mar=c(12,7,12,7))
+                    #add regression plots to the pdf output
                     plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(linepos[1]),":",.(as.numeric(linepos[2]))," (",.(paste(prev_bp,cur_del,sep="")) %->% .(prev_bp),")",.(ifelse(ref_inv," INV REF","")),.(ifelse(reg_res$extra_rob," EXTRA ROBUST","")),sep="")),sbs=sbs, SB_threshold=SB_threshold_indel,plot_labels=plot_labels,add_contours=add_contours,names=indiv_run[,2])
                     par(mar=c(1,1,1,1))
+                    #add alignment plots to the pdf output
                     plotGviz(isTNpairs,sTrack,ref_genome,txdb,annotation,UCSC,indiv_run,linepos,genotype,somatic_status,do_plots,Tindex,Nindex,onlyTindex,onlyNindex,bam_folder)
                     dev.off()
                   }else{
+                    #output only regression plots
                     pdf(paste(linepos[1],"_",linepos[2],"_",as.numeric(linepos[2])+nchar(cur_del)-1,"_",paste(prev_bp,cur_del,sep=""),"_",prev_bp,ifelse(ref_inv,"_inv_ref",""),ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),7,6)
                     plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(linepos[1]),":",.(as.numeric(linepos[2]))," (",.(paste(prev_bp,cur_del,sep="")) %->% .(prev_bp),")",.(ifelse(ref_inv," INV REF","")),.(ifelse(reg_res$extra_rob," EXTRA ROBUST","")),sep="")),sbs=sbs, SB_threshold=SB_threshold_indel,plot_labels=plot_labels,add_contours=add_contours,names=indiv_run[,2])
                     dev.off()
@@ -667,9 +679,10 @@ while(length(line <- readLines(f,n=1, warn = FALSE)) > 0) {
               }
 
               cat("\n",sep = "",file=out_file,append=T)
-              if (do_plots=="ALL") {
+              
+              if (do_plots=="ALL") { #output all variants
                 
-                if(do_alignments==TRUE){
+                if(do_alignments==TRUE){ #add alignment plots
                   
                   if(!ref_inv & nchar(cur_ins)>50) cur_ins = paste(substr(cur_ins,1,5+match(cur_ins,uniq_ins)),substr(cur_ins,nchar(cur_ins)-(5+match(cur_ins,uniq_ins)),nchar(cur_ins)),sep="...")
                   if(ref_inv & nchar(ref)>50) ref = paste(substr(ref,1,5+match(ref,uniq_ins)),substr(ref,nchar(ref)-(5+match(ref,uniq_ins)),nchar(ref)),sep="...")
@@ -681,25 +694,31 @@ while(length(line <- readLines(f,n=1, warn = FALSE)) > 0) {
                     pdf(paste(linepos[1],"_",linepos[2],"_",as.numeric(linepos[2]),"_",prev_bp,"_",paste(prev_bp,cur_ins,sep=""),ifelse(ref_inv,"_inv_ref",""),ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),9,8)
                     par(mar=c(8,7,8,7))
                   }
+                  #add regression plots to the pdf output
                   plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(linepos[1]),":",.(linepos[2])," (",.(prev_bp) %->% .(paste(prev_bp,cur_ins,sep="")),")",.(ifelse(ref_inv," INV REF","")),.(ifelse(reg_res$extra_rob," EXTRA ROBUST","")),sep="")),sbs=sbs, SB_threshold=SB_threshold_indel,plot_labels=plot_labels,add_contours=add_contours,names=indiv_run[,2])
                   par(mar=c(1,1,1,1))
+                  #add alignment plots to the pdf output
                   plotGviz(isTNpairs,sTrack,ref_genome,txdb,annotation,UCSC,indiv_run,linepos,genotype,somatic_status,do_plots,Tindex,Nindex,onlyTindex,onlyNindex,bam_folder)
                   dev.off()
                 }else{
+                  #output only regression plots
                   pdf(paste(linepos[1],"_",linepos[2],"_",as.numeric(linepos[2]),"_",prev_bp,"_",paste(prev_bp,cur_ins,sep=""),ifelse(ref_inv,"_inv_ref",""),ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),7,6)
                   plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(linepos[1]),":",.(linepos[2])," (",.(prev_bp) %->% .(paste(prev_bp,cur_ins,sep="")),")",.(ifelse(ref_inv," INV REF","")),.(ifelse(reg_res$extra_rob," EXTRA ROBUST","")),sep="")),sbs=sbs, SB_threshold=SB_threshold_indel,plot_labels=plot_labels,add_contours=add_contours,names=indiv_run[,2])
                   dev.off()
                 }
-              }else if(do_plots=="SOMATIC"){
+              }else if(do_plots=="SOMATIC"){ #output only somatic variants
                 if("SOMATIC" %in% somatic_status){
-                  if(do_alignments==TRUE){
+                  if(do_alignments==TRUE){ #add alignment plots
                     pdf(paste(linepos[1],"_",linepos[2],"_",as.numeric(linepos[2]),"_",prev_bp,"_",paste(prev_bp,cur_ins,sep=""),ifelse(ref_inv,"_inv_ref",""),ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),11,12)
                     par(mar=c(12,7,12,7))
+                    #add regression plots to the pdf output
                     plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(linepos[1]),":",.(linepos[2])," (",.(prev_bp) %->% .(paste(prev_bp,cur_ins,sep="")),")",.(ifelse(ref_inv," INV REF","")),.(ifelse(reg_res$extra_rob," EXTRA ROBUST","")),sep="")),sbs=sbs, SB_threshold=SB_threshold_indel,plot_labels=plot_labels,add_contours=add_contours,names=indiv_run[,2])
                     par(mar=c(1,1,1,1))
+                    #add alignment plots to the pdf output
                     plotGviz(isTNpairs,sTrack,ref_genome,txdb,annotation,UCSC,indiv_run,linepos,genotype,somatic_status,do_plots,Tindex,Nindex,onlyTindex,onlyNindex,bam_folder)
                     dev.off()
                   }else{
+                    #output only regression plots
                     pdf(paste(linepos[1],"_",linepos[2],"_",as.numeric(linepos[2]),"_",prev_bp,"_",paste(prev_bp,cur_ins,sep=""),ifelse(ref_inv,"_inv_ref",""),ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),7,6)
                     plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(linepos[1]),":",.(linepos[2])," (",.(prev_bp) %->% .(paste(prev_bp,cur_ins,sep="")),")",.(ifelse(ref_inv," INV REF","")),.(ifelse(reg_res$extra_rob," EXTRA ROBUST","")),sep="")),sbs=sbs, SB_threshold=SB_threshold_indel,plot_labels=plot_labels,add_contours=add_contours,names=indiv_run[,2])
                     dev.off()
