@@ -1,7 +1,7 @@
 #! /usr/bin/env nextflow
 
 // needlestack: a multi-sample somatic variant caller
-// Copyright (C) 2015 Matthieu Foll and Tiffany Delhomme
+// Copyright (C) 2017 Matthieu Foll, Tiffany Delhomme, Nicolas Alcala and Aurelie Gabriel
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
