@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # needlestack: a multi-sample somatic variant caller
-# Copyright (C) 2017 Matthieu Foll, Tiffany Delhomme and Nicolas Alcala
+# Copyright (C) 2017 Matthieu Foll, Tiffany Delhomme, Nicolas Alcala and Aurelie Gabriel.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@ usage ()
     echo "--------------------------------------------------------"
     echo "NEEDLESTACK v1.0b: A MULTI-SAMPLE SOMATIC VARIANT CALLER"
     echo "--------------------------------------------------------"
-    echo "Copyright (C) 2015 Matthieu Foll and Tiffany Delhomme"
+    echo "Copyright (C) 2017 Matthieu Foll, Tiffany Delhomme, Nicolas Alcala and Aurelie Gabriel"
     echo "This program comes with ABSOLUTELY NO WARRANTY; for details see LICENSE.txt"
     echo "This is free software, and you are welcome to redistribute it"
     echo "under certain conditions; see LICENSE.txt for details."
@@ -207,7 +207,7 @@ echo ''
 echo '--------------------------------------------------------'
 echo 'NEEDLESTACK v1.0b: A MULTI-SAMPLE SOMATIC VARIANT CALLER'
 echo '--------------------------------------------------------'
-echo 'Copyright (C) 2015 Matthieu Foll and Tiffany Delhomme'
+echo 'Copyright (C) 2017 Matthieu Foll, Tiffany Delhomme, Nicolas Alcala and Aurelie Gabriel'
 echo 'This program comes with ABSOLUTELY NO WARRANTY; for details see LICENSE.txt'
 echo 'This is free software, and you are welcome to redistribute it'
 echo 'under certain conditions; see LICENSE.txt for details.'
@@ -217,7 +217,7 @@ if [ $pairs_file = "FALSE" ]; then
 else
 	echo "Perform a tumor-normal somatic variant calling (--pairs_file)   : yes (file $pairs_file)" 
 fi
-echo "!!!!! $pairs_file"
+
 echo "To consider a site for calling:"
 echo "     minimum median coverage (--min_dp)                         : $min_dp"
 echo "     minimum of alternative reads (--min_ao)                    : $min_ao"
@@ -450,7 +450,7 @@ fi
 
 #mpileup2vcf
 samtools mpileup --fasta-ref $fasta_ref --region $region --ignore-RG --min-BQ $base_qual --min-MQ $map_qual --max-idepth 1000000 --max-depth $max_DP $bam_folder*.bam | sed 's/		/	*	*/g' \
-| ~/bin/mpileup2readcounts 0 -5 $indel_par 0 \
+| mpileup2readcounts 0 -5 $indel_par 0 \
 | Rscript ~/bin/needlestack.r --pairs_file=$pairs_file --source_path=~/bin/ --out_file=$out_vcf --fasta_ref=$fasta_ref --bam_folder=$bam_folder --ref_genome=$ref_genome \
 --GQ_threshold=$min_qval --min_coverage=$min_dp --min_reads=$min_ao --SB_type=$sb_type --SB_threshold_SNV=$sb_snv --SB_threshold_indel=$sb_indel --output_all_SNVs=$all_SNVs \
 --do_plots=$do_plots --do_alignments=$do_alignments --plot_labels=$labels --add_contours=$contours --extra_rob=$extra_robust_gl --afmin_power=$power_min_af --sigma=$sigma_normal
@@ -469,9 +469,10 @@ mv header.txt $out_vcf
 #move pdf plots      
 if [ $do_plots != "NONE" ]; then
 	mkdir $out_folder'PDF'
-	mv *.pdf $PWD/PDF
+	mv *.pdf $out_folder/PDF
 fi
 
+mv $out_vcf $out_folder
 
 
 #remove intermediate files
