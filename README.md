@@ -33,7 +33,7 @@ Needlestack works under most Linux distributions and Apple OS X.
 
 1. Install [java](https://java.com/download/) JRE if you don't already have it (7 or higher).
 
-2. Install [nextflow](http://www.nextflow.io/).
+2. Install [nextflow](http://www.nextflow.io/) or go to 7 to use needlestack without nextflow.
 
 	```bash
 	curl -fsSL get.nextflow.io | bash
@@ -91,7 +91,25 @@ Needlestack works under most Linux distributions and Apple OS X.
 	nextflow run iarcbioinfo/needlestack -r v0.3 -with-docker \
 	         --bed TP53_all.bed --bam_folder BAM/ --fasta_ref 17.fasta.gz
 	```
+7. You can run needlastack in a shell without nextflow. 
 
+	a. Install [samtools](http://www.htslib.org), Rscript from [R](https://www.r-project.org), g++ compiler and compile the file *mpileup2readcounts.cc* located [here](https://github.com/IARCbioinfo/mpileup2readcounts), put them in your path (executables are assumed to be respectively called `samtools`, `Rscript` and `mpileup2readcounts`)
+	b. Download the files in this [bin](https://github.com/IARCbioinfo/needlestack/tree/gabriela_cpp/bin) directory and add them to your path.
+	c. Optionnally download a sample dataset.
+
+	```bash
+	git clone --depth=1 https://github.com/mfoll/NGS_data_test.git
+	```
+	d. Run needlestack.
+	
+	Here on the example dataset downloaded above:
+	```bash
+	cd NGS_data_test/1000G_CEU_TP53/
+	needlestack.sh --region=17:7572814-7573814 --bam_folder=BAM/ --fasta_ref=17.fasta.gz
+	```
+	
+	You will find a [VCF file](https://samtools.github.io/hts-specs/) called `all_variants.vcf` in the `BAM/` folder once done.
+	
 ## Detailed instructions
 
 ### Nextflow and Docker
