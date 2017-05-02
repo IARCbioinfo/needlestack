@@ -25,16 +25,16 @@ argsL <- as.list(as.character(as.data.frame(do.call("rbind", parseArgs(args)))$V
 names(argsL) <- as.data.frame(do.call("rbind", parseArgs(args)))$V1
 args <- argsL;rm(argsL)
 
-if("--help" %in% args | is.null(args$out_file) | is.null(args$fasta_ref) | is.null(args$source_path) ) {
+if("--help" %in% args | is.null(args$out_file) | is.null(args$fasta_ref) ) {
   cat("
       The R Script arguments_section.R
       Mandatory arguments:
       --writeHeader                  - write header if true
       --out_file=file_name           - name of output vcf
-      --source_path=path             - path to source files (glm_rob_nb.r, plot_rob_nb.r)
       --fasta_ref=path               - path of fasta ref
       --help                         - print this text
       Optionnal arguments:
+      --source_path=path             - path to source files (glm_rob_nb.r, plot_rob_nb.r, plot_alignments.r)
       --samtools=path                - path of samtools, default=samtools
       --SB_type=SOR, RVSB or FS      - strand bias measure, default=SOR
       --SB_threshold_SNV=value       - strand bias threshold for SNV, default=100
@@ -82,6 +82,8 @@ if(is.null(args$extra_rob)) {args$extra_rob=FALSE} else {args$extra_rob=as.logic
 if(is.null(args$afmin_power)) {args$afmin_power=-1} else {args$afmin_power=as.numeric(args$afmin_power)}
 if(is.null(args$sigma)) {args$sigma=0.1} else {args$sigma=as.numeric(args$sigma)}
 
+# script.dir <- dirname(sys.frame(1)$ofile)
+# print(script.dir)
 
 samtools=args$samtools
 out_file=args$out_file
@@ -112,9 +114,25 @@ if( do_plots==FALSE & do_alignments==TRUE){
   q(save="no")
 }
 
-source(paste(args$source_path,"glm_rob_nb.r",sep=""))
-source(paste(args$source_path,"plot_rob_nb.r",sep=""))
-source(paste(args$source_path,"plot_alignments.r",sep=""))
+#source R files
+getScriptPath <- function(){
+  cmd.args <- commandArgs()
+  m <- regexpr("(?<=^--file=).+", cmd.args, perl=TRUE)
+  script.dir <- dirname(regmatches(cmd.args, m))
+  if(length(script.dir) == 0) stop("can't determine script dir: please call the script with Rscript")
+  if(length(script.dir) > 1) stop("can't determine script dir: more than one '--file' argument detected")
+  return(script.dir)
+}
+
+if(is.null(args$source_path)) {
+  source_path=paste0(getScriptPath(),"/")
+} else {
+  source_path=as.numeric(args$source_path)
+}
+
+source(paste(source_path,'glm_rob_nb.r',sep=""))
+source(paste(source_path,"plot_rob_nb.r",sep=""))
+source(paste(source_path,"plot_alignments.r",sep=""))
 
 
 ############################################################

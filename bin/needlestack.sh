@@ -451,7 +451,7 @@ fi
 #mpileup2vcf
 samtools mpileup --fasta-ref $fasta_ref --region $region --ignore-RG --min-BQ $base_qual --min-MQ $map_qual --max-idepth 1000000 --max-depth $max_DP $bam_folder*.bam | sed 's/		/	*	*/g' \
 | mpileup2readcounts 0 -5 $indel_par 0 \
-| Rscript ~/bin/needlestack.r --pairs_file=$pairs_file --source_path=~/bin/ --out_file=$out_vcf --fasta_ref=$fasta_ref --bam_folder=$bam_folder --ref_genome=$ref_genome \
+| needlestack.r --pairs_file=$pairs_file --out_file=$out_vcf --fasta_ref=$fasta_ref --bam_folder=$bam_folder --ref_genome=$ref_genome \
 --GQ_threshold=$min_qval --min_coverage=$min_dp --min_reads=$min_ao --SB_type=$sb_type --SB_threshold_SNV=$sb_snv --SB_threshold_indel=$sb_indel --output_all_SNVs=$all_SNVs \
 --do_plots=$do_plots --do_alignments=$do_alignments --plot_labels=$labels --add_contours=$contours --extra_rob=$extra_robust_gl --afmin_power=$power_min_af --sigma=$sigma_normal
 
