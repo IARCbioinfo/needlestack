@@ -82,9 +82,6 @@ if(is.null(args$extra_rob)) {args$extra_rob=FALSE} else {args$extra_rob=as.logic
 if(is.null(args$afmin_power)) {args$afmin_power=-1} else {args$afmin_power=as.numeric(args$afmin_power)}
 if(is.null(args$sigma)) {args$sigma=0.1} else {args$sigma=as.numeric(args$sigma)}
 
-# script.dir <- dirname(sys.frame(1)$ofile)
-# print(script.dir)
-
 samtools=args$samtools
 out_file=args$out_file
 fasta_ref=args$fasta_ref
