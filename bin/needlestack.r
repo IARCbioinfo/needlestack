@@ -124,7 +124,7 @@ getScriptPath <- function(){
 if(is.null(args$source_path)) {
   source_path=paste0(getScriptPath(),"/")
 } else {
-  source_path=as.numeric(args$source_path)
+  source_path=args$source_path
 }
 
 source(paste(source_path,'glm_rob_nb.r',sep=""))
