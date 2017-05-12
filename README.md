@@ -1,4 +1,5 @@
 <img align="center" src="https://cloud.githubusercontent.com/assets/3366818/12507528/99afd6fa-c0f6-11e5-993b-5ac925d178fa.png" width="700">
+
 # A multi-sample somatic variant caller
 
 <img align="center" src="https://cloud.githubusercontent.com/assets/3366818/10489240/7da79144-729c-11e5-8cb3-0225106d9b06.jpg" width="600">
@@ -10,6 +11,8 @@ Warning: development in progress, unreliable results warranted.
 Please wait upcoming publication before using it in production. 
 
 Contact: follm@iarc.fr
+
+Needlestack development is support by the US National Cancer Institute (grant number R21CA175979) and the French Institut national du cancer.
 
 ## Description
 
