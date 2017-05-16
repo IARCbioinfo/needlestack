@@ -440,7 +440,11 @@ if(params.input_vcf) {
           printf "$SM1	$SM2\\n" >> names.txt
       done
 
-      abs_pairs_file=$(readlink -f !{pairs_file})
+      if [ "!{params.pairs_file}" != "FALSE" ]; then
+          abs_pairs_file=$(readlink -f !{pairs_file})
+      else
+          abs_pairs_file="FALSE"
+      fi
       set -o pipefail
       i=1
       
