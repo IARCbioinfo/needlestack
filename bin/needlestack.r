@@ -53,7 +53,7 @@ if("--help" %in% args | is.null(args$out_file) | is.null(args$fasta_ref) ) {
       WARNING : by default samtools has to be in your path
       Example:
       needlestack.r --out_file=test.vcf --fasta_ref=~/Documents/References/ \n\n")
-
+  
   q(save="no")
 }
 if(is.null(args$samtools)) {args$samtools="samtools"}
@@ -97,7 +97,9 @@ SB_threshold_indel=args$SB_threshold_indel
 output_all_SNVs=args$output_all_SNVs
 do_plots=args$do_plots
 do_alignments=args$do_alignments
+
 ref_genome=args$ref_genome
+
 plot_labels=args$plot_labels
 add_contours=args$add_contours
 extra_rob=args$extra_rob
@@ -440,7 +442,7 @@ while(length(line <- readLines(f,n=1, warn = FALSE)) > 0) {
           }
         }
       }
-
+      
       #DEL
       ldel=linepos[deletion_cols]
       names(ldel)=id_samples
@@ -549,7 +551,7 @@ while(length(line <- readLines(f,n=1, warn = FALSE)) > 0) {
               }
               
               cat("\n",sep = "",file=out_file,append=T)
-            
+              
               
               if (do_plots=="ALL") { #output all variants
                 if(do_alignments==TRUE){ #add alignment plots
@@ -557,7 +559,7 @@ while(length(line <- readLines(f,n=1, warn = FALSE)) > 0) {
                   # deletions are shifted in samtools mpileup by 1bp, so put them at the right place by adding + to pos_ref[i,"loc"] everywhere in what follows
                   if(!ref_inv & nchar(cur_del)>50) cur_del = paste(substr(cur_del,1,5+match(cur_del,uniq_del)),substr(cur_del,nchar(cur_del)-(5+match(cur_del,uniq_del)),nchar(cur_del)),sep="...")
                   if(ref_inv & nchar(ref)>50) ref = paste(substr(ref,1,5+match(ref,uniq_del)),substr(ref,nchar(ref)-(5+match(ref,uniq_del)),nchar(ref)),sep="...")
-
+                  
                   if(isTNpairs){
                     pdf(paste(linepos[1],"_",linepos[2],"_",as.numeric(linepos[2])+nchar(cur_del)-1,"_",paste(prev_bp,cur_del,sep=""),"_",prev_bp,ifelse(ref_inv,"_inv_ref",""),ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),11,12)
                     par(mar=c(12,7,12,7))
@@ -637,14 +639,14 @@ while(length(line <- readLines(f,n=1, warn = FALSE)) > 0) {
           # compute Qval20pc
           qval_minAF = rep(0,nindiv)
           somatic_status = rep(".",nindiv)
-
+          
           if(isTNpairs){
             qval_minAF[Nindex] = sapply(1:length(Nindex),function(ii) toQvalueN(DP[Nindex][ii],reg_res,sigma) )
             if(sum(reg_res$GQ[Nindex]>GQ_threshold)>0) qval_minAF[Tindex] = sapply(1:length(Tindex),function(ii) toQvalueN(DP[Tindex][ii],reg_res,sigma) ) #GERMLINE VARIANT, check if power to CONFIRM in tumors
             else qval_minAF[Tindex] = sapply(1:length(Tindex),function(ii) toQvalueT(DP[Tindex][ii],reg_res,afmin_power) ) #no germline variant, check if power to call SOMATIC in tumors
             if( length(onlyNindex)>0 ) qval_minAF[onlyNindex] = sapply(1:length(onlyNindex),function(ii) toQvalueN(DP[onlyNindex][ii],reg_res,sigma) )
             if( length(onlyTindex)>0 ) qval_minAF[onlyTindex] = sapply(1:length(onlyTindex),function(ii) toQvalueT(DP[onlyTindex][ii],reg_res,afmin_power) )
-
+            
             #no matching normal -> UNKNOWN (impossible to call somatic status)
             somatic_status[onlyTindex][(reg_res$GQ[onlyTindex] > GQ_threshold) ] = "UNKNOWN"
             #no matching tumor -> GERMLINE_UNCONFIRMABLE (impossible to call somatic status)
@@ -658,7 +660,7 @@ while(length(line <- readLines(f,n=1, warn = FALSE)) > 0) {
             #no tumor variant, normal variant with low power in T (with or without good power in N)-> "GERMLINE_UNCONFIRMABLE"
             somatic_status[Tindex][(reg_res$GQ[Tindex] < GQ_threshold)&(qval_minAF[Tindex]<GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE_UNCONFIRMABLE"
             somatic_status[Nindex][(reg_res$GQ[Tindex] < GQ_threshold)&(qval_minAF[Tindex]<GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE_UNCONFIRMABLE"
-
+            
             #tumor variant, no normal variant but without enough power -> UNKNOWN for both Tumor and Normal
             somatic_status[Tindex][(reg_res$GQ[Tindex] > GQ_threshold)&(qval_minAF[Nindex]<GQ_threshold)&(reg_res$GQ[Nindex]<GQ_threshold) ] = "UNKNOWN"
             somatic_status[Nindex][(reg_res$GQ[Tindex] > GQ_threshold)&(qval_minAF[Nindex]<GQ_threshold)&(reg_res$GQ[Nindex]<GQ_threshold) ] = "UNKNOWN"
@@ -667,7 +669,7 @@ while(length(line <- readLines(f,n=1, warn = FALSE)) > 0) {
             somatic_status[Nindex][ (reg_res$GQ[Tindex] > GQ_threshold)&(reg_res$GQ[Nindex]>GQ_threshold) ] = "GERMLINE_CONFIRMED"
             #tumor variant, no normal variant despite good power -> SOMATIC
             somatic_status[Tindex][(reg_res$GQ[Tindex] > GQ_threshold)&(qval_minAF[Nindex]>GQ_threshold)&(reg_res$GQ[Nindex]<GQ_threshold) ] = "SOMATIC"
-
+            
             #flag possible contamination
             wh.germ = grep("GERMLINE|UNKNOWN",somatic_status)
             if( length(wh.germ)>0 ) somatic_status[Tindex][somatic_status[Tindex] == "SOMATIC"] = paste("POSSIBLE_CONTAMINATION_FROM", paste(indiv_run[wh.germ,2],sep="_",collapse="_"),sep="_")
@@ -678,7 +680,7 @@ while(length(line <- readLines(f,n=1, warn = FALSE)) > 0) {
               qval_minAF = sapply(1:nindiv,function(ii) toQvalueT(DP[ii],reg_res,afmin_power) )
             }
           }
-
+          
           if (!is.na(reg_res$coef["slope"]) & sum(reg_res$GQ>=GQ_threshold,na.rm=TRUE)>0) {
             all_AO=sum(ma_count)
             all_DP=sum(as.numeric(linepos[eval(depth)]))+sum(ma_count)
@@ -706,11 +708,11 @@ while(length(line <- readLines(f,n=1, warn = FALSE)) > 0) {
               if(ref_inv) { genotype[homozygotes]="0/0" }  else { genotype[homozygotes]="1/1" }
               #no tumor variant but low power -> "./."
               genotype[(reg_res$GQ < GQ_threshold)&(qval_minAF<GQ_threshold) ]="./."
-
+              
               for (cur_sample in 1:nindiv) {
                 cat("\t",genotype[cur_sample],":",reg_res$GQ[cur_sample],":",DP[cur_sample],":",(Rp+Rm)[cur_sample],":",ma_count[cur_sample],":",(ma_count/DP)[cur_sample],":",Rp[cur_sample],",",Rm[cur_sample],",",Vp[cur_sample],",",Vm[cur_sample],":",sors[cur_sample],":",rvsbs[cur_sample],":",FisherStrand[cur_sample],":",qval_minAF[cur_sample],":",somatic_status[cur_sample],sep = "",file=out_file,append=T)
               }
-
+              
               cat("\n",sep = "",file=out_file,append=T)
               
               if (do_plots=="ALL") { #output all variants
