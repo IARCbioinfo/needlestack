@@ -143,7 +143,7 @@ Type `--help` to get the full list of options. `--bam_folder` and `--fasta_ref` 
 | all_SNVs |   | Put this argument to output all SNVs, even when no variant is detected. Note that positions with zero coverage for all samples might still be missing depending on how the region split is performed |
 | do_plots | SOMATIC if pairs_file provided, ALL if not | To create pdf plots of regressions in the output. To remove pdf plots set --do_plot to NONE (See *Plot options* paragraph).|
 | do_alignments |  | Put this argument to add alignments plots to the pdf plots of regressions |
-| ref_genome |   | Reference genome for the alignment plots. Examples : *Hsapiens.UCSC.hg19*, *Hsapiens.UCSC.hg18*, *Hsapiens.1000genomes.hs37d5*, *Mmusculus.UCSC.mm10*. The right terminology is described below (*Plot options* paragraph).|
+| ref_genome |   | Reference genome for the annotions on the alignments plots. Examples : *Hsapiens.UCSC.hg19*, *Hsapiens.UCSC.hg19*, *Hsapiens.UCSC.hg38*, *Mmusculus.UCSC.mm10*. The right terminology is described below (*Plot options* paragraph).|
 | no_labels |   | Put this argument for not labeling the outliers on regression plots |
 | no_indels |   | Put this argument to do not perform the variant calling on insertions and deletions |
 | no_contours |   | Put this argument to do not plot qvalues contours (for qvalue threshold={10,30,50,70,100} by default) and do not plot minimum detectable allelic fraction in function of coverage |
@@ -181,36 +181,33 @@ In other cases (when there is no `--pairs_file` parameter defined), genotypes ar
 	* ALL : To produce pdf regression plots for all variants. Default value when not using matched tumor/normal.
 	* NONE : To remove pdf regression plots from the output
 	
-2. --do_alignments : To add the alignments plots to the regression plots. If this option is set to "true", the name of the reference genome required for the bam alignments (--ref_genome option) needs to be provided (See *--ref_genome option* below). False is the default value.
+2. --do_alignments : To add the alignments plots to the regression plots. If this option is set to "true", the name of the reference genome (--ref_genome option) needs to be provided to choose the correct annotation (See *--ref_genome option* below). False is the default value.
 
 #### Bioconductor packages to install for plotting the alignments :
 
 - The [Gviz](https://bioconductor.org/packages/release/bioc/html/Gviz.html) package
-- A [BSgenome data package](https://bioconductor.org/packages/release/BiocViews.html#___BSgenome) to provide a full genome sequence. This sequence can be, for Homo sapiens, provided by UCSC or based on NCBI GRCh37 for the 1000genomes Reference Genome Sequence ([hs37d5](https://bioconductor.org/packages/release/data/annotation/html/BSgenome.Hsapiens.1000genomes.hs37d5.html)). 
 - An [Annotation package for TxDb objects](http://bioconductor.org/packages/release/BiocViews.html#___TxDb).
 - A [Genome wide annotation](https://bioconductor.org/packages/release/BiocViews.html#___OrgDb), it contains mappings between Entrez Gene identifiers and GenBank accession numbers. Examples : the Genome wide annotation package for Human : *org.Hs.eg.db* and for the mouse : *org.Mm.eg.db*.
 
 Examples :
 
-If one needs the UCSC version of the reference Human genome hg19, the fowolling packages should be installed : 
+If one used the UCSC version of the reference Human genome hg19, the fowolling packages should be installed : 
 - *Gviz*
-- *BSgenome.Hsapiens.UCSC.hg19* (hg18 and hg38 UCSC version can also be used)
-- *TxDb.Hsapiens.UCSC.hg19.knownGene* 
+- *TxDb.Hsapiens.UCSC.hg19.knownGene* (hg18 and hg38 UCSC version can also be used)
 - *org.Hs.eg.db* 
 
 These packages exist for other organisms than Human but have not been tested.
 
 One can for example generate the alignments plot for data issued from the mouse by installing : 
-- *BSgenome.Mmusculus.UCSC.mm10* (mm9 UCSC version can also be used)
-- *TxDb.Mmusculus.UCSC.mm10.knownGene*  
+- *TxDb.Mmusculus.UCSC.mm10.knownGene*(mm9 UCSC version can also be used)
 - *org.Mm.eg.db*
 
-For the other organisms the packages needs to have the same nomenclature as the ones listed above.
+For the other organisms the packages need to have the same nomenclature as the ones listed above.
 
 #### --ref_genome option :
 
-The name of the reference genome has to be the same as the BSgenome data package name without "BSgenome.", for the UCSC version of the reference Human genome hg19, one needs to set --ref_genome to "*Hsapiens.UCSC.hg19*".
-
+The argument corresponds to the TxDb annotation package name without its extrimities. For the UCSC version of the reference Human genome hg19, one needs to set --ref_genome to "*Hsapiens.UCSC.hg19*".
+Note that the packages chosen for the annotations are compatible with the UCSC notations since most of the Gviz fonctionalities can handle these notations.
 
 By default, when using matched tumor/normal (pairs_file option), needlestack will produce pdf plots of regressions only for somatic variants and without the alignment plots; when not, needlestack will produce them for all variants and without the alignment plots. 
 
