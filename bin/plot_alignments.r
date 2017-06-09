@@ -49,55 +49,66 @@ get_UCSC_correpondance<- function(chr,ref_genome){
 
 #create alignments tracks
 get_htTrack <- function(isTNpairs,i,Tindex,Nindex,onlyTindex,onlyNindex,indiv_run,bam_folder,plot_grtracks,UCSC,sTrack,grtrack,chr,pos,paired=FALSE){
-  #get bam alignments tracks (AlignmentsTrack())
-  if(isTNpairs){
-    if(i %in% Tindex){
-      pair_index=which(Tindex==i)
-      alTrack_T <- AlignmentsTrack(paste0(bam_folder,indiv_run[,1][Tindex[pair_index]],".bam"), isPaired = paired,stacking = "squish",alpha=0.95,chromosome=chr,cex.mismatch=0.5,name="Tumor",cex.title=1.5)
-      alTrack_N <- AlignmentsTrack(paste0(bam_folder,indiv_run[,1][Nindex[pair_index]],".bam"), isPaired = paired,stacking = "squish",alpha=0.95,chromosome=chr,cex.mismatch=0.5,name="Normal",cex.title=1.5)
-      unique=FALSE #two alignments on the same plot
-    }else if(i %in% Nindex) {
-      pair_index=which(Nindex==i)
-      alTrack_T <- AlignmentsTrack(paste0(bam_folder,indiv_run[,1][Tindex[pair_index]],".bam"), isPaired = paired,stacking = "squish",alpha=0.95,chromosome=chr,cex.mismatch=0.5,name="Tumor",cex.title=1.5)
-      alTrack_N <- AlignmentsTrack(paste0(bam_folder,indiv_run[,1][Nindex[pair_index]],".bam"), isPaired = paired,stacking = "squish",alpha=0.95,chromosome=chr,cex.mismatch=0.5,name="Normal",cex.title=1.5)
-      unique=FALSE
-    }else if((i %in% onlyTindex)){
-      alTrack_unique <- AlignmentsTrack(paste0(bam_folder,indiv_run[,1][i],".bam"), isPaired = paired,stacking = "squish",alpha=0.95,chromosome=chr,cex.mismatch=0.5,name="Normal",cex.title=1.5)
-      unique=TRUE #only one alignment 
-    }else if((i %in% onlyNindex)){
-      alTrack_unique <- AlignmentsTrack(paste0(bam_folder,indiv_run[,1][i],".bam"), isPaired = paired,stacking = "squish",alpha=0.95,chromosome=chr,cex.mismatch=0.5,name="Tumor",cex.title=1.5)
-      unique=TRUE
-    }
-    
-    if(plot_grtracks){
-      if(unique){
-        ht <- HighlightTrack(trackList = list(alTrack_unique, sTrack, grtrack), start = c(pos), width =0,chromosome = chr) #highlight the position of the variant
-        s=c(0.05,0.1,0.72,0.05,0.08) #tracks proportions
-      }else{
-        ht <- HighlightTrack(trackList = list(alTrack_T,alTrack_N, sTrack, grtrack), start = c(pos), width =0,chromosome = chr)
-        s=c(0.05,0.1,0.36,0.36,0.05,0.08)
+  no_plot=NULL
+  tryCatch(
+    {
+    #get bam alignments tracks (AlignmentsTrack())
+    if(isTNpairs){
+      if(i %in% Tindex){
+        pair_index=which(Tindex==i)
+        alTrack_T <- AlignmentsTrack(paste0(bam_folder,indiv_run[,1][Tindex[pair_index]],".bam"), isPaired = paired,stacking = "squish",alpha=0.95,chromosome=chr,cex.mismatch=0.5,name="Tumor",cex.title=1.5)
+        alTrack_N <- AlignmentsTrack(paste0(bam_folder,indiv_run[,1][Nindex[pair_index]],".bam"), isPaired = paired,stacking = "squish",alpha=0.95,chromosome=chr,cex.mismatch=0.5,name="Normal",cex.title=1.5)
+        unique=FALSE #two alignments on the same plot
+      }else if(i %in% Nindex) {
+        pair_index=which(Nindex==i)
+        alTrack_T <- AlignmentsTrack(paste0(bam_folder,indiv_run[,1][Tindex[pair_index]],".bam"), isPaired = paired,stacking = "squish",alpha=0.95,chromosome=chr,cex.mismatch=0.5,name="Tumor",cex.title=1.5)
+        alTrack_N <- AlignmentsTrack(paste0(bam_folder,indiv_run[,1][Nindex[pair_index]],".bam"), isPaired = paired,stacking = "squish",alpha=0.95,chromosome=chr,cex.mismatch=0.5,name="Normal",cex.title=1.5)
+        unique=FALSE
+      }else if((i %in% onlyTindex)){
+        alTrack_unique <- AlignmentsTrack(paste0(bam_folder,indiv_run[,1][i],".bam"), isPaired = paired,stacking = "squish",alpha=0.95,chromosome=chr,cex.mismatch=0.5,name="Normal",cex.title=1.5)
+        unique=TRUE #only one alignment 
+      }else if((i %in% onlyNindex)){
+        alTrack_unique <- AlignmentsTrack(paste0(bam_folder,indiv_run[,1][i],".bam"), isPaired = paired,stacking = "squish",alpha=0.95,chromosome=chr,cex.mismatch=0.5,name="Tumor",cex.title=1.5)
+        unique=TRUE
       }
-    }else if(plot_grtracks==FALSE){
-      if(unique){
-        ht <- HighlightTrack(trackList = list(alTrack_unique, sTrack), start = c(pos), width =0,chromosome = chr)
-        s=c(0.05,0.1,0.8,0.05)
-      }else{
-        ht <- HighlightTrack(trackList = list(alTrack_T,alTrack_N, sTrack), start = c(pos), width =0,chromosome = chr)
-        s=c(0.05,0.1,0.4,0.4,0.05)
+      
+      if(plot_grtracks){
+        if(unique){
+          ht <- HighlightTrack(trackList = list(alTrack_unique, sTrack, grtrack), start = c(pos), width =0,chromosome = chr) #highlight the position of the variant
+          s=c(0.05,0.1,0.72,0.05,0.08) #tracks proportions
+        }else{
+          ht <- HighlightTrack(trackList = list(alTrack_T,alTrack_N, sTrack, grtrack), start = c(pos), width =0,chromosome = chr)
+          s=c(0.05,0.1,0.36,0.36,0.05,0.08)
+        }
+      }else if(plot_grtracks==FALSE){
+        if(unique){
+          ht <- HighlightTrack(trackList = list(alTrack_unique, sTrack), start = c(pos), width =0,chromosome = chr)
+          s=c(0.05,0.1,0.8,0.05)
+        }else{
+          ht <- HighlightTrack(trackList = list(alTrack_T,alTrack_N, sTrack), start = c(pos), width =0,chromosome = chr)
+          s=c(0.05,0.1,0.4,0.4,0.05)
+        }
       }
-    }
-  }else{
-  alTrack <- AlignmentsTrack(paste0(bam_folder,indiv_run[,1][i],".bam"), isPaired = paired,stacking = "squish",alpha=0.95,chromosome=chr,cex.mismatch=0.5,name="Alignment",cex.title=1.5)
-  if(plot_grtracks){
-      ht <- HighlightTrack(trackList = list(alTrack, sTrack, grtrack), start = c(pos), width =0,chromosome = chr)
-      s=c(0.05,0.1,0.72,0.05,0.08)
     }else{
-      ht <- HighlightTrack(trackList = list(alTrack, sTrack), start = c(pos), width =0,chromosome = chr)
-      s=c(0.05,0.1,0.8,0.05)
+      alTrack <- AlignmentsTrack(paste0(bam_folder,indiv_run[,1][i],".bam"), isPaired = paired,stacking = "squish",alpha=0.95,chromosome=chr,cex.mismatch=0.5,name="Alignment",cex.title=1.5)
+      if(plot_grtracks){
+        ht <- HighlightTrack(trackList = list(alTrack, sTrack, grtrack), start = c(pos), width =0,chromosome = chr)
+        s=c(0.05,0.1,0.72,0.05,0.08)
+      }else{
+        ht <- HighlightTrack(trackList = list(alTrack, sTrack), start = c(pos), width =0,chromosome = chr)
+        s=c(0.05,0.1,0.8,0.05)
+      }
     }
+    no_plot=FALSE
+    },
+    error=function(e) {print(paste0("Warning: error in the aligmentsTrack creation : chr -> ",chr," pos -> ",pos))},
+    finally = {if(is.null(no_plot)){no_plot=TRUE}}
+  )
+  if(no_plot){
+    return(list(0,0,TRUE))
+  }else{
+    return(list(ht,s,FALSE))
   }
-  
-  return(list(ht,s))
 }
 
 #remove repetition : to avoid having two identical figures for each tumor/normal pair
@@ -150,138 +161,159 @@ plotGviz <- function(isTNpairs,sTrack,ref_genome,txdb,annotation,UCSC,indiv_run,
     only_alignment=FALSE
   }
   
-  if(only_alignment==FALSE){
-    #Define tracks common to all samples (reference sequence, chromosome representation, genome annotation)
-    gtrack <- GenomeAxisTrack() #genomic axis
-    sTrack@sequence@ranges@NAMES <- sapply( 1:length(sTrack@sequence@ranges@NAMES), function(i) unlist(strsplit(sTrack@sequence@ranges@NAMES[i], " "))[1] )
-    sTrack@chromosome <-chr
-    ideoTrack <- IdeogramTrack(genome = unlist(strsplit(ref_genome,".",fixed=TRUE))[3], chromosome = chr_annotation) #chromosome representation
-    levels(ideoTrack@bandTable$chrom)[which(levels(ideoTrack@bandTable$chrom)==chr_annotation)] <- chr
-    ideoTrack@chromosome<-chr
-    
-    grtrack <- GeneRegionTrack(txdb,chromosome = chr_annotation,start = pos-w_zoomout, end = pos+w_zoomout,exonAnnotation = "exon",shape = "arrow",showTitle=FALSE,alpha=0.95,cex=0.7)
-    if( summary(is.na(grtrack@range@elementMetadata$gene))[2]>0 ){ #if no genes in the annotation it is not possible to use the collapseTranscripts option
-      displayPars(grtrack)$collapseTranscripts <- "longest"
-    }
-    grtrack@range@seqinfo@seqnames<-chr
-    levels(grtrack@range@seqnames)<-chr
-    grtrack@chromosome<-chr
-    
-    #complete gene annotation 
-    if(length(unique(gene(grtrack)))>=6){
-      sampling=sample(unique(grtrack@range@elementMetadata$gene),5)
-      grtrack@range=grtrack@range[grtrack@range@elementMetadata$gene %in% sampling,]
-      displayPars(grtrack)$cex <- 0.6
-    }
-    displayPars(grtrack) <- list(background.title = "white")
-    #zoom out on the gene
-    grtrack_zoomout=grtrack
-    displayPars(grtrack_zoomout)$transcriptAnnotation <- "symbol"
-    displayPars(grtrack_zoomout)$showExonId <- FALSE
-    displayPars(grtrack_zoomout)$shape <- c("smallArrow","box")
-    if(length(gene(grtrack_zoomout))!=0){
-      if( length( which( unique(gene(grtrack_zoomout)) %in% keys(annotation,keytype="ENTREZID") == TRUE))==length(unique(gene(grtrack_zoomout))) ){
-        symbols <- unlist(mapIds(annotation, gene(grtrack_zoomout), "SYMBOL", "ENTREZID", multiVals = "first"))
-        symbol(grtrack_zoomout) <- symbols[gene(grtrack_zoomout)]
-      }
-      plot_grtracks=TRUE
-    }else{ #genome annotation can not be added if non UCSC genome
-      plot_grtracks=FALSE
-    }
-    if(length(unique(gene(grtrack_zoomout)))>=6){
-      grtrack_zoomout@range=grtrack_zoomout@range[grtrack_zoomout@range@elementMetadata$gene %in% sampling,]
-    }
-    ht_zoomout <- HighlightTrack(trackList = list(grtrack_zoomout,gtrack), start = c(pos), width =0,chromosome = chr) #highlight the position of the variant on the genomic axis and the genome annotation
-    
-  }else{
-    plot_grtracks=FALSE
-    sTrack@sequence@ranges@NAMES <- sapply( 1:length(sTrack@sequence@ranges@NAMES), function(i) unlist(strsplit(sTrack@sequence@ranges@NAMES[i], " "))[1] )
-    sTrack@chromosome <-chr
-  }
-  
-  #plot alignments for the samples with the variant
-  for(i in samples_with_var){
-    
-    if(only_alignment=="FALSE"){
-      res=get_htTrack(isTNpairs,i,Tindex,Nindex,onlyTindex,onlyNindex,indiv_run,bam_folder,plot_grtracks,UCSC,sTrack,grtrack,chr,pos,paired) #create alignments tracks
-      if(plot_grtracks){
-        tryCatch(
-          {
-            grid.newpage()
-            pushViewport(viewport(x=0,y=1, height=0.85, width=1, just=c("left","top"))) 
-            plotTracks(c(ideoTrack,gtrack,res[1]),sizes=unlist(res[2]),from = pos-w, to = pos+w,add = TRUE, add53=TRUE,min.height=4, main=paste0(indiv_run[i,2]),title.width=0.7,littleTicks = TRUE,cex.main=1.5)
-            popViewport(1)
-            pushViewport(viewport(x=0,y=0, height=0.15, width=1, just=c("left","bottom")))
-            plotTracks(list(ht_zoomout),chromosome = chr, add = TRUE)
-            popViewport(0)
-          },
-          error=function(e) print(paste0("Warning: error for this AlignmentsPlot : chr -> ",chr," pos -> ",pos," sample -> ",indiv_run[i,2]))
-        )
+  no_plot=NULL
+  tryCatch(
+    {
+      if(only_alignment==FALSE){
+        #Define tracks common to all samples (reference sequence, chromosome representation, genome annotation)
+        gtrack <- GenomeAxisTrack() #genomic axis
+        sTrack@sequence@ranges@NAMES <- sapply( 1:length(sTrack@sequence@ranges@NAMES), function(i) unlist(strsplit(sTrack@sequence@ranges@NAMES[i], " "))[1] )
+        sTrack@chromosome <-chr
+        ideoTrack <- IdeogramTrack(genome = unlist(strsplit(ref_genome,".",fixed=TRUE))[3], chromosome = chr_annotation) #chromosome representation
+        levels(ideoTrack@bandTable$chrom)[which(levels(ideoTrack@bandTable$chrom)==chr_annotation)] <- chr
+        ideoTrack@chromosome<-chr
+        
+        grtrack <- GeneRegionTrack(txdb,chromosome = chr_annotation,start = pos-w_zoomout, end = pos+w_zoomout,exonAnnotation = "exon",shape = "arrow",showTitle=FALSE,alpha=0.95,cex=0.7)
+        if( summary(is.na(grtrack@range@elementMetadata$gene))[2]>0 ){ #if no genes in the annotation it is not possible to use the collapseTranscripts option
+          displayPars(grtrack)$collapseTranscripts <- "longest"
+        }
+        grtrack@range@seqinfo@seqnames<-chr
+        levels(grtrack@range@seqnames)<-chr
+        grtrack@chromosome<-chr
+        
+        #complete gene annotation 
+        if(length(unique(gene(grtrack)))>=6){
+          sampling=sample(unique(grtrack@range@elementMetadata$gene),5)
+          grtrack@range=grtrack@range[grtrack@range@elementMetadata$gene %in% sampling,]
+          displayPars(grtrack)$cex <- 0.6
+        }
+        displayPars(grtrack) <- list(background.title = "white")
+        #zoom out on the gene
+        grtrack_zoomout=grtrack
+        displayPars(grtrack_zoomout)$transcriptAnnotation <- "symbol"
+        displayPars(grtrack_zoomout)$showExonId <- FALSE
+        displayPars(grtrack_zoomout)$shape <- c("smallArrow","box")
+        if(length(gene(grtrack_zoomout))!=0){
+          if( length( which( unique(gene(grtrack_zoomout)) %in% keys(annotation,keytype="ENTREZID") == TRUE))==length(unique(gene(grtrack_zoomout))) ){
+            symbols <- unlist(mapIds(annotation, gene(grtrack_zoomout), "SYMBOL", "ENTREZID", multiVals = "first"))
+            symbol(grtrack_zoomout) <- symbols[gene(grtrack_zoomout)]
+          }
+          plot_grtracks=TRUE
+        }else{ #genome annotation can not be added if non UCSC genome
+          plot_grtracks=FALSE
+        }
+        if(length(unique(gene(grtrack_zoomout)))>=6){
+          grtrack_zoomout@range=grtrack_zoomout@range[grtrack_zoomout@range@elementMetadata$gene %in% sampling,]
+        }
+        ht_zoomout <- HighlightTrack(trackList = list(grtrack_zoomout,gtrack), start = c(pos), width =0,chromosome = chr) #highlight the position of the variant on the genomic axis and the genome annotation
+        
       }else{
-        tryCatch(
-          {
-            plotTracks(c(ideoTrack,gtrack,res[1]),sizes=unlist(res[2]),from = pos-w, to = pos+w, add53=TRUE,min.height=4, main=paste0(indiv_run[i,2]),title.width=0.7,littleTicks = TRUE,cex.main=1.5)
-          },
-          error=function(e) print(paste0("Warning: error for this AlignmentsPlot : chr -> ",chr," pos -> ",pos," sample -> ",indiv_run[i,2]))
-        )
+        plot_grtracks=FALSE
+        sTrack@sequence@ranges@NAMES <- sapply( 1:length(sTrack@sequence@ranges@NAMES), function(i) unlist(strsplit(sTrack@sequence@ranges@NAMES[i], " "))[1] )
+        sTrack@chromosome <-chr
       }
-      
-    }else {
-      res=get_htTrack(isTNpairs,i,Tindex,Nindex,onlyTindex,onlyNindex,indiv_run,bam_folder,plot_grtracks,UCSC,sTrack,grtrack,chr,pos,paired) #create alignments tracks
-      tryCatch(
-        {
-          plotTracks(c(gtrack,res[1]),sizes=unlist(res[2])[-1],from = pos-w, to = pos+w, add53=TRUE,min.height=4, main=paste0(indiv_run[i,2]),title.width=0.7,littleTicks = TRUE,cex.main=1.5)
-        },
-        error=function(e) print(paste0("Warning: error for this AlignmentsPlot : chr -> ",chr," pos -> ",pos," sample -> ",indiv_run[i,2]))
-      )
-    }
-  }
+      no_plot=FALSE
+    },
+  error=function(e) 
+    {
+      print(paste0("Warning: error in the Tracks creation : chr -> ",chr," pos -> ",pos))
+    },
+  finally = {if(is.null(no_plot)){no_plot=TRUE}}
+  )
   
-  #plot alignments for the samples without the variant
-  if(length(samples_without_var)!=0){
-    #sampling of the samples without the variant
-    if(length(samples_without_var)<nb_toplot){
-      samples_without_var_toplot=samples_without_var
-    }else{
-      samples_without_var_toplot=sample(samples_without_var,nb_toplot)
-    }
-    
-    for(i in samples_without_var_toplot){
-      if(plot_grtracks){
+  if(no_plot==FALSE){
+    #plot alignments for the samples with the variant
+    for(i in samples_with_var){
+      
+      if(only_alignment=="FALSE"){
         res=get_htTrack(isTNpairs,i,Tindex,Nindex,onlyTindex,onlyNindex,indiv_run,bam_folder,plot_grtracks,UCSC,sTrack,grtrack,chr,pos,paired) #create alignments tracks
-        if(plot_grtracks){
+        if(res[3]==FALSE){
+          if(plot_grtracks){
+            tryCatch(
+              {
+                grid.newpage()
+                pushViewport(viewport(x=0,y=1, height=0.85, width=1, just=c("left","top"))) 
+                plotTracks(c(ideoTrack,gtrack,res[1]),sizes=unlist(res[2]),from = pos-w, to = pos+w,add = TRUE, add53=TRUE,min.height=4, main=paste0(indiv_run[i,2]),title.width=0.7,littleTicks = TRUE,cex.main=1.5)
+                popViewport(1)
+                pushViewport(viewport(x=0,y=0, height=0.15, width=1, just=c("left","bottom")))
+                plotTracks(list(ht_zoomout),chromosome = chr, add = TRUE)
+                popViewport(0)
+              },
+              error=function(e) print(paste0("Warning: error for this AlignmentsPlot : chr -> ",chr," pos -> ",pos," sample -> ",indiv_run[i,2]))
+            )
+          }else{
+            tryCatch(
+              {
+                plotTracks(c(ideoTrack,gtrack,res[1]),sizes=unlist(res[2]),from = pos-w, to = pos+w, add53=TRUE,min.height=4, main=paste0(indiv_run[i,2]),title.width=0.7,littleTicks = TRUE,cex.main=1.5)
+              },
+              error=function(e) print(paste0("Warning: error for this AlignmentsPlot : chr -> ",chr," pos -> ",pos," sample -> ",indiv_run[i,2]))
+            )
+          }
+        }
+      }else {
+        res=get_htTrack(isTNpairs,i,Tindex,Nindex,onlyTindex,onlyNindex,indiv_run,bam_folder,plot_grtracks,UCSC,sTrack,grtrack,chr,pos,paired) #create alignments tracks
+        if(res[3]==FALSE){
           tryCatch(
             {
-              grid.newpage()
-              pushViewport(viewport(x=0,y=1, height=0.85, width=1, just=c("left","top"))) 
-              plotTracks(c(ideoTrack,gtrack,res[1]),sizes=unlist(res[2]),from = pos-w, to = pos+w,add = TRUE, add53=TRUE,min.height=4, main=paste0(indiv_run[i,2],"*"),title.width=0.7,littleTicks = TRUE,cex.main=1.5)
-              popViewport(1)
-              pushViewport(viewport(x=0,y=0, height=0.15, width=1, just=c("left","bottom")))
-              plotTracks(list(ht_zoomout),chromosome = chr, add = TRUE)
-              popViewport(0)
+              plotTracks(c(gtrack,res[1]),sizes=unlist(res[2])[-1],from = pos-w, to = pos+w, add53=TRUE,min.height=4, main=paste0(indiv_run[i,2]),title.width=0.7,littleTicks = TRUE,cex.main=1.5)
             },
-            error=function(e) print(paste0("Warning: error for this AlignmentsPlot : chr -> ",chr," pos -> ",pos," sample* -> ",indiv_run[i,2]))
-          )
-        }else{
-          tryCatch(
-            {
-              plotTracks(c(ideoTrack,gtrack,res[1]),sizes=unlist(res[2]),from = pos-w, to = pos+w,add53=TRUE,min.height=4, main=paste0(indiv_run[i,2],"*"),title.width=0.7,littleTicks = TRUE,cex.main=1.5)
-            },
-            error=function(e) print(paste0("Warning: error for this AlignmentsPlot : chr -> ",chr," pos -> ",pos," sample* -> ",indiv_run[i,2]))
+            error=function(e) print(paste0("Warning: error for this AlignmentsPlot : chr -> ",chr," pos -> ",pos," sample -> ",indiv_run[i,2]))
           )
         }
-      }else if(only_alignment){
-        res=get_htTrack(isTNpairs,i,Tindex,Nindex,onlyTindex,onlyNindex,indiv_run,bam_folder,plot_grtracks,UCSC,sTrack,grtrack,chr,pos,paired) #create alignments tracks
-        tryCatch(
-          {
-            plotTracks(c(gtrack,res[1]),sizes=unlist(res[2])[-1],from = pos-w, to = pos+w, add53=TRUE,min.height=4, main=paste0(indiv_run[i,2],"*"),title.width=0.7,littleTicks = TRUE,cex.main=1.5)
-          },
-          error=function(e) print(paste0("Warning: error for this AlignmentsPlot : chr -> ",chr," pos -> ",pos," sample* -> ",indiv_run[i,2]))
-        )
       }
     }
+    
+    #plot alignments for the samples without the variant
+    if(length(samples_without_var)!=0){
+      #sampling of the samples without the variant
+      if(length(samples_without_var)<nb_toplot){
+        samples_without_var_toplot=samples_without_var
+      }else{
+        samples_without_var_toplot=sample(samples_without_var,nb_toplot)
+      }
+      
+      for(i in samples_without_var_toplot){
+        if(plot_grtracks){
+          res=get_htTrack(isTNpairs,i,Tindex,Nindex,onlyTindex,onlyNindex,indiv_run,bam_folder,plot_grtracks,UCSC,sTrack,grtrack,chr,pos,paired) #create alignments tracks
+          if(res[3]==FALSE){
+            if(plot_grtracks){
+              tryCatch(
+                {
+                  grid.newpage()
+                  pushViewport(viewport(x=0,y=1, height=0.85, width=1, just=c("left","top"))) 
+                  plotTracks(c(ideoTrack,gtrack,res[1]),sizes=unlist(res[2]),from = pos-w, to = pos+w,add = TRUE, add53=TRUE,min.height=4, main=paste0(indiv_run[i,2],"*"),title.width=0.7,littleTicks = TRUE,cex.main=1.5)
+                  popViewport(1)
+                  pushViewport(viewport(x=0,y=0, height=0.15, width=1, just=c("left","bottom")))
+                  plotTracks(list(ht_zoomout),chromosome = chr, add = TRUE)
+                  popViewport(0)
+                },
+                error=function(e) print(paste0("Warning: error for this AlignmentsPlot : chr -> ",chr," pos -> ",pos," sample* -> ",indiv_run[i,2]))
+              )
+            }else{
+              tryCatch(
+                {
+                  plotTracks(c(ideoTrack,gtrack,res[1]),sizes=unlist(res[2]),from = pos-w, to = pos+w,add53=TRUE,min.height=4, main=paste0(indiv_run[i,2],"*"),title.width=0.7,littleTicks = TRUE,cex.main=1.5)
+                },
+                error=function(e) print(paste0("Warning: error for this AlignmentsPlot : chr -> ",chr," pos -> ",pos," sample* -> ",indiv_run[i,2]))
+              )
+            }
+          }
+        }else if(only_alignment){
+          res=get_htTrack(isTNpairs,i,Tindex,Nindex,onlyTindex,onlyNindex,indiv_run,bam_folder,plot_grtracks,UCSC,sTrack,grtrack,chr,pos,paired) #create alignments tracks
+          if(res[3]==FALSE){
+            tryCatch(
+              {
+                plotTracks(c(gtrack,res[1]),sizes=unlist(res[2])[-1],from = pos-w, to = pos+w, add53=TRUE,min.height=4, main=paste0(indiv_run[i,2],"*"),title.width=0.7,littleTicks = TRUE,cex.main=1.5)
+              },
+              error=function(e) print(paste0("Warning: error for this AlignmentsPlot : chr -> ",chr," pos -> ",pos," sample* -> ",indiv_run[i,2]))
+            )
+          }
+        }
+      }
+    }
+    
   }
-  
+
 }
 
 
