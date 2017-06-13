@@ -39,7 +39,7 @@ RUN mkdir -p /var/cache/apt/archives/partial && \
 	DEBIAN_FRONTEND=noninteractive apt-get -y install libssl-dev && \
 	DEBIAN_FRONTEND=noninteractive apt-get -y install libcurl4-openssl-dev && \	
 	
-	Rscript -e "source('http://bioconductor.org/biocLite.R'); biocLite('Gviz'); biocLite('BSgenome.Hsapiens.UCSC.hg19'); biocLite('BSgenome.Hsapiens.UCSC.hg18'); biocLite('BSgenome.Hsapiens.UCSC.hg38'); biocLite('BSgenome.Hsapiens.1000genomes.hs37d5'); biocLite('TxDb.Hsapiens.UCSC.hg19.knownGene'); biocLite('TxDb.Hsapiens.UCSC.hg18.knownGene'); biocLite('TxDb.Hsapiens.UCSC.hg38.knownGene'); biocLite('org.Hs.eg.db')" && \
+	Rscript -e "source('http://bioconductor.org/biocLite.R'); biocLite('Gviz'); biocLite('TxDb.Hsapiens.UCSC.hg19.knownGene'); biocLite('TxDb.Hsapiens.UCSC.hg18.knownGene'); biocLite('TxDb.Hsapiens.UCSC.hg38.knownGene'); biocLite('org.Hs.eg.db')" && \
 
 	# Install bedtools specific version manually
 	wget https://github.com/arq5x/bedtools2/releases/download/v2.25.0/bedtools-2.25.0.tar.gz && \
