@@ -1,7 +1,9 @@
 #! /usr/bin/env nextflow
 
+//vim: syntax=groovy -*- mode: groovy;-*-
+
 // needlestack: a multi-sample somatic variant caller
-// Copyright (C) 2017 Matthieu Foll, Tiffany Delhomme, Nicolas Alcala and Aurelie Gabriel
+// Copyright (C) 2017 IARC/WHO
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,13 +18,14 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-// requirement:
+// Requirements :
 // - bedtools
 // - samtools
 // - Rscript (R)
 // - bed_cut.r (in bin folder)
 // - needlestack.r (in bin folder)
 // - mpileup2readcounts (in bin folder) ( c++ )
+
 
 params.help = null
 params.input_vcf = null
