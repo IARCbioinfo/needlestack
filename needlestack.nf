@@ -42,7 +42,7 @@ params.power_min_af = -1 // minimum allelic fraction for power computations
 params.sigma_normal = 0.1 // sigma parameter for negative binomial modeling germline mutations
 params.map_qual = 0 // min mapping quality (passed to samtools)
 params.base_qual = 13 // min base quality (passed to samtools)
-params.max_DP = 50000 // downsample coverage per sample (passed to samtools)
+params.max_dp = 50000 // downsample coverage per sample (passed to samtools)
 params.use_file_name = false //put these argument to use the bam file names as sample names and do not to use the sample name filed from the bam files (SM tag)
 params.all_SNVs = false //  output all sites, even when no variant is detected
 params.extra_robust_gl = false //  perform an extra robust regression basically for germline variants
@@ -96,7 +96,7 @@ if (params.help) {
     log.info '    --sigma_normal   VALUE                    Sigma parameter for negative binomial modeling germline mutations.'
     log.info '    --map_qual       VALUE                    Samtools minimum mapping quality.'
     log.info '    --base_qual      VALUE                    Samtools minimum base quality.'
-    log.info '    --max_DP         INTEGER                  Samtools maximum coverage before downsampling.'
+    log.info '    --max_dp         INTEGER                  Samtools maximum coverage before downsampling.'
     log.info '    --use_file_name                           Sample names are taken from file names, otherwise extracted from the bam file SM tag.'
     log.info '    --all_SNVs                                Output all SNVs, even when no variant found.'
     log.info '    --extra_robust_gl                         Perform an extra robust regression, basically for germline variants'
@@ -291,7 +291,7 @@ if(params.input_vcf) {
       assert baiID.containsAll(bamID) : "check that every bam file has an index (.bam.bai)"
   }
   assert (params.min_dp >= 0) : "minimum coverage must be higher than or equal to 0 (--min_dp)"
-  assert (params.max_DP > 1) : "maximum coverage before downsampling must be higher than 1 (--max_DP)"
+  assert (params.max_dp > 1) : "maximum coverage before downsampling must be higher than 1 (--max_dp)"
   assert (params.min_ao >= 0) : "minimum alternative reads must be higher than or equal to 0 (--min_ao)"
   assert (params.nsplit > 0) : "number of regions to split must be higher than 0 (--nsplit)"
   assert (params.min_qval >= 0) : "minimum Phred-scale qvalue must be higher than or equal to 0 (--min_qval)"
@@ -333,7 +333,7 @@ if(params.input_vcf) {
   log.info "Sigma parameter for germline (--sigma)                          : ${params.sigma_normal}"
   log.info "Samtools minimum mapping quality (--map_qual)                   : ${params.map_qual}"
   log.info "Samtools minimum base quality (--base_qual)                     : ${params.base_qual}"
-  log.info "Samtools maximum coverage before downsampling (--max_DP)        : ${params.max_DP}"
+  log.info "Samtools maximum coverage before downsampling (--max_dp)        : ${params.max_dp}"
   log.info "Sample names definition (--use_file_name)                       : ${sample_names}"
   log.info(params.all_SNVs == true ? "Output all SNVs (--all_SNVs)                                    : yes" : "Output all SNVs (--all_SNVs)                                    : no" )
   log.info(params.extra_robust_gl == true ? "Perform an extra-robust regression (--extra_robust_gl)          : yes" : "Perform an extra-robust regression (--extra_robust_gl)          : no" )
@@ -444,7 +444,7 @@ if(params.input_vcf) {
       i=1
 
       { while read bed_line; do
-          samtools mpileup --fasta-ref !{fasta_ref} --region $bed_line --ignore-RG --min-BQ !{params.base_qual} --min-MQ !{params.map_qual} --max-idepth 1000000 --max-depth !{params.max_DP} BAM/*.bam | sed 's/		/	*	*/g'
+          samtools mpileup --fasta-ref !{fasta_ref} --region $bed_line --ignore-RG --min-BQ !{params.base_qual} --min-MQ !{params.map_qual} --max-idepth 1000000 --max-depth !{params.max_dp} BAM/*.bam | sed 's/		/	*	*/g'
           i=$((i+1))
       done < !{split_bed}
       } | mpileup2readcounts 0 -5 !{indel_par} !{params.min_ao} | Rscript !{baseDir}/bin/needlestack.r --pairs_file=${abs_pairs_file} --source_path=!{baseDir}/bin/ --out_file=!{region_tag}.vcf --fasta_ref=!{fasta_ref} --bam_folder=BAM/ --ref_genome=!{params.ref_genome} --GQ_threshold=!{params.min_qval} --min_coverage=!{params.min_dp} --min_reads=!{params.min_ao} --SB_type=!{params.sb_type} --SB_threshold_SNV=!{params.sb_snv} --SB_threshold_indel=!{params.sb_indel} --output_all_SNVs=!{params.all_SNVs} --do_plots=!{params.do_plots} --do_alignments=!{params.do_alignments} --plot_labels=!{!params.no_labels} --add_contours=!{!params.no_contours} --extra_rob=!{params.extra_robust_gl} --afmin_power=!{params.power_min_af} --sigma=!{params.sigma_normal}

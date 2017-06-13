@@ -45,7 +45,7 @@ usage ()
     echo "    --sigma_normal   VALUE                    Sigma parameter for negative binomial modeling germline mutations."
     echo "    --map_qual       VALUE                    Samtools minimum mapping quality."
     echo "    --base_qual      VALUE                    Samtools minimum base quality."
-    echo "    --max_DP         INTEGER                  Samtools maximum coverage before downsampling."
+    echo "    --max_dp         INTEGER                  Samtools maximum coverage before downsampling."
     echo "    --use_file_name                           Sample names are taken from file names, otherwise extracted from the bam file SM tag."
     echo "    --all_SNVs                                Output all SNVs, even when no variant found."
     echo "    --extra_robust_gl                         Perform an extra robust regression, basically for germline variants"
@@ -81,7 +81,7 @@ power_min_af=-1 : minimum allelic fraction for power computations
 sigma_normal=0.1 : sigma parameter for negative binomial modeling germline mutations
 map_qual=0 : min mapping quality, passed to samtools
 base_qual=13 : min base quality, passed to samtools
-max_DP=50000 : downsample coverage per sample, passed to samtools
+max_dp=50000 : downsample coverage per sample, passed to samtools
 use_file_name=false : put these argument to use the bam file names as sample names and do not to use the sample name filed from the bam files \(SM tag\)
 all_SNVs=false :  output all sites, even when no variant is detected
 extra_robust_gl=false :  perform an extra robust regression basically for germline variants
@@ -114,8 +114,8 @@ while [ "$1" != "" ]; do
         --map_qual)
             map_qual=$VALUE
             ;;
-        --max_DP)
-            max_DP=$VALUE
+        --max_dp)
+            max_dp=$VALUE
             ;;
         --no_indels)
             no_indels=$VALUE
@@ -284,7 +284,7 @@ echo "Minimum allelic fraction for power computations (--power_min_af): $power_m
 echo "Sigma parameter for germline (--sigma)                          : $sigma_normal"
 echo "Samtools minimum mapping quality (--map_qual)                   : $map_qual"
 echo "Samtools minimum base quality (--base_qual)                     : $base_qual"
-echo "Samtools maximum coverage before downsampling (--max_DP)        : $max_DP"
+echo "Samtools maximum coverage before downsampling (--max_dp)        : $max_dp"
 echo "Sample names definition (--use_file_name)                       : $sample_names"
 if [ $all_SNVs = true ]; then
 	echo "Output all SNVs (--all_SNVs)                                    : yes"
@@ -366,7 +366,7 @@ fi
 
 
 if [ $min_dp -lt 0 ];then echo "WARNING : minimum coverage must be higher than or equal to 0 (--min_dp)"; fi
-if [ $max_DP -le 1 ];then echo "WARNING : maximum coverage before downsampling must be higher than 1 (--max_DP)"; fi
+if [ $max_dp -le 1 ];then echo "WARNING : maximum coverage before downsampling must be higher than 1 (--max_dp)"; fi
 if [ $min_ao -lt 0 ];then echo "WARNING : minimum alternative reads must be higher than or equal to 0 (--min_ao)"; fi
 if [ $min_qval -lt 0 ];then echo "WARNING : minimum Phred-scale qvalue must be higher than or equal to 0 (--min_qval)"; fi
 
@@ -449,7 +449,7 @@ else
 fi
 
 #mpileup2vcf
-samtools mpileup --fasta-ref $fasta_ref --region $region --ignore-RG --min-BQ $base_qual --min-MQ $map_qual --max-idepth 1000000 --max-depth $max_DP $bam_folder*.bam | sed 's/		/	*	*/g' \
+samtools mpileup --fasta-ref $fasta_ref --region $region --ignore-RG --min-BQ $base_qual --min-MQ $map_qual --max-idepth 1000000 --max-depth $max_dp $bam_folder*.bam | sed 's/		/	*	*/g' \
 | mpileup2readcounts 0 -5 $indel_par 0 \
 | needlestack.r --pairs_file=$pairs_file --out_file=$out_vcf --fasta_ref=$fasta_ref --bam_folder=$bam_folder --ref_genome=$ref_genome \
 --GQ_threshold=$min_qval --min_coverage=$min_dp --min_reads=$min_ao --SB_type=$sb_type --SB_threshold_SNV=$sb_snv --SB_threshold_indel=$sb_indel --output_all_SNVs=$all_SNVs \
