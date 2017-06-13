@@ -18,14 +18,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-// Requirements :
-// - bedtools
-// - samtools
-// - Rscript (R)
-// - bed_cut.r (in bin folder)
-// - needlestack.r (in bin folder)
-// - mpileup2readcounts (in bin folder) ( c++ )
-
 
 params.help = null
 params.input_vcf = null
