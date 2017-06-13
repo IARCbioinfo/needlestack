@@ -54,7 +54,7 @@ RUN apt-get clean && \
 	DEBIAN_FRONTEND=noninteractive apt-get -y install libssl-dev && \
 	DEBIAN_FRONTEND=noninteractive apt-get -y install libcurl4-openssl-dev && \	
 	
-	Rscript -e "source('http://bioconductor.org/biocLite.R'); biocLite('Gviz'); biocLite('BSgenome.Hsapiens.UCSC.hg19'); biocLite('BSgenome.Hsapiens.UCSC.hg18'); biocLite('BSgenome.Hsapiens.UCSC.hg38'); biocLite('BSgenome.Hsapiens.1000genomes.hs37d5'); biocLite('TxDb.Hsapiens.UCSC.hg19.knownGene'); biocLite('TxDb.Hsapiens.UCSC.hg18.knownGene'); biocLite('TxDb.Hsapiens.UCSC.hg38.knownGene'); biocLite('org.Hs.eg.db')" && \
+	Rscript -e "source('http://bioconductor.org/biocLite.R'); biocLite('Gviz'); biocLite('TxDb.Hsapiens.UCSC.hg19.knownGene'); biocLite('TxDb.Hsapiens.UCSC.hg18.knownGene'); biocLite('TxDb.Hsapiens.UCSC.hg38.knownGene'); biocLite('org.Hs.eg.db')" && \
 	
 	# mpileup2readcounts compilation
 	wget https://raw.githubusercontent.com/IARCbioinfo/mpileup2readcounts/master/mpileup2readcounts.cc && \
