@@ -4,7 +4,11 @@ FROM debian:latest
 # File Author / Maintainer
 MAINTAINER Matthieu Foll <follm@iarc.fr>
 
-RUN apt-get clean && \
+RUN mkdir -p /var/cache/apt/archives/partial && \
+	touch /var/cache/apt/archives/lock && \
+	chmod 640 /var/cache/apt/archives/lock && \
+	apt-key adv --keyserver keyserver.ubuntu.com --recv-keys F76221572C52609D && \
+	apt-get clean && \
 	apt-get update -y && \
 	# Add R new version repos and update the repository sources list
 	DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y software-properties-common && \
