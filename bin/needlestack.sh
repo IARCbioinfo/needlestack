@@ -56,7 +56,7 @@ usage ()
     echo "    --no_contours                             Do not add contours to plots and do not plot min(AF)~DP."
     echo "    --output_folder     OUTPUT FOLDER            Output directory, by default input bam folder."
     echo "    --region         CHR:START-END            A region for calling."
-    echo "    --pairs_file     TEXT FILE                A tab-delimited file containing two columns (normal and tumor sample name) for each sample in line."
+    echo "    --tn_pairs     TEXT FILE                A tab-delimited file containing two columns (normal and tumor sample name) for each sample in line."
     echo "    --ref_genome                     Reference genome for alignments plot"
     echo ""
 
@@ -123,7 +123,7 @@ while [ "$1" != "" ]; do
         --min_ao)
             min_ao=$VALUE
             ;;
-        --pairs_file)
+        --tn_pairs)
             pairs_file=$VALUE
             if [ $pairs_file != "FALSE" ]; then
 				if [ ! -e "$pairs_file" ]; then
@@ -213,9 +213,9 @@ echo 'This is free software, and you are welcome to redistribute it'
 echo 'under certain conditions; see LICENSE.txt for details.'
 echo '--------------------------------------------------------'
 if [ $pairs_file = "FALSE" ]; then
-	echo "Perform a tumor-normal somatic variant calling (--pairs_file)   : no"
+	echo "Perform a tumor-normal somatic variant calling (--tn_pairs)   : no"
 else
-	echo "Perform a tumor-normal somatic variant calling (--pairs_file)   : yes (file $pairs_file)"
+	echo "Perform a tumor-normal somatic variant calling (--tn_pairs)   : yes (file $pairs_file)"
 fi
 
 echo "To consider a site for calling:"
@@ -332,7 +332,7 @@ fi
 
 if [ $do_plots = "SOMATIC" ] && [ $pairs_file = "FALSE" ]
 then
-	echo "\n ERROR : --do_plots can not be set to SOMATIC since no pairs_file was provided (--pairs_file option), exit."
+	echo "\n ERROR : --do_plots can not be set to SOMATIC since no tn_pairs was provided (--tn_pairs option), exit."
 	exit
 fi
 if [ $do_plots = "NONE" ] && [ $do_alignments = true ]

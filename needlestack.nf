@@ -47,12 +47,12 @@ params.use_file_name = false //put these argument to use the bam file names as s
 params.all_SNVs = false //  output all sites, even when no variant is detected
 params.extra_robust_gl = false //  perform an extra robust regression basically for germline variants
 
-params.pairs_file = "FALSE" // by default R will get a false boolean value for pairs_file option
-assert (params.pairs_file != true) : "please enter a file name when using --pairs_file option"
-if (params.pairs_file != "FALSE") { try { assert file(params.pairs_file).exists() : "\n ERROR : input tumor-normal pairs file not located in execution directory, exit" } catch (AssertionError e) { println e.getMessage() ; System.exit(0)} }
-pairs_file = file(params.pairs_file)
+params.tn_pairs = "FALSE" // by default R will get a false boolean value for tn_pairs option
+assert (params.tn_pairs != true) : "please enter a file name when using --tn_pairs option"
+if (params.tn_pairs != "FALSE") { try { assert file(params.tn_pairs).exists() : "\n ERROR : input tumor-normal pairs file not located in execution directory, exit" } catch (AssertionError e) { println e.getMessage() ; System.exit(0)} }
+pairs_file = file(params.tn_pairs)
 
-if (params.pairs_file != "FALSE") {
+if (params.tn_pairs != "FALSE") {
   params.do_plots = "SOMATIC"  // produce pdf plots of regressions for somatic variants
 }else {
   params.do_plots = "ALL" // produce pdf plots of regressions for all variants
@@ -108,7 +108,7 @@ if (params.help) {
     log.info '    --output_folder     OUTPUT FOLDER            Output directory, by default input bam folder.'
     log.info '    --bed            BED FILE                 A BED file for calling.'
     log.info '    --region         CHR:START-END            A region for calling.'
-    log.info '    --pairs_file     TEXT FILE                A tab-delimited file containing two columns (normal and tumor sample name) for each sample in line.'
+    log.info '    --tn_pairs     TEXT FILE                A tab-delimited file containing two columns (normal and tumor sample name) for each sample in line.'
     log.info '    --ref_genome                     Reference genome for alignments plot'
     log.info ''
     exit 1
@@ -125,7 +125,7 @@ log.info 'This program comes with ABSOLUTELY NO WARRANTY; for details see LICENS
 log.info 'This is free software, and you are welcome to redistribute it'
 log.info 'under certain conditions; see LICENSE.txt for details.'
 log.info '--------------------------------------------------------'
-log.info(params.pairs_file == "FALSE" ? "Perform a tumor-normal somatic variant calling (--pairs_file)   : no"  : "Perform a tumor-normal somatic variant calling (--pairs_file)   : yes (file ${params.pairs_file})" )
+log.info(params.tn_pairs == "FALSE" ? "Perform a tumor-normal somatic variant calling (--pairs_file)   : no"  : "Perform a tumor-normal somatic variant calling (--tn_pairs)   : yes (file ${params.tn_pairs})" )
 log.info "To consider a site for calling:"
 log.info "     minimum median coverage (--min_dp)                         : ${params.min_dp}"
 log.info "     minimum of alternative reads (--min_ao)                    : ${params.min_ao}"
@@ -265,8 +265,8 @@ if(params.input_vcf) {
   assert params.do_alignments in [true,false] : "do not assign a value to --no_alignments"
   assert params.no_indels in [true,false] : "do not assign a value to --no_indels"
   assert params.use_file_name in [true,false] : "do not assign a value to --use_file_name"
-  if ( (params.do_plots == "SOMATIC") && (params.pairs_file == "FALSE") ) {
-      println "\n ERROR : --do_plots can not be set to SOMATIC since no pairs_file was provided (--pairs_file option), exit."; System.exit(0)
+  if ( (params.do_plots == "SOMATIC") && (params.tn_pairs == "FALSE") ) {
+      println "\n ERROR : --do_plots can not be set to SOMATIC since no tn_pairs was provided (--tn_pairs option), exit."; System.exit(0)
   }
   if ( (params.do_plots == "NONE") && (params.do_alignments == true) ) {
       println "\n ERROR : --do_alignments can not be true since --do_plots is set to NONE, exit."; System.exit(0)
@@ -435,7 +435,7 @@ if(params.input_vcf) {
           printf "$SM1	$SM2\\n" >> names.txt
       done
 
-      if [ "!{params.pairs_file}" != "FALSE" ]; then
+      if [ "!{params.tn_pairs}" != "FALSE" ]; then
           abs_pairs_file=$(readlink -f !{pairs_file})
       else
           abs_pairs_file="FALSE"
