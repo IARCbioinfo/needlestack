@@ -105,7 +105,7 @@ if (params.help) {
     log.info '    --no_labels                               Do not add labels to outliers in regression plots.'
     log.info '    --no_indels                               Do not call indels.'
     log.info '    --no_contours                             Do not add contours to plots and do not plot min(AF)~DP.'
-    log.info '    --out_folder     OUTPUT FOLDER            Output directory, by default input bam folder.'
+    log.info '    --output_folder     OUTPUT FOLDER            Output directory, by default input bam folder.'
     log.info '    --bed            BED FILE                 A BED file for calling.'
     log.info '    --region         CHR:START-END            A region for calling.'
     log.info '    --pairs_file     TEXT FILE                A tab-delimited file containing two columns (normal and tumor sample name) for each sample in line.'
@@ -145,7 +145,7 @@ log.info(params.no_contours == true ? "Add contours in plots and plot min(AF)~DP
 
 if(params.input_vcf) {
 
-  params.out_folder = "annotated_vcf"
+  params.output_folder = "annotated_vcf"
   params.chunk_size = 10000
   input_vcf = file(params.input_vcf)
   params.out_annotated_vcf = null
@@ -157,7 +157,7 @@ if(params.input_vcf) {
   log.info "Input vcf for annotation by needlestack (--input_vcf)           : ${params.input_vcf}"
   log.info "Output annotated file (--out_annotated_vcf)                     : ${out_annotated_vcf}"
   log.info(params.extra_robust_gl == true ? "Perform an extra-robust regression (--extra_robust_gl)          : yes" : "Perform an extra-robust regression (--extra_robust_gl)          : no" )
-  log.info "output folder (--out_folder)                                    : ${params.out_folder}"
+  log.info "output folder (--output_folder)                                    : ${params.output_folder}"
   log.info "\n"
 
   process split_vcf {
@@ -193,7 +193,7 @@ if(params.input_vcf) {
   process annotate_vcf {
 
     if(!params.no_plots) {
-          publishDir params.out_folder+'/PDF/', mode: 'move', pattern: '*.pdf'
+          publishDir params.output_folder+'/PDF/', mode: 'move', pattern: '*.pdf'
     }
 
     input:
@@ -212,7 +212,7 @@ if(params.input_vcf) {
 
   process merge_vcf {
 
-    publishDir params.out_folder, mode: 'move'
+    publishDir params.output_folder, mode: 'move'
 
     input:
     val out_annotated_vcf
@@ -248,7 +248,7 @@ if(params.input_vcf) {
 
 } else {
 
-  params.out_folder = params.bam_folder // if not provided, outputs will be held on the input bam folder
+  params.output_folder = params.bam_folder // if not provided, outputs will be held on the input bam folder
   assert (params.fasta_ref != true) && (params.fasta_ref != null) : "please specify --fasta_ref option (--fasta_ref reference.fasta(.gz))"
   assert (params.bam_folder != true) && (params.bam_folder != null) : "please specify --bam_folder option (--bam_folder bamfolder)"
 
@@ -308,7 +308,7 @@ if(params.input_vcf) {
   assert (params.map_qual >= 0) : "minimum mapping quality (samtools) must be higher than or equal to 0"
   assert (params.base_qual >= 0) : "minimum base quality (samtools) must be higher than or equal to 0"
 
-  sample_names = params.use_file_name ? "FILE" : "BAM" 
+  sample_names = params.use_file_name ? "FILE" : "BAM"
   out_vcf = params.out_vcf ? params.out_vcf : "all_variants.vcf"
 
   /* manage input positions to call (bed or region or whole-genome) */
@@ -322,7 +322,7 @@ if(params.input_vcf) {
   }
 
   log.info "Input BAM folder (--bam_folder)                                 : ${params.bam_folder}"
-  log.info "output folder (--out_folder)                                    : ${params.out_folder}"
+  log.info "output folder (--output_folder)                                    : ${params.output_folder}"
   log.info "Reference in fasta format (--fasta_ref)                         : ${params.fasta_ref}"
   log.info "Intervals for calling (--bed)                                   : ${input_region}"
   log.info "Number of regions to split (--nsplit)                           : ${params.nsplit}"
@@ -380,15 +380,15 @@ if(params.input_vcf) {
       grep -v '^track' !{bed} | sort -k1,1 -k2,2n | bedtools merge -i stdin | awk '{print $1" "$2" "$3}' | bed_cut.r !{params.nsplit}
       '''
   }
- 
+
 
   // create mpileup file + parse mpileup file to send it to Rscript
   process mpileup2vcf {
 
 	  if(params.do_plots) {
-          publishDir params.out_folder+'/PDF/', mode: 'move', pattern: '*.pdf'
+          publishDir params.output_folder+'/PDF/', mode: 'move', pattern: '*.pdf'
       }
-      
+
       tag { region_tag }
 
       input:
@@ -412,7 +412,7 @@ if(params.input_vcf) {
       } else {
           indel_par = "false"
       }
-      
+
       '''
       for cur_bam in BAM/*.bam
       do
@@ -423,14 +423,14 @@ if(params.input_vcf) {
               SM1="$(echo -e "${bam_file_name}" | tr -d '[[:space:]]')"
               SM2="$(echo -e "${bam_file_name}" | tr -d '[[:space:]]')"
           else
-              # get bam file names 
+              # get bam file names
 	      bam_file_name=$(basename "${cur_bam%.*}")
 	      # remove whitespaces from name
 	      SM1="$(echo -e "${bam_file_name}" | tr -d '[[:space:]]')"
 	      # extract sample name from bam file read group info field
 	      SM2=$(samtools view -H $cur_bam | grep "^@RG" | tail -n1 | sed "s/.*SM:\\([^	]*\\).*/\\1/" | tr -d '[:space:]')
           fi
-          
+
 
           printf "$SM1	$SM2\\n" >> names.txt
       done
@@ -442,11 +442,11 @@ if(params.input_vcf) {
       fi
       set -o pipefail
       i=1
-      
+
       { while read bed_line; do
-          samtools mpileup --fasta-ref !{fasta_ref} --region $bed_line --ignore-RG --min-BQ !{params.base_qual} --min-MQ !{params.map_qual} --max-idepth 1000000 --max-depth !{params.max_DP} BAM/*.bam | sed 's/		/	*	*/g' 
+          samtools mpileup --fasta-ref !{fasta_ref} --region $bed_line --ignore-RG --min-BQ !{params.base_qual} --min-MQ !{params.map_qual} --max-idepth 1000000 --max-depth !{params.max_DP} BAM/*.bam | sed 's/		/	*	*/g'
           i=$((i+1))
-      done < !{split_bed} 
+      done < !{split_bed}
       } | mpileup2readcounts 0 -5 !{indel_par} !{params.min_ao} | Rscript !{baseDir}/bin/needlestack.r --pairs_file=${abs_pairs_file} --source_path=!{baseDir}/bin/ --out_file=!{region_tag}.vcf --fasta_ref=!{fasta_ref} --bam_folder=BAM/ --ref_genome=!{params.ref_genome} --GQ_threshold=!{params.min_qval} --min_coverage=!{params.min_dp} --min_reads=!{params.min_ao} --SB_type=!{params.sb_type} --SB_threshold_SNV=!{params.sb_snv} --SB_threshold_indel=!{params.sb_indel} --output_all_SNVs=!{params.all_SNVs} --do_plots=!{params.do_plots} --do_alignments=!{params.do_alignments} --plot_labels=!{!params.no_labels} --add_contours=!{!params.no_contours} --extra_rob=!{params.extra_robust_gl} --afmin_power=!{params.power_min_af} --sigma=!{params.sigma_normal}
       '''
   }
@@ -455,7 +455,7 @@ if(params.input_vcf) {
   // merge all vcf files in one big file
   process collect_vcf_result {
 
-      publishDir params.out_folder, mode: 'move'
+      publishDir params.output_folder, mode: 'move'
 
       input:
       val out_vcf

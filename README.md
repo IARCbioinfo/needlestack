@@ -3,17 +3,17 @@
 
 <img align="center" src="https://cloud.githubusercontent.com/assets/3366818/10489240/7da79144-729c-11e5-8cb3-0225106d9b06.jpg" width="600">
 
-[![Join the chat at https://gitter.im/iarcbioinfo/needlestack](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/iarcbioinfo/needlestack?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Circle CI](https://circleci.com/gh/IARCbioinfo/needlestack/tree/master.svg?style=shield&circle-token=402d456a7c50af352bb4e1a52425ce0fe645f78f)](https://circleci.com/gh/IARCbioinfo/needlestack/tree/master) [![Docker Hub](https://img.shields.io/badge/docker-ready-blue.svg)](https://hub.docker.com/r/iarcbioinfo/needlestack/) 
+[![Join the chat at https://gitter.im/iarcbioinfo/needlestack](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/iarcbioinfo/needlestack?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Circle CI](https://circleci.com/gh/IARCbioinfo/needlestack/tree/master.svg?style=shield&circle-token=402d456a7c50af352bb4e1a52425ce0fe645f78f)](https://circleci.com/gh/IARCbioinfo/needlestack/tree/master) [![Docker Hub](https://img.shields.io/badge/docker-ready-blue.svg)](https://hub.docker.com/r/iarcbioinfo/needlestack/)
 
-Warning: development in progress, unreliable results warranted. 
+Warning: development in progress, unreliable results warranted.
 
-Please wait upcoming publication before using it in production. 
+Please wait upcoming publication before using it in production.
 
 Contact: follm@iarc.fr
 
 ## Description
 
-Needlestack is an ultra-sensitive multi-sample variant caller for Next Generation Sequencing (NGS) data. It is based on the idea that analysing several samples together can help estimate the distribution of sequencing errors to accurately identify variants. It has been initially developed for somatic variant calling using very deep NGS data from circulating free DNA, but is also applicable to lower coverage data like Whole Exome Sequencing (WES) or even Whole Genome Sequencing (WGS). It is a highly scalable and reproducible pipeline thanks to the use of [nextflow](http://www.nextflow.io/) and [docker](https://www.docker.com) technologies. 
+Needlestack is an ultra-sensitive multi-sample variant caller for Next Generation Sequencing (NGS) data. It is based on the idea that analysing several samples together can help estimate the distribution of sequencing errors to accurately identify variants. It has been initially developed for somatic variant calling using very deep NGS data from circulating free DNA, but is also applicable to lower coverage data like Whole Exome Sequencing (WES) or even Whole Genome Sequencing (WGS). It is a highly scalable and reproducible pipeline thanks to the use of [nextflow](http://www.nextflow.io/) and [docker](https://www.docker.com) technologies.
 
 Here is a summary of the method:
 
@@ -23,7 +23,7 @@ Here is a summary of the method:
 
 ## Input
 
-- A set of [BAM files](https://samtools.github.io/hts-specs/) (called `*.bam`) grouped in a single folder along with their [index files](http://www.htslib.org/doc/samtools.html) (called `*.bam.bai`). A minimum of 20 BAM files is recommended. 
+- A set of [BAM files](https://samtools.github.io/hts-specs/) (called `*.bam`) grouped in a single folder along with their [index files](http://www.htslib.org/doc/samtools.html) (called `*.bam.bai`). A minimum of 20 BAM files is recommended.
 - A reference [fasta file](https://en.wikipedia.org/wiki/FASTA_format) (eventually compressed with [bgzip](http://www.htslib.org/doc/tabix.html)) along with its [faidx index](http://www.htslib.org/doc/faidx.html) (and `*.gzi` faidx index if compressed).
 - Optionally a [bed file](https://genome.ucsc.edu/FAQ/FAQformat.html#format1), otherwise the variant calling is performed on the whole reference provided.
 
@@ -43,7 +43,7 @@ Needlestack works under most Linux distributions and Apple OS X.
 	sudo mv nextflow /usr/local/bin
 	```
 3. Install [docker](https://www.docker.com).
-	
+
 	This is very system specific (but quite easy in most cases), follow  [docker documentation](https://docs.docker.com/installation/). Also follow the optional configuration step called `Create a Docker group` in their documentation.
 
 4. Optionally download a sample dataset.
@@ -52,30 +52,30 @@ Needlestack works under most Linux distributions and Apple OS X.
 	git clone --depth=1 https://github.com/mfoll/NGS_data_test.git
 	```
 5. Run the pipeline.
-	
+
 	Here on the example dataset downloaded above:
 	```bash
 	cd NGS_data_test/1000G_CEU_TP53/
 	nextflow run iarcbioinfo/needlestack -with-docker  \
 	         --bed TP53_all.bed --bam_folder BAM/ --fasta_ref 17.fasta.gz
 	```
-	
+
 	You will find a [VCF file](https://samtools.github.io/hts-specs/) called `all_variants.vcf` in the `BAM/` folder once done.
-	
+
 	The first time it will take more time as the pipeline will be downloaded from github and the docker container from [dockerhub](https://hub.docker.com/r/iarcbioinfo/needlestack/).
 
 	Creating an alias for the long command above can be useful. For example:
 	```bash
 	alias needlestack='nextflow run iarcbioinfo/needlestack -with-docker'
 	```
-	
+
 	If you want to permanantly add this alias (and not just for your current session), add the above  line to your `~/.bashrc` file (assuming you are using bash).
-	
+
 	It will allow you to do this:
 	```bash
 	needlestack --bed TP53_all.bed --bam_folder BAM/ --fasta_ref 17.fasta.gz
 	```
-	
+
 6. Update the pipeline
 
 	You can update the nextflow sofware and the pipeline itself simply using:
@@ -91,7 +91,7 @@ Needlestack works under most Linux distributions and Apple OS X.
 	nextflow run iarcbioinfo/needlestack -r v0.3 -with-docker \
 	         --bed TP53_all.bed --bam_folder BAM/ --fasta_ref 17.fasta.gz
 	```
-7. You can run needlastack in a shell without nextflow. 
+7. You can run needlastack in a shell without nextflow.
 
 	a. Install [samtools](http://www.htslib.org), Rscript from [R](https://www.r-project.org), g++ compiler and compile the file *mpileup2readcounts.cc* located [here](https://github.com/IARCbioinfo/mpileup2readcounts), put them in your path (executables are assumed to be respectively called `samtools`, `Rscript` and `mpileup2readcounts`)
 	b. Download the files in this [bin](https://github.com/IARCbioinfo/needlestack/tree/gabriela_cpp/bin) directory and add them to your path.
@@ -101,15 +101,15 @@ Needlestack works under most Linux distributions and Apple OS X.
 	git clone --depth=1 https://github.com/mfoll/NGS_data_test.git
 	```
 	d. Run needlestack.
-	
+
 	Here on the example dataset downloaded above:
 	```bash
 	cd NGS_data_test/1000G_CEU_TP53/
 	needlestack.sh --region=17:7572814-7573814 --bam_folder=BAM/ --fasta_ref=17.fasta.gz
 	```
-	
+
 	You will find a [VCF file](https://samtools.github.io/hts-specs/) called `all_variants.vcf` in the `BAM/` folder once done.
-	
+
 ## Detailed instructions
 
 ### Nextflow and Docker
@@ -121,14 +121,14 @@ The exact same pipeline can be run on your computer or on a HPC cluster, by addi
 process.executor = 'sge'
 ```
 
-Other popular schedulers such as LSF, SLURM, PBS, TORQUE etc. are also compatible. See the nextflow documentation [here](http://www.nextflow.io/docs/latest/executor.html) for more details. Also have a look at the [other parameters for the executors](http://www.nextflow.io/docs/latest/config.html#scope-executor), in particular `queueSize` that defines the number of tasks the executor will handle in a parallel manner. Parallelism in needlestack is managed by splitting the genomic regions in pieces of equal sizes (`--nsplit`). 
+Other popular schedulers such as LSF, SLURM, PBS, TORQUE etc. are also compatible. See the nextflow documentation [here](http://www.nextflow.io/docs/latest/executor.html) for more details. Also have a look at the [other parameters for the executors](http://www.nextflow.io/docs/latest/config.html#scope-executor), in particular `queueSize` that defines the number of tasks the executor will handle in a parallel manner. Parallelism in needlestack is managed by splitting the genomic regions in pieces of equal sizes (`--nsplit`).
 
 ### Parameters
 
 Type `--help` to get the full list of options. `--bam_folder` and `--fasta_ref` are compulsary. The optional parameters with default values are:
 
 | Parameter | Default value | Description |
-|-----------|--------------:|-------------| 
+|-----------|--------------:|-------------|
 | min_dp    |            30 | Minimum median coverage to consider a site. In addition, at least 10 samples have to be covered by min_dp. |
 | min_ao | 3 | Minimum number of non-ref reads in at least one sample to consider a site |
 | nsplit | 1 | Split the bed file in nsplit pieces and run in parallel |
@@ -147,7 +147,7 @@ Type `--help` to get the full list of options. `--bam_folder` and `--fasta_ref` 
 | no_labels |   | Put this argument for not labeling the outliers on regression plots |
 | no_indels |   | Put this argument to do not perform the variant calling on insertions and deletions |
 | no_contours |   | Put this argument to do not plot qvalues contours (for qvalue threshold={10,30,50,70,100} by default) and do not plot minimum detectable allelic fraction in function of coverage |
-| out_folder | --bam_folder | Output folder, by default equals to the input bam folder |
+| output_folder | --bam_folder | Output folder, by default equals to the input bam folder |
 | out_vcf | all_variants.vcf | File name of final VCF |
 | bed |   | BED file containing a list of regions (or positions) where needlestack should be run |
 | region |   | A region in format CHR:START-END where calling should be done |
@@ -180,7 +180,7 @@ In other cases (when there is no `--pairs_file` parameter defined), genotypes ar
 	* SOMATIC : To produce pdf regression plots only for somatic variants. Default value when using matched tumor/normal.
 	* ALL : To produce pdf regression plots for all variants. Default value when not using matched tumor/normal.
 	* NONE : To remove pdf regression plots from the output
-	
+
 2. --do_alignments : To add the alignments plots to the regression plots. If this option is set to "true", the name of the reference genome (--ref_genome option) needs to be provided to choose the correct annotation (See *--ref_genome option* below). False is the default value.
 
 #### Bioconductor packages to install for plotting the alignments :
@@ -191,14 +191,14 @@ In other cases (when there is no `--pairs_file` parameter defined), genotypes ar
 
 Examples :
 
-If one used the UCSC version of the reference Human genome hg19, the fowolling packages should be installed : 
+If one used the UCSC version of the reference Human genome hg19, the fowolling packages should be installed :
 - *Gviz*
 - *TxDb.Hsapiens.UCSC.hg19.knownGene* (hg18 and hg38 UCSC version can also be used)
-- *org.Hs.eg.db* 
+- *org.Hs.eg.db*
 
 These packages exist for other organisms than Human but have not been tested.
 
-One can for example generate the alignments plot for data issued from the mouse by installing : 
+One can for example generate the alignments plot for data issued from the mouse by installing :
 - *TxDb.Mmusculus.UCSC.mm10.knownGene*(mm9 UCSC version can also be used)
 - *org.Mm.eg.db*
 
@@ -209,7 +209,7 @@ For the other organisms the packages need to have the same nomenclature as the o
 The argument corresponds to the TxDb annotation package name without its extrimities. For the UCSC version of the reference Human genome hg19, one needs to set --ref_genome to "*Hsapiens.UCSC.hg19*".
 Note that the packages chosen for the annotations are compatible with the UCSC notations since most of the Gviz fonctionalities can handle these notations.
 
-By default, when using matched tumor/normal (pairs_file option), needlestack will produce pdf plots of regressions only for somatic variants and without the alignment plots; when not, needlestack will produce them for all variants and without the alignment plots. 
+By default, when using matched tumor/normal (pairs_file option), needlestack will produce pdf plots of regressions only for somatic variants and without the alignment plots; when not, needlestack will produce them for all variants and without the alignment plots.
 
 ![Example of an alignment plot](alignments.png "Example of an alignment plot")
 
@@ -220,8 +220,8 @@ By default, when using matched tumor/normal (pairs_file option), needlestack wil
 - BAM alignment(s) (50 bases on both sides of the variant) : the variant position is highlighted in red.
 - The reference genome : the variant position is highlighted in red.
 - Genome annotation : the yellow blocks represent exons, the variant position is highlighted in red. The annotation is represented only if the variant is not in an intergenic region.
-- Zoom-out on the genome annotation : representation of the whole gene whose name is on the right side of the gene annotation. The annotation is represented only if the variant is not in an intergenic region. A red vertical line shows the position of the variant. 
-- Genomic axis corresponding to the previous genome annotation. A red vertical line shows the position of the variant. 
+- Zoom-out on the genome annotation : representation of the whole gene whose name is on the right side of the gene annotation. The annotation is represented only if the variant is not in an intergenic region. A red vertical line shows the position of the variant.
+- Genomic axis corresponding to the previous genome annotation. A red vertical line shows the position of the variant.
 
 ## Notes
 

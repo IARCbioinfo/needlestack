@@ -54,7 +54,7 @@ usage ()
     echo "    --no_labels                               Do not add labels to outliers in regression plots."
     echo "    --no_indels                               Do not call indels."
     echo "    --no_contours                             Do not add contours to plots and do not plot min(AF)~DP."
-    echo "    --out_folder     OUTPUT FOLDER            Output directory, by default input bam folder."
+    echo "    --output_folder     OUTPUT FOLDER            Output directory, by default input bam folder."
     echo "    --region         CHR:START-END            A region for calling."
     echo "    --pairs_file     TEXT FILE                A tab-delimited file containing two columns (normal and tumor sample name) for each sample in line."
     echo "    --ref_genome                     Reference genome for alignments plot"
@@ -67,7 +67,7 @@ min_dp=30 : minimum median coverage to consider a site
 min_ao=3 : minimum number of non-ref reads in at least one sample to consider a site
 min_qval=50 : qvalue in Phred scale to consider a variant
 sb_type="SOR" : strand bias measure to be used: "SOR" or "RVSB"
-case $sb_type in 
+case $sb_type in
 	SOR|RVSB)
 		sb_snv=100 : strand bias threshold for snv
 		sb_indel=100 : strand bias threshold for indels
@@ -105,15 +105,15 @@ while [ "$1" != "" ]; do
             ;;
         --fasta_ref)
             fasta_ref=$VALUE
-            fasta_ref_fai=$fasta_ref'.fai' 
-			fasta_ref_gzi=$fasta_ref'.gzi' 
+            fasta_ref_fai=$fasta_ref'.fai'
+			fasta_ref_gzi=$fasta_ref'.gzi'
             ;;
         --base_qual)
             base_qual=$VALUE
             ;;
         --map_qual)
             map_qual=$VALUE
-            ;; 
+            ;;
         --max_DP)
             max_DP=$VALUE
             ;;
@@ -127,7 +127,7 @@ while [ "$1" != "" ]; do
             pairs_file=$VALUE
             if [ $pairs_file != "FALSE" ]; then
 				if [ ! -e "$pairs_file" ]; then
-					echo "ERROR : input tumor-normal pairs file not located in execution directory, exit" 
+					echo "ERROR : input tumor-normal pairs file not located in execution directory, exit"
 					exit
 				fi
 				do_plots="SOMATIC"  : produce pdf plots of regressions for somatic variants
@@ -153,7 +153,7 @@ while [ "$1" != "" ]; do
             ;;
         --sb_type)
             sb_type=$VALUE
-            ;;  
+            ;;
         --sb_snv)
             sb_snv=$VALUE
             ;;
@@ -165,7 +165,7 @@ while [ "$1" != "" ]; do
             ;;
         --power_min_af)
             power_min_af=$VALUE
-            ;;  
+            ;;
         --sigma_normal)
             sigma_normal=$VALUE
             ;;
@@ -177,18 +177,18 @@ while [ "$1" != "" ]; do
             ;;
         --extra_robust_gl)
             extra_robust_gl=$VALUE
-            ;;  
+            ;;
         --do_alignments)
             do_alignments=$VALUE
             ;;
         --no_labels)
             no_labels=$VALUE
-            ;;           
+            ;;
         --no_contours)
             no_contours=$VALUE
             ;;
-        --out_folder)
-            out_folder=$VALUE
+        --output_folder)
+            output_folder=$VALUE
             ;;
         --region)
             region=$VALUE
@@ -213,9 +213,9 @@ echo 'This is free software, and you are welcome to redistribute it'
 echo 'under certain conditions; see LICENSE.txt for details.'
 echo '--------------------------------------------------------'
 if [ $pairs_file = "FALSE" ]; then
-	echo "Perform a tumor-normal somatic variant calling (--pairs_file)   : no" 
+	echo "Perform a tumor-normal somatic variant calling (--pairs_file)   : no"
 else
-	echo "Perform a tumor-normal somatic variant calling (--pairs_file)   : yes (file $pairs_file)" 
+	echo "Perform a tumor-normal somatic variant calling (--pairs_file)   : yes (file $pairs_file)"
 fi
 
 echo "To consider a site for calling:"
@@ -223,9 +223,9 @@ echo "     minimum median coverage (--min_dp)                         : $min_dp"
 echo "     minimum of alternative reads (--min_ao)                    : $min_ao"
 echo "Phred-scale qvalue threshold (--min_qval)                       : $min_qval"
 
-if [ -z $out_folder ];then out_folder=$bam_folder ;fi 
+if [ -z $output_folder ];then output_folder=$bam_folder ;fi
 
-case $do_plots in 
+case $do_plots in
 	ALL)
 		echo "PDF regression plots (--do_plots)                               : ALL"
 		;;
@@ -241,13 +241,13 @@ case $do_plots in
 esac
 
 if [ $do_alignments = true ]; then
-	echo "Alignment plots (--do_alignments)                               : yes" 
+	echo "Alignment plots (--do_alignments)                               : yes"
 else
-	echo "Alignment plots (--do_alignments)                               : no" 
+	echo "Alignment plots (--do_alignments)                               : no"
 fi
 
 if [ $no_labels = true ]; then
-	echo "Labeling outliers in regression plots (--no_labels)             : no" 
+	echo "Labeling outliers in regression plots (--no_labels)             : no"
 else
 	echo "Labeling outliers ibooleann regression plots (--no_labels)      : yes"
 fi
@@ -259,9 +259,9 @@ else
 fi
 
 if [ $use_file_name = true ];then
-	sample_names="FILE" 
+	sample_names="FILE"
 else
-	sample_names="BAM" 
+	sample_names="BAM"
 fi
 if [ -z $out_vcf ]; then out_vcf="all_variants.vcf"; fi
 
@@ -269,12 +269,12 @@ if [ -z $out_vcf ]; then out_vcf="all_variants.vcf"; fi
 if [ ! -z $region ]
 then
 	input_region='region'
-else 
+else
 	input_region='whole_genome'
 fi
 
 echo "Input BAM folder (--bam_folder)                                 : $bam_folder"
-echo "output folder (--out_folder)                                    : $out_folder"
+echo "output folder (--output_folder)                                    : $output_folder"
 echo "Reference in fasta format (--fasta_ref)                         : $fasta_ref"
 echo "Intervals for calling (--bed)                                   : $input_region"
 echo "Strand bias measure (--sb_type)                                 : $sb_type"
@@ -287,12 +287,12 @@ echo "Samtools minimum base quality (--base_qual)                     : $base_qu
 echo "Samtools maximum coverage before downsampling (--max_DP)        : $max_DP"
 echo "Sample names definition (--use_file_name)                       : $sample_names"
 if [ $all_SNVs = true ]; then
-	echo "Output all SNVs (--all_SNVs)                                    : yes" 
+	echo "Output all SNVs (--all_SNVs)                                    : yes"
 else
 	echo "Output all SNVs (--all_SNVs)                                    : no"
 fi
 if [ $extra_robust_gl = true ]; then
-	echo "Perform an extra-robust regression (--extra_robust_gl)          : yes" 
+	echo "Perform an extra-robust regression (--extra_robust_gl)          : yes"
 else
 	echo "Perform an extra-robust regression (--extra_robust_gl)          : no"
 fi
@@ -304,32 +304,32 @@ fi
 echo "\n"
 
 #check parameters values
-if [ $sb_type != "SOR" ] && [ $sb_type != "RVSB" ] && [ $sb_type != "FS" ] 
-then 
+if [ $sb_type != "SOR" ] && [ $sb_type != "RVSB" ] && [ $sb_type != "FS" ]
+then
 	echo "WARNING : --sb_type must be SOR, RVSB or FS "
 fi
-if [ $all_SNVs != true ] && [ $all_SNVs != false ] 
-then 
+if [ $all_SNVs != true ] && [ $all_SNVs != false ]
+then
 	echo "WARNING : do not assign a value to --all_SNVs"
 fi
-if [ $extra_robust_gl != true ] && [ $extra_robust_gl != false ] 
-then 
+if [ $extra_robust_gl != true ] && [ $extra_robust_gl != false ]
+then
 	echo "WARNING : do not assign a value to --extra_robust_gl"
 fi
 
-if [ $do_alignments != true ] && [ $do_alignments != false ] 
-then 
+if [ $do_alignments != true ] && [ $do_alignments != false ]
+then
 	echo "WARNING : do not assign a value to --no_alignments"
 fi
-if [ $no_indels != true ] && [ $no_indels != false ] 
-then 
+if [ $no_indels != true ] && [ $no_indels != false ]
+then
 	echo "WARNING : do not assign a value to --no_indels"
 fi
-if [ $use_file_name != true ] && [ $use_file_name != false ] 
-then 
+if [ $use_file_name != true ] && [ $use_file_name != false ]
+then
 	echo "WARNING : do not assign a value to --use_file_name"
 fi
-  
+
 if [ $do_plots = "SOMATIC" ] && [ $pairs_file = "FALSE" ]
 then
 	echo "\n ERROR : --do_plots can not be set to SOMATIC since no pairs_file was provided (--pairs_file option), exit."
@@ -415,7 +415,7 @@ else
 	indel_par="false"
 fi
 
-#generate names.txt file 
+#generate names.txt file
 for cur_bam in $bam_folder*.bam
 do
 	if [ $sample_names = "FILE" ]; then
@@ -425,7 +425,7 @@ do
 		SM1="$(echo "${bam_file_name}" | tr -d '[[:space:]]')"
 		SM2="$(echo "${bam_file_name}" | tr -d '[[:space:]]')"
 	else
-		# get bam file names 
+		# get bam file names
 		bam_file_name=$(basename "${cur_bam%.*}")
 		# remove whitespaces from name
 		SM1="$(echo "${bam_file_name}" | tr -d '[[:space:]]')"
@@ -437,12 +437,12 @@ do
 done
 
 #parameters needed for the Rscript
-if [ $no_labels = true ];then 
+if [ $no_labels = true ];then
 	labels=false
-else 
+else
 	labels=true
 fi
-if [ $no_contours = true ];then 
+if [ $no_contours = true ];then
 	contours=false
 else
 	contours=true
@@ -466,13 +466,13 @@ sed -i '/##source=.*/ r versions.txt' header.txt
 grep --no-filename -v '^#' $out_vcf >> header.txt
 mv header.txt $out_vcf
 
-#move pdf plots      
+#move pdf plots
 if [ $do_plots != "NONE" ]; then
-	mkdir $out_folder'PDF'
-	mv *.pdf $out_folder/PDF
+	mkdir $output_folder'PDF'
+	mv *.pdf $output_folder/PDF
 fi
 
-mv $out_vcf $out_folder
+mv $out_vcf $output_folder
 
 
 #remove intermediate files
@@ -480,12 +480,3 @@ mv $out_vcf $out_folder
 rm "names.txt"
 rm "versions.txt"
 rm "contigs.txt"
-
-
-
-
-
-
-
-
-
