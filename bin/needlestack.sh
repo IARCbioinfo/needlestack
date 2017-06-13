@@ -29,11 +29,11 @@ usage ()
     echo "--------------------------------------------------------"
     echo ""
     echo "Usage: "
-    echo "    ./needlestack.sh --region=chrX:pos1-pos2 --bam_folder=BAM/ --fasta_ref=reference.fasta [other options]"
+    echo "    ./needlestack.sh --region=chrX:pos1-pos2 --bam_folder=BAM/ --ref=reference.fasta [other options]"
     echo ""
     echo "Mandatory arguments:"
     echo "    --bam_folder     BAM_DIR                  BAM files directory."
-    echo "    --fasta_ref      REF_IN_FASTA             Reference genome in fasta format."
+    echo "    --ref      REF_IN_FASTA             Reference genome in fasta format."
     echo "Options:"
     echo "    --min_dp         INTEGER                  Minimum median coverage (in addition, min_dp in at least 10 samples)."
     echo "    --min_ao         INTEGER                  Minimum number of non-ref reads in at least one sample to consider a site."
@@ -103,7 +103,7 @@ while [ "$1" != "" ]; do
             usage
             exit
             ;;
-        --fasta_ref)
+        --ref)
             fasta_ref=$VALUE
             fasta_ref_fai=$fasta_ref'.fai'
 			fasta_ref_gzi=$fasta_ref'.gzi'
@@ -275,7 +275,7 @@ fi
 
 echo "Input BAM folder (--bam_folder)                                 : $bam_folder"
 echo "output folder (--output_folder)                                    : $output_folder"
-echo "Reference in fasta format (--fasta_ref)                         : $fasta_ref"
+echo "Reference in fasta format (--ref)                         : $fasta_ref"
 echo "Intervals for calling (--bed)                                   : $input_region"
 echo "Strand bias measure (--sb_type)                                 : $sb_type"
 echo "Strand bias threshold for SNVs (--sb_snv)                       : $sb_snv"

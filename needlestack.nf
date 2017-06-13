@@ -77,11 +77,11 @@ if (params.help) {
     log.info '--------------------------------------------------------'
     log.info ''
     log.info 'Usage: '
-    log.info '    nextflow run iarcbioinfo/needlestack [-with-docker] --bed bedfile.bed --bam_folder BAM/ --fasta_ref reference.fasta [other options]'
+    log.info '    nextflow run iarcbioinfo/needlestack [-with-docker] --bed bedfile.bed --bam_folder BAM/ --ref reference.fasta [other options]'
     log.info ''
     log.info 'Mandatory arguments:'
     log.info '    --bam_folder     BAM_DIR                  BAM files directory.'
-    log.info '    --fasta_ref      REF_IN_FASTA             Reference genome in fasta format.'
+    log.info '    --ref      REF_IN_FASTA             Reference genome in fasta format.'
     log.info '    OR '
     log.info '    --input_vcf      VCF FILE                 VCF file (basically from GATK pipeline) to annotate.'
     log.info 'Options:'
@@ -249,12 +249,12 @@ if(params.input_vcf) {
 } else {
 
   params.output_folder = params.bam_folder // if not provided, outputs will be held on the input bam folder
-  assert (params.fasta_ref != true) && (params.fasta_ref != null) : "please specify --fasta_ref option (--fasta_ref reference.fasta(.gz))"
+  assert (params.ref != true) && (params.ref != null) : "please specify --ref option (--ref reference.fasta(.gz))"
   assert (params.bam_folder != true) && (params.bam_folder != null) : "please specify --bam_folder option (--bam_folder bamfolder)"
 
-  fasta_ref = file( params.fasta_ref )
-  fasta_ref_fai = file( params.fasta_ref+'.fai' )
-  fasta_ref_gzi = file( params.fasta_ref+'.gzi' )
+  fasta_ref = file( params.ref )
+  fasta_ref_fai = file( params.ref+'.fai' )
+  fasta_ref_gzi = file( params.ref+'.gzi' )
 
   /* Verify user inputs are correct */
 
@@ -280,7 +280,7 @@ if(params.input_vcf) {
   if (params.bed) { try { assert file(params.bed).exists() : "\n WARNING : input bed file not located in execution directory" } catch (AssertionError e) { println e.getMessage() } }
   try { assert fasta_ref.exists() : "\n WARNING : fasta reference not located in execution directory. Make sure reference index is in the same folder as fasta reference" } catch (AssertionError e) { println e.getMessage() }
   if (fasta_ref.exists()) {assert fasta_ref_fai.exists() : "input fasta reference does not seem to have a .fai index (use samtools faidx)"}
-  if (fasta_ref.exists() && params.fasta_ref.tokenize('.')[-1] == 'gz') {assert fasta_ref_gzi.exists() : "input gz fasta reference does not seem to have a .gzi index (use samtools faidx)"}
+  if (fasta_ref.exists() && params.ref.tokenize('.')[-1] == 'gz') {assert fasta_ref_gzi.exists() : "input gz fasta reference does not seem to have a .gzi index (use samtools faidx)"}
   try { assert file(params.bam_folder).exists() : "\n WARNING : input BAM folder not located in execution directory" } catch (AssertionError e) { println e.getMessage() }
   assert file(params.bam_folder).listFiles().findAll { it.name ==~ /.*bam/ }.size() > 0 : "BAM folder contains no BAM"
   if (file(params.bam_folder).exists()) {
@@ -323,7 +323,7 @@ if(params.input_vcf) {
 
   log.info "Input BAM folder (--bam_folder)                                 : ${params.bam_folder}"
   log.info "output folder (--output_folder)                                    : ${params.output_folder}"
-  log.info "Reference in fasta format (--fasta_ref)                         : ${params.fasta_ref}"
+  log.info "Reference in fasta format (--fasta_ref)                         : ${params.ref}"
   log.info "Intervals for calling (--bed)                                   : ${input_region}"
   log.info "Number of regions to split (--nsplit)                           : ${params.nsplit}"
   log.info "Strand bias measure (--sb_type)                                 : ${params.sb_type}"
