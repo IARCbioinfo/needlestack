@@ -125,7 +125,7 @@ log.info 'This program comes with ABSOLUTELY NO WARRANTY; for details see LICENS
 log.info 'This is free software, and you are welcome to redistribute it'
 log.info 'under certain conditions; see LICENSE.txt for details.'
 log.info '--------------------------------------------------------'
-log.info(params.tn_pairs == "FALSE" ? "Perform a tumor-normal somatic variant calling (--pairs_file)   : no"  : "Perform a tumor-normal somatic variant calling (--tn_pairs)   : yes (file ${params.tn_pairs})" )
+log.info(params.tn_pairs == "FALSE" ? "Perform a tumor-normal somatic variant calling (--tn_pairs)   : no"  : "Perform a tumor-normal somatic variant calling (--tn_pairs)   : yes (file ${params.tn_pairs})" )
 log.info "To consider a site for calling:"
 log.info "     minimum median coverage (--min_dp)                         : ${params.min_dp}"
 log.info "     minimum of alternative reads (--min_ao)                    : ${params.min_ao}"
@@ -323,7 +323,7 @@ if(params.input_vcf) {
 
   log.info "Input BAM folder (--bam_folder)                                 : ${params.bam_folder}"
   log.info "output folder (--output_folder)                                    : ${params.output_folder}"
-  log.info "Reference in fasta format (--fasta_ref)                         : ${params.ref}"
+  log.info "Reference in fasta format (--ref)                         : ${params.ref}"
   log.info "Intervals for calling (--bed)                                   : ${input_region}"
   log.info "Number of regions to split (--nsplit)                           : ${params.nsplit}"
   log.info "Strand bias measure (--sb_type)                                 : ${params.sb_type}"

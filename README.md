@@ -138,10 +138,10 @@ Type `--help` to get the full list of options. `--bam_folder` and `--fasta_ref` 
 | sb_indel | 100 or 1000 | Strand bias threshold for indels (100 (1000 if FS) = no filter)|
 | map_qual | 20 | Min mapping quality (passed to samtools) |
 | base_qual | 20 | Min base quality (passed to samtools) |
-| max_DP | 30000 | Downsample coverage per sample (passed to samtools) |
+| max_dp | 30000 | Downsample coverage per sample (passed to samtools) |
 | use_file_name |   | Put this argument to use the bam file names as sample names. By default the sample name is extracted from the bam file SM tag. |
 | all_SNVs |   | Put this argument to output all SNVs, even when no variant is detected. Note that positions with zero coverage for all samples might still be missing depending on how the region split is performed |
-| do_plots | SOMATIC if pairs_file provided, ALL if not | To create pdf plots of regressions in the output. To remove pdf plots set --do_plot to NONE (See *Plot options* paragraph).|
+| do_plots | SOMATIC if tn_pairs provided, ALL if not | To create pdf plots of regressions in the output. To remove pdf plots set --do_plot to NONE (See *Plot options* paragraph).|
 | do_alignments |  | Put this argument to add alignments plots to the pdf plots of regressions |
 | ref_genome |   | Reference genome for the annotions on the alignments plots. Examples : *Hsapiens.UCSC.hg19*, *Hsapiens.UCSC.hg19*, *Hsapiens.UCSC.hg38*, *Mmusculus.UCSC.mm10*. The right terminology is described below (*Plot options* paragraph).|
 | no_labels |   | Put this argument for not labeling the outliers on regression plots |
@@ -151,7 +151,7 @@ Type `--help` to get the full list of options. `--bam_folder` and `--fasta_ref` 
 | out_vcf | all_variants.vcf | File name of final VCF |
 | bed |   | BED file containing a list of regions (or positions) where needlestack should be run |
 | region |   | A region in format CHR:START-END where calling should be done |
-| pairs_file | | A tab-delimited file containing two columns (normal and tumor sample names) for each sample in line. This enables matched tumor/normal pair calling features (see below) |
+| tn_pairs | | A tab-delimited file containing two columns (normal and tumor sample names) for each sample in line. This enables matched tumor/normal pair calling features (see below) |
 | power_min_af |  | Allelic fraction used to classify genotypes to 0/0 or ./. depending of the power to detect a variant at this fraction (see below) |
 | extra_robust_gl | | Add this argument to perform extra-robust regression (useful for common germline SNPs, see below) |
 | sigma_normal | 0.1 | Sigma parameter for negative binomial modeling of expected germline allelic fraction. We strongly recommend not to change this parameter unless you really know what it means |
@@ -167,9 +167,9 @@ Simply add the parameters you want in the command line like `--min_dp 1000` for 
 When using matched tumor/normal, Needlestack can classify variants (VCF `FORMAT/STATUS` field) according to the following table:
 ![Status Table](STATUS_TABLE.png)
 
-For this one need to provide a tab-delimited file containing two columns with normal and tumor sample names using the `--pairs_file` option. The first line of this file is a header with `TUMOR` and `NORMAL` keywords. When one normal or one tumor is missing, one can write `NA`. In this mode, the parameter `power_min_af` defines the allelic fraction in the tumor one is trying to detect to classify genotypes as `./.` or `0/0` depending on the power to detect this allelic fraction. Variants found as somatic in a tumor, but germline in another sample of the series will be flagged as `POSSIBLE_CONTAMINATION`. We found this particularly important, as needlestack is very sensitive to low allelic fractions, to filter out contamination among samples for pooled exome capture.
+For this one need to provide a tab-delimited file containing two columns with normal and tumor sample names using the `--tn_pairs` option. The first line of this file is a header with `TUMOR` and `NORMAL` keywords. When one normal or one tumor is missing, one can write `NA`. In this mode, the parameter `power_min_af` defines the allelic fraction in the tumor one is trying to detect to classify genotypes as `./.` or `0/0` depending on the power to detect this allelic fraction. Variants found as somatic in a tumor, but germline in another sample of the series will be flagged as `POSSIBLE_CONTAMINATION`. We found this particularly important, as needlestack is very sensitive to low allelic fractions, to filter out contamination among samples for pooled exome capture.
 
-In other cases (when there is no `--pairs_file` parameter defined), genotypes are defined as `./.` or `0/0` assuming one is looking for allelic fractions expected for germline variants (negative binomial distribution centered at 0.5 with over-dispersion parameter sigma=`sigma_normal`, with `sigma_normal=0.1` by default). If you are looking for somatic variants without matched-normal and assuming you are interesting to correctly distinguish `./.` and `0/0`genotypes, you can set the `power_min_af` parameter to the lowest allelic fraction of somatic variants you are interested with (and your coverage allows you to find).  Note that this is by far not the most common situation, and that in most cases you don't have to worry about the `power_min_af` parameter.
+In other cases (when there is no `--tn_pairs` parameter defined), genotypes are defined as `./.` or `0/0` assuming one is looking for allelic fractions expected for germline variants (negative binomial distribution centered at 0.5 with over-dispersion parameter sigma=`sigma_normal`, with `sigma_normal=0.1` by default). If you are looking for somatic variants without matched-normal and assuming you are interesting to correctly distinguish `./.` and `0/0`genotypes, you can set the `power_min_af` parameter to the lowest allelic fraction of somatic variants you are interested with (and your coverage allows you to find).  Note that this is by far not the most common situation, and that in most cases you don't have to worry about the `power_min_af` parameter.
 
 ### Plot options
 
@@ -209,7 +209,7 @@ For the other organisms the packages need to have the same nomenclature as the o
 The argument corresponds to the TxDb annotation package name without its extrimities. For the UCSC version of the reference Human genome hg19, one needs to set --ref_genome to "*Hsapiens.UCSC.hg19*".
 Note that the packages chosen for the annotations are compatible with the UCSC notations since most of the Gviz fonctionalities can handle these notations.
 
-By default, when using matched tumor/normal (pairs_file option), needlestack will produce pdf plots of regressions only for somatic variants and without the alignment plots; when not, needlestack will produce them for all variants and without the alignment plots.
+By default, when using matched tumor/normal (tn_pairs option), needlestack will produce pdf plots of regressions only for somatic variants and without the alignment plots; when not, needlestack will produce them for all variants and without the alignment plots.
 
 ![Example of an alignment plot](alignments.png "Example of an alignment plot")
 
