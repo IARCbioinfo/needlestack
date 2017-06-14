@@ -53,9 +53,9 @@ if (params.tn_pairs != "FALSE") { try { assert file(params.tn_pairs).exists() : 
 pairs_file = file(params.tn_pairs)
 
 if (params.tn_pairs != "FALSE") {
-  params.do_plots = "SOMATIC"  // produce pdf plots of regressions for somatic variants
+  params.plots = "SOMATIC"  // produce pdf plots of regressions for somatic variants
 }else {
-  params.do_plots = "ALL" // produce pdf plots of regressions for all variants
+  params.plots = "ALL" // produce pdf plots of regressions for all variants
 }
 
 params.do_alignments = false // do not produce alignment plots in the pdf
@@ -100,7 +100,7 @@ if (params.help) {
     log.info '    --use_file_name                           Sample names are taken from file names, otherwise extracted from the bam file SM tag.'
     log.info '    --all_SNVs                                Output all SNVs, even when no variant found.'
     log.info '    --extra_robust_gl                         Perform an extra robust regression, basically for germline variants'
-    log.info '    --do_plots                                Output PDF regression plots.'
+    log.info '    --plots                                Output PDF regression plots.'
     log.info '    --do_alignments                           Add alignment plots.'
     log.info '    --no_labels                               Do not add labels to outliers in regression plots.'
     log.info '    --no_indels                               Do not call indels.'
@@ -131,12 +131,12 @@ log.info "     minimum median coverage (--min_dp)                         : ${pa
 log.info "     minimum of alternative reads (--min_ao)                    : ${params.min_ao}"
 log.info "Phred-scale qvalue threshold (--min_qval)                       : ${params.min_qval}"
 
-if(params.do_plots == "ALL"){
-	log.info "PDF regression plots (--do_plots)                               : ALL"
-} else if (params.do_plots == "SOMATIC"){
-	log.info "PDF regression plots (--do_plots)                               : SOMATIC"
+if(params.plots == "ALL"){
+	log.info "PDF regression plots (--plots)                               : ALL"
+} else if (params.plots == "SOMATIC"){
+	log.info "PDF regression plots (--plots)                               : SOMATIC"
 } else {
-	log.info "PDF regression plots (--do_plots)                               : NONE"
+	log.info "PDF regression plots (--plots)                               : NONE"
 }
 
 log.info(params.do_alignments == true ? "Alignment plots (--do_alignments)                               : yes"  : "Alignment plots (--do_alignments)                               : no" )
@@ -206,7 +206,7 @@ if(params.input_vcf) {
     shell:
     '''
     tabix -p vcf !{svcf}
-    Rscript !{baseDir}/bin/annotate_vcf.r --source_path=!{baseDir}/bin/ --input_vcf=!{svcf} --chunk_size=!{params.chunk_size} --do_plots=!{params.do_plots} --plot_labels=!{!params.no_labels} --add_contours=!{!params.no_contours} --min_coverage=!{params.min_dp} --min_reads=!{params.min_ao} --GQ_threshold=!{params.min_qval} --extra_rob=!{params.extra_robust_gl}
+    Rscript !{baseDir}/bin/annotate_vcf.r --source_path=!{baseDir}/bin/ --input_vcf=!{svcf} --chunk_size=!{params.chunk_size} --do_plots=!{params.plots} --plot_labels=!{!params.no_labels} --add_contours=!{!params.no_contours} --min_coverage=!{params.min_dp} --min_reads=!{params.min_ao} --GQ_threshold=!{params.min_qval} --extra_rob=!{params.extra_robust_gl}
     '''
   }
 
@@ -261,15 +261,15 @@ if(params.input_vcf) {
   assert params.sb_type in ["SOR","RVSB","FS"] : "--sb_type must be SOR, RVSB or FS "
   assert params.all_SNVs in [true,false] : "do not assign a value to --all_SNVs"
   assert params.extra_robust_gl in [true,false] : "do not assign a value to --extra_robust_gl"
-  assert params.do_plots in ["SOMATIC","ALL","NONE"] : "option not reconized for --do_plots (SOMATIC,ALL or NONE)"
+  assert params.plots in ["SOMATIC","ALL","NONE"] : "option not reconized for --plots (SOMATIC,ALL or NONE)"
   assert params.do_alignments in [true,false] : "do not assign a value to --no_alignments"
   assert params.no_indels in [true,false] : "do not assign a value to --no_indels"
   assert params.use_file_name in [true,false] : "do not assign a value to --use_file_name"
-  if ( (params.do_plots == "SOMATIC") && (params.tn_pairs == "FALSE") ) {
-      println "\n ERROR : --do_plots can not be set to SOMATIC since no tn_pairs was provided (--tn_pairs option), exit."; System.exit(0)
+  if ( (params.plots == "SOMATIC") && (params.tn_pairs == "FALSE") ) {
+      println "\n ERROR : --plots can not be set to SOMATIC since no tn_pairs was provided (--tn_pairs option), exit."; System.exit(0)
   }
-  if ( (params.do_plots == "NONE") && (params.do_alignments == true) ) {
-      println "\n ERROR : --do_alignments can not be true since --do_plots is set to NONE, exit."; System.exit(0)
+  if ( (params.plots == "NONE") && (params.do_alignments == true) ) {
+      println "\n ERROR : --do_alignments can not be true since --plots is set to NONE, exit."; System.exit(0)
   }
   if ( (params.do_alignments == true) && (params.ref_genome == null) ) {
       println "\n ERROR : --do_alignments is true, --ref_genome can not be null, exit."; System.exit(0)
@@ -385,7 +385,7 @@ if(params.input_vcf) {
   // create mpileup file + parse mpileup file to send it to Rscript
   process mpileup2vcf {
 
-	  if(params.do_plots) {
+	  if(params.plots) {
           publishDir params.output_folder+'/PDF/', mode: 'move', pattern: '*.pdf'
       }
 
@@ -447,7 +447,7 @@ if(params.input_vcf) {
           samtools mpileup --fasta-ref !{fasta_ref} --region $bed_line --ignore-RG --min-BQ !{params.base_qual} --min-MQ !{params.map_qual} --max-idepth 1000000 --max-depth !{params.max_dp} BAM/*.bam | sed 's/		/	*	*/g'
           i=$((i+1))
       done < !{split_bed}
-      } | mpileup2readcounts 0 -5 !{indel_par} !{params.min_ao} | Rscript !{baseDir}/bin/needlestack.r --pairs_file=${abs_pairs_file} --source_path=!{baseDir}/bin/ --out_file=!{region_tag}.vcf --fasta_ref=!{fasta_ref} --bam_folder=BAM/ --ref_genome=!{params.ref_genome} --GQ_threshold=!{params.min_qval} --min_coverage=!{params.min_dp} --min_reads=!{params.min_ao} --SB_type=!{params.sb_type} --SB_threshold_SNV=!{params.sb_snv} --SB_threshold_indel=!{params.sb_indel} --output_all_SNVs=!{params.all_SNVs} --do_plots=!{params.do_plots} --do_alignments=!{params.do_alignments} --plot_labels=!{!params.no_labels} --add_contours=!{!params.no_contours} --extra_rob=!{params.extra_robust_gl} --afmin_power=!{params.power_min_af} --sigma=!{params.sigma_normal}
+      } | mpileup2readcounts 0 -5 !{indel_par} !{params.min_ao} | Rscript !{baseDir}/bin/needlestack.r --pairs_file=${abs_pairs_file} --source_path=!{baseDir}/bin/ --out_file=!{region_tag}.vcf --fasta_ref=!{fasta_ref} --bam_folder=BAM/ --ref_genome=!{params.ref_genome} --GQ_threshold=!{params.min_qval} --min_coverage=!{params.min_dp} --min_reads=!{params.min_ao} --SB_type=!{params.sb_type} --SB_threshold_SNV=!{params.sb_snv} --SB_threshold_indel=!{params.sb_indel} --output_all_SNVs=!{params.all_SNVs} --do_plots=!{params.plots} --do_alignments=!{params.do_alignments} --plot_labels=!{!params.no_labels} --add_contours=!{!params.no_contours} --extra_rob=!{params.extra_robust_gl} --afmin_power=!{params.power_min_af} --sigma=!{params.sigma_normal}
       '''
   }
 

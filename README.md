@@ -141,7 +141,7 @@ Type `--help` to get the full list of options. `--bam_folder` and `--fasta_ref` 
 | max_dp | 30000 | Downsample coverage per sample (passed to samtools) |
 | use_file_name |   | Put this argument to use the bam file names as sample names. By default the sample name is extracted from the bam file SM tag. |
 | all_SNVs |   | Put this argument to output all SNVs, even when no variant is detected. Note that positions with zero coverage for all samples might still be missing depending on how the region split is performed |
-| do_plots | SOMATIC if tn_pairs provided, ALL if not | To create pdf plots of regressions in the output. To remove pdf plots set --do_plot to NONE (See *Plot options* paragraph).|
+| plots | SOMATIC if tn_pairs provided, ALL if not | To create pdf plots of regressions in the output. To remove pdf plots set --do_plot to NONE (See *Plot options* paragraph).|
 | do_alignments |  | Put this argument to add alignments plots to the pdf plots of regressions |
 | ref_genome |   | Reference genome for the annotions on the alignments plots. Examples : *Hsapiens.UCSC.hg19*, *Hsapiens.UCSC.hg19*, *Hsapiens.UCSC.hg38*, *Mmusculus.UCSC.mm10*. The right terminology is described below (*Plot options* paragraph).|
 | no_labels |   | Put this argument for not labeling the outliers on regression plots |
@@ -175,7 +175,7 @@ In other cases (when there is no `--tn_pairs` parameter defined), genotypes are 
 
 #### Two options to consider :
 
-1. --do_plots :
+1. --plots :
 
 	* SOMATIC : To produce pdf regression plots only for somatic variants. Default value when using matched tumor/normal.
 	* ALL : To produce pdf regression plots for all variants. Default value when not using matched tumor/normal.

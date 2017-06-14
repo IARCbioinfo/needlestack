@@ -49,7 +49,7 @@ usage ()
     echo "    --use_file_name                           Sample names are taken from file names, otherwise extracted from the bam file SM tag."
     echo "    --all_SNVs                                Output all SNVs, even when no variant found."
     echo "    --extra_robust_gl                         Perform an extra robust regression, basically for germline variants"
-    echo "    --do_plots                                Output PDF regression plots."
+    echo "    --plots                                Output PDF regression plots."
     echo "    --do_alignments                           Add alignment plots."
     echo "    --no_labels                               Do not add labels to outliers in regression plots."
     echo "    --no_indels                               Do not call indels."
@@ -133,7 +133,7 @@ while [ "$1" != "" ]; do
 				do_plots="SOMATIC"  : produce pdf plots of regressions for somatic variants
 			fi
             ;;
-        --do_plots)
+        --plots)
             do_plots=$VALUE
             ;;
         --bam_folder)
@@ -227,16 +227,16 @@ if [ -z $output_folder ];then output_folder=$bam_folder ;fi
 
 case $do_plots in
 	ALL)
-		echo "PDF regression plots (--do_plots)                               : ALL"
+		echo "PDF regression plots (--plots)                               : ALL"
 		;;
 	SOMATIC)
-		echo "PDF regression plots (--do_plots)                               : SOMATIC"
+		echo "PDF regression plots (--plots)                               : SOMATIC"
 		;;
 	NONE)
-		echo "PDF regression plots (--do_plots)                               : NONE"
+		echo "PDF regression plots (--plots)                               : NONE"
 		;;
 	*)
-		echo "option not reconized for --do_plots (SOMATIC,ALL or NONE)"
+		echo "option not reconized for --plots (SOMATIC,ALL or NONE)"
 		;;
 esac
 
@@ -332,12 +332,12 @@ fi
 
 if [ $do_plots = "SOMATIC" ] && [ $pairs_file = "FALSE" ]
 then
-	echo "\n ERROR : --do_plots can not be set to SOMATIC since no tn_pairs was provided (--tn_pairs option), exit."
+	echo "\n ERROR : --plots can not be set to SOMATIC since no tn_pairs was provided (--tn_pairs option), exit."
 	exit
 fi
 if [ $do_plots = "NONE" ] && [ $do_alignments = true ]
 then
-	echo "\n ERROR : --do_alignments can not be true since --do_plots is set to NONE, exit."
+	echo "\n ERROR : --do_alignments can not be true since --plots is set to NONE, exit."
 	exit
 fi
 
