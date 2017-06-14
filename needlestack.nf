@@ -24,7 +24,7 @@ params.input_vcf = null
 params.region = null
 params.bed = null
 params.out_annotated_vcf = null
-params.ref_genome = null
+params.genome_release = null
 params.min_dp = 30 // minimum median coverage to consider a site
 params.min_ao = 3 // minimum number of non-ref reads in at least one sample to consider a site
 params.nsplit = 1 // split the positions for calling in nsplit pieces and run in parallel
@@ -69,18 +69,19 @@ if (params.help) {
     log.info '--------------------------------------------------------'
     log.info 'NEEDLESTACK v1.0b: A MULTI-SAMPLE SOMATIC VARIANT CALLER'
     log.info '--------------------------------------------------------'
-    log.info 'Copyright (C) 2015 Matthieu Foll and Tiffany Delhomme'
+    log.info 'Copyright (C) IARC/WHO'
     log.info 'This program comes with ABSOLUTELY NO WARRANTY; for details see LICENSE.txt'
     log.info 'This is free software, and you are welcome to redistribute it'
     log.info 'under certain conditions; see LICENSE.txt for details.'
     log.info '--------------------------------------------------------'
     log.info ''
     log.info 'Usage: '
-    log.info '    nextflow run iarcbioinfo/needlestack [-with-docker] --bed bedfile.bed --bam_folder BAM/ --ref reference.fasta [other options]'
+    log.info '    nextflow run iarcbioinfo/needlestack [-with-docker] --bed bedfile.bed --bam_folder BAM/ --ref reference.fasta --output_vcf VCF_name.vcf [other options]'
     log.info ''
     log.info 'Mandatory arguments:'
     log.info '    --bam_folder     BAM_DIR                  BAM files directory.'
-    log.info '    --ref      REF_IN_FASTA             Reference genome in fasta format.'
+    log.info '    --ref            REF_IN_FASTA             Reference genome in fasta format.'
+    log.info '    --output_vcf     VCF FILE NAME            Name of the VCF file (output file).'
     log.info '    OR '
     log.info '    --input_vcf      VCF FILE                 VCF file (basically from GATK pipeline) to annotate.'
     log.info 'Options:'
@@ -96,19 +97,20 @@ if (params.help) {
     log.info '    --map_qual       VALUE                    Samtools minimum mapping quality.'
     log.info '    --base_qual      VALUE                    Samtools minimum base quality.'
     log.info '    --max_dp         INTEGER                  Samtools maximum coverage before downsampling.'
+    log.info '    --output_folder  OUTPUT FOLDER            Output directory, by default input bam folder.'
+    log.info '    --bed            BED FILE                 A BED file for calling.'
+    log.info '    --region         CHR:START-END            A region for calling.'
+    log.info '    --tn_pairs       TEXT FILE                A tab-delimited file containing two columns (normal and tumor sample name) for each sample in line.'
+    log.info '    --genome_release VALUE                    Reference genome for alignments plot'
+    log.info '    --plots          VALUE                    Output PDF regression plots.'
+    log.info 'Flags:'
     log.info '    --use_file_name                           Sample names are taken from file names, otherwise extracted from the bam file SM tag.'
     log.info '    --all_SNVs                                Output all SNVs, even when no variant found.'
     log.info '    --extra_robust_gl                         Perform an extra robust regression, basically for germline variants'
-    log.info '    --plots                                Output PDF regression plots.'
     log.info '    --do_alignments                           Add alignment plots.'
     log.info '    --no_labels                               Do not add labels to outliers in regression plots.'
     log.info '    --no_indels                               Do not call indels.'
     log.info '    --no_contours                             Do not add contours to plots and do not plot min(AF)~DP.'
-    log.info '    --output_folder     OUTPUT FOLDER            Output directory, by default input bam folder.'
-    log.info '    --bed            BED FILE                 A BED file for calling.'
-    log.info '    --region         CHR:START-END            A region for calling.'
-    log.info '    --tn_pairs     TEXT FILE                A tab-delimited file containing two columns (normal and tumor sample name) for each sample in line.'
-    log.info '    --ref_genome                     Reference genome for alignments plot'
     log.info ''
     exit 1
 }
@@ -119,28 +121,12 @@ log.info ''
 log.info '--------------------------------------------------------'
 log.info 'NEEDLESTACK v1.0b: A MULTI-SAMPLE SOMATIC VARIANT CALLER'
 log.info '--------------------------------------------------------'
-log.info 'Copyright (C) 2015 Matthieu Foll and Tiffany Delhomme'
+log.info 'Copyright (C) IARC/WHO'
 log.info 'This program comes with ABSOLUTELY NO WARRANTY; for details see LICENSE.txt'
 log.info 'This is free software, and you are welcome to redistribute it'
 log.info 'under certain conditions; see LICENSE.txt for details.'
 log.info '--------------------------------------------------------'
-log.info(params.tn_pairs == "FALSE" ? "Perform a tumor-normal somatic variant calling (--tn_pairs)   : no"  : "Perform a tumor-normal somatic variant calling (--tn_pairs)   : yes (file ${params.tn_pairs})" )
-log.info "To consider a site for calling:"
-log.info "     minimum median coverage (--min_dp)                         : ${params.min_dp}"
-log.info "     minimum of alternative reads (--min_ao)                    : ${params.min_ao}"
-log.info "Phred-scale qvalue threshold (--min_qval)                       : ${params.min_qval}"
 
-if(params.plots == "ALL"){
-	log.info "PDF regression plots (--plots)                               : ALL"
-} else if (params.plots == "SOMATIC"){
-	log.info "PDF regression plots (--plots)                               : SOMATIC"
-} else {
-	log.info "PDF regression plots (--plots)                               : NONE"
-}
-
-log.info(params.do_alignments == true ? "Alignment plots (--do_alignments)                               : yes"  : "Alignment plots (--do_alignments)                               : no" )
-log.info(params.no_labels == true ? "Labeling outliers in regression plots (--no_labels)             : no"  : "Labeling outliers in regression plots (--no_labels)             : yes" )
-log.info(params.no_contours == true ? "Add contours in plots and plot min(AF)~DP (--no_contours)       : no"  : "Add contours in plots and plot min(AF)~DP (--no_contours)       : yes" )
 
 if(params.input_vcf) {
 
@@ -151,12 +137,22 @@ if(params.input_vcf) {
   out_annotated_vcf = params.out_annotated_vcf ? params.out_annotated_vcf : "annotated.vcf"
   assert params.extra_robust_gl in [true,false] : "do not assign a value to --extra_robust_gl"
 
-  log.info "Number of vcf chunks for parallel computing (--nsplit)          : ${params.nsplit}"
-  log.info "Size of read chunks by VariantAnnotation (--chunk_size)         : ${params.chunk_size}"
+  log.info 'Mandatory arguments:'
   log.info "Input vcf for annotation by needlestack (--input_vcf)           : ${params.input_vcf}"
+  log.info 'Options:'
+  log.info "Number of vcf chunks for parallel computing (--nsplit)          : ${params.nsplit}"
+  log.info "To consider a site for calling:"
+  log.info "     minimum median coverage (--min_dp)                         : ${params.min_dp}"
+  log.info "     minimum of alternative reads (--min_ao)                    : ${params.min_ao}"
+  log.info "Phred-scale qvalue threshold (--min_qval)                       : ${params.min_qval}"
+  log.info "Size of read chunks by VariantAnnotation (--chunk_size)         : ${params.chunk_size}"
   log.info "Output annotated file (--out_annotated_vcf)                     : ${out_annotated_vcf}"
   log.info(params.extra_robust_gl == true ? "Perform an extra-robust regression (--extra_robust_gl)          : yes" : "Perform an extra-robust regression (--extra_robust_gl)          : no" )
   log.info "output folder (--output_folder)                                    : ${params.output_folder}"
+  log.info 'Flags:'
+  log.info(params.do_alignments == true ? "Alignment plots (--do_alignments)                               : yes"  : "Alignment plots (--do_alignments)                               : no" )
+  log.info(params.no_labels == true ? "Labeling outliers in regression plots (--no_labels)             : no"  : "Labeling outliers in regression plots (--no_labels)             : yes" )
+  log.info(params.no_contours == true ? "Add contours in plots and plot min(AF)~DP (--no_contours)       : no"  : "Add contours in plots and plot min(AF)~DP (--no_contours)       : yes" )
   log.info "\n"
 
   process split_vcf {
@@ -271,11 +267,11 @@ if(params.input_vcf) {
   if ( (params.plots == "NONE") && (params.do_alignments == true) ) {
       println "\n ERROR : --do_alignments can not be true since --plots is set to NONE, exit."; System.exit(0)
   }
-  if ( (params.do_alignments == true) && (params.ref_genome == null) ) {
-      println "\n ERROR : --do_alignments is true, --ref_genome can not be null, exit."; System.exit(0)
+  if ( (params.do_alignments == true) && (params.genome_release == null) ) {
+      println "\n ERROR : --do_alignments is true, --genome_release can not be null, exit."; System.exit(0)
   }
-  if ( (params.do_alignments == false) && (params.ref_genome != null) ) {
-    println "\n WARNING : value assign to --ref_genome although do_alignments is false."
+  if ( (params.do_alignments == false) && (params.genome_release != null) ) {
+    println "\n WARNING : value assign to --genome_release although do_alignments is false."
   }
   if (params.bed) { try { assert file(params.bed).exists() : "\n WARNING : input bed file not located in execution directory" } catch (AssertionError e) { println e.getMessage() } }
   try { assert fasta_ref.exists() : "\n WARNING : fasta reference not located in execution directory. Make sure reference index is in the same folder as fasta reference" } catch (AssertionError e) { println e.getMessage() }
@@ -321,11 +317,16 @@ if(params.input_vcf) {
       input_region = 'whole_genome'
   }
 
+  log.info 'Mandatory arguments:'
   log.info "Input BAM folder (--bam_folder)                                 : ${params.bam_folder}"
-  log.info "output folder (--output_folder)                                    : ${params.output_folder}"
-  log.info "Reference in fasta format (--ref)                         : ${params.ref}"
-  log.info "Intervals for calling (--bed)                                   : ${input_region}"
+  log.info "Reference in fasta format (--ref)                               : ${params.ref}"
+  log.info "VCF output file (--output_vcf)                                  : ${params.output_vcf}"
+  log.info 'Options:'
   log.info "Number of regions to split (--nsplit)                           : ${params.nsplit}"
+  log.info "To consider a site for calling:"
+  log.info "     minimum median coverage (--min_dp)                         : ${params.min_dp}"
+  log.info "     minimum of alternative reads (--min_ao)                    : ${params.min_ao}"
+  log.info "Phred-scale qvalue threshold (--min_qval)                       : ${params.min_qval}"
   log.info "Strand bias measure (--sb_type)                                 : ${params.sb_type}"
   log.info "Strand bias threshold for SNVs (--sb_snv)                       : ${params.sb_snv}"
   log.info "Strand bias threshold for indels (--sb_indel)                   : ${params.sb_indel}"
@@ -334,10 +335,27 @@ if(params.input_vcf) {
   log.info "Samtools minimum mapping quality (--map_qual)                   : ${params.map_qual}"
   log.info "Samtools minimum base quality (--base_qual)                     : ${params.base_qual}"
   log.info "Samtools maximum coverage before downsampling (--max_dp)        : ${params.max_dp}"
+  log.info "output folder (--output_folder)                                 : ${params.output_folder}"
+  log.info "Intervals for calling (--bed)                                   : ${input_region}"
+  log.info(params.tn_pairs == "FALSE" ? "Perform a tumor-normal somatic variant calling (--tn_pairs)     : no"  : "Perform a tumor-normal somatic variant calling (--tn_pairs)     : yes (file ${params.tn_pairs})" )
+  if(params.genome_release != null){
+    log.info "Genome release (--genome_release)                               : ${params.genome_release}"
+  }
+  if(params.plots == "ALL"){
+    log.info "PDF regression plots (--plots)                                  : ALL"
+  } else if (params.plots == "SOMATIC"){
+    log.info "PDF regression plots (--plots)                                  : SOMATIC"
+  } else {
+    log.info "PDF regression plots (--plots)                                  : NONE"
+  }
+  log.info 'Flags:'
   log.info "Sample names definition (--use_file_name)                       : ${sample_names}"
   log.info(params.all_SNVs == true ? "Output all SNVs (--all_SNVs)                                    : yes" : "Output all SNVs (--all_SNVs)                                    : no" )
   log.info(params.extra_robust_gl == true ? "Perform an extra-robust regression (--extra_robust_gl)          : yes" : "Perform an extra-robust regression (--extra_robust_gl)          : no" )
+  log.info(params.do_alignments == true ? "Alignment plots (--do_alignments)                               : yes"  : "Alignment plots (--do_alignments)                               : no" )
+  log.info(params.no_labels == true ? "Labeling outliers in regression plots (--no_labels)             : no"  : "Labeling outliers in regression plots (--no_labels)             : yes" )
   log.info(params.no_indels == true ? "Skip indels (--no_indels)                                       : yes" : "Skip indels (--no_indels)                                       : no" )
+  log.info(params.no_contours == true ? "Add contours in plots and plot min(AF)~DP (--no_contours)       : no"  : "Add contours in plots and plot min(AF)~DP (--no_contours)       : yes" )
   log.info "\n"
 
   bam = Channel.fromPath( params.bam_folder+'/*.bam' ).toList()
@@ -447,7 +465,7 @@ if(params.input_vcf) {
           samtools mpileup --fasta-ref !{fasta_ref} --region $bed_line --ignore-RG --min-BQ !{params.base_qual} --min-MQ !{params.map_qual} --max-idepth 1000000 --max-depth !{params.max_dp} BAM/*.bam | sed 's/		/	*	*/g'
           i=$((i+1))
       done < !{split_bed}
-      } | mpileup2readcounts 0 -5 !{indel_par} !{params.min_ao} | Rscript !{baseDir}/bin/needlestack.r --pairs_file=${abs_pairs_file} --source_path=!{baseDir}/bin/ --out_file=!{region_tag}.vcf --fasta_ref=!{fasta_ref} --bam_folder=BAM/ --ref_genome=!{params.ref_genome} --GQ_threshold=!{params.min_qval} --min_coverage=!{params.min_dp} --min_reads=!{params.min_ao} --SB_type=!{params.sb_type} --SB_threshold_SNV=!{params.sb_snv} --SB_threshold_indel=!{params.sb_indel} --output_all_SNVs=!{params.all_SNVs} --do_plots=!{params.plots} --do_alignments=!{params.do_alignments} --plot_labels=!{!params.no_labels} --add_contours=!{!params.no_contours} --extra_rob=!{params.extra_robust_gl} --afmin_power=!{params.power_min_af} --sigma=!{params.sigma_normal}
+      } | mpileup2readcounts 0 -5 !{indel_par} !{params.min_ao} | Rscript !{baseDir}/bin/needlestack.r --pairs_file=${abs_pairs_file} --source_path=!{baseDir}/bin/ --out_file=!{region_tag}.vcf --fasta_ref=!{fasta_ref} --bam_folder=BAM/ --ref_genome=!{params.genome_release} --GQ_threshold=!{params.min_qval} --min_coverage=!{params.min_dp} --min_reads=!{params.min_ao} --SB_type=!{params.sb_type} --SB_threshold_SNV=!{params.sb_snv} --SB_threshold_indel=!{params.sb_indel} --output_all_SNVs=!{params.all_SNVs} --do_plots=!{params.plots} --do_alignments=!{params.do_alignments} --plot_labels=!{!params.no_labels} --add_contours=!{!params.no_contours} --extra_rob=!{params.extra_robust_gl} --afmin_power=!{params.power_min_af} --sigma=!{params.sigma_normal}
       '''
   }
 

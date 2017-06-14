@@ -38,8 +38,9 @@ Needlestack works under most Linux distributions and Apple OS X.
 - Install g++ compiler
 - Compile the file *mpileup2readcounts.cc* located [here](https://github.com/IARCbioinfo/mpileup2readcounts)
 - Add the previous tools to your path (executables are assumed to be respectively called `samtools`, `Rscript` and `mpileup2readcounts`)
+- Install the bioconductor packages reauired for the alignments plots (see the Detailed description section)
 
-You can avoid installing all the external software by only installing Docker. See the [IARC-nf]((https://github.com/IARCbioinfo/IARC-nf) repository for more information.
+You can avoid installing all the external software by only installing Docker. See the [IARC-nf](https://github.com/IARCbioinfo/IARC-nf) repository for more information.
 
 To use needlestack without nextflow, in addition to the previous tools, download the files in this [bin](https://github.com/IARCbioinfo/needlestack/tree/gabriela_cpp/bin) directory and add them to your path.
 
@@ -49,8 +50,7 @@ To use needlestack without nextflow, in addition to the previous tools, download
 |-----------|---------------|
 | [BAM files](https://samtools.github.io/hts-specs/)  | BAM files (called `*.bam`) grouped in a single folder along with their [index files](http://www.htslib.org/doc/samtools.html) (called `*.bam.bai`). A minimum of 20 BAM files is recommended. |
 | [fasta file](https://en.wikipedia.org/wiki/FASTA_format)  |A reference fasta file (eventually compressed with [bgzip](http://www.htslib.org/doc/tabix.html)) along with its [faidx index](http://www.htslib.org/doc/faidx.html) (and `*.gzi` faidx index if compressed). |
-| [bed file](https://genome.ucsc.edu/FAQ/FAQformat.html#format1) | Optional input file. Otherwise the variant calling is performed on the whole reference provided.
-|
+| [bed file](https://genome.ucsc.edu/FAQ/FAQformat.html#format1) | Optional input file. Otherwise the variant calling is performed on the whole reference provided.|
 
 A sample dataset is available at this [address](https://github.com/mfoll/NGS_data_test.git) for testing.
 
@@ -79,7 +79,7 @@ Type `--help` to get the full list of options.
 | base_qual | 20 | Min base quality (passed to samtools) |
 | max_dp | 30000 | Downsample coverage per sample (passed to samtools) |
 | plots | SOMATIC if tn_pairs provided, ALL if not | To create pdf plots of regressions in the output. To remove pdf plots set --do_plot to NONE (See *Plot options* paragraph).|
-| ref_genome |  - | Reference genome for the annotions on the alignments plots. Examples : *Hsapiens.UCSC.hg19*, *Hsapiens.UCSC.hg19*, *Hsapiens.UCSC.hg38*, *Mmusculus.UCSC.mm10*. The right terminology is described below (*Plot options* paragraph). WARNING : this option is mandatory if the --do_alignments flag is used|
+| genome_release |  - | Reference genome for the annotions on the alignments plots. Examples : *Hsapiens.UCSC.hg19*, *Hsapiens.UCSC.hg19*, *Hsapiens.UCSC.hg38*, *Mmusculus.UCSC.mm10*. The right terminology is described below (*Plot options* paragraph). WARNING : this option is mandatory if the --do_alignments flag is used|
 | output_folder | --bam_folder | Output folder, by default equals to the input bam folder |
 | bed |  - | BED file containing a list of regions (or positions) where needlestack should be run |
 | region |  - | A region in format CHR:START-END where calling should be done |
@@ -115,14 +115,14 @@ Simply add the parameters you want in the command line like `--min_dp 1000` for 
 	```bash
 	git clone --depth=1 https://github.com/IARCbioinfo/data_test
 	```
-	
+
 2. Run the pipeline using nextflow.
 
 	Here on the example dataset downloaded above:
 	```bash
 	cd data_test
 	nextflow run iarcbioinfo/needlestack -with-docker  \
-	         --bed BED/TP53_all.bed --bam_folder BAM/BAM_multiple/ --ref REF/17.fasta.gz --output_vcf all_variants.vcf
+	         --bed BED/TP53_all.bed --bam_folder BAM/BAM_multiple/ --ref REF/17.fasta --output_vcf all_variants.vcf --do_alignments --genome_release Hsapiens.UCSC.hg19
 	```
 
 	You will find a [VCF file](https://samtools.github.io/hts-specs/) called `all_variants.vcf` in the `BAM_multiple/` folder once done.
@@ -138,20 +138,20 @@ Simply add the parameters you want in the command line like `--min_dp 1000` for 
 
 	It will allow you to do this:
 	```bash
-	needlestack --bed BED/TP53_all.bed --bam_folder BAM/BAM_multiple/ --ref REF/17.fasta.gz --output_vcf all_variants.vcf
+	needlestack --bed BED/TP53_all.bed --bam_folder BAM/BAM_multiple/ --ref REF/17.fasta --output_vcf all_variants.vcf --do_alignments --genome_release Hsapiens.UCSC.hg19
 	```
 
 	Official releases can be found [here](https://github.com/iarcbioinfo/needlestack/releases/). There is a corresponding official [docker container](https://hub.docker.com/r/iarcbioinfo/needlestack/) for each release and one can run a particular version using (for example for v0.3):
 		```bash
 		nextflow run iarcbioinfo/needlestack -r v0.3 -with-docker \
-		        --bed BED/TP53_all.bed --bam_folder BAM/BAM_multiple/ --ref REF/17.fasta.gz --output_vcf all_variants.vcf
+		        --bed BED/TP53_all.bed --bam_folder BAM/BAM_multiple/ --fasta_ref REF/17.fasta --out_vcf all_variants.vcf
 		```
 2.  Run the pipeline without nextflow.
 
 	Here on the example dataset downloaded above:
 	```bash
 	cd data_test/
-	needlestack.sh --region=17:7572814-7573814 --bam_folder=BAM/BAM_multiple --ref=REF/17.fasta.gz --output_vcf=all_variants.vcf
+	needlestack.sh --region=17:7572814-7573814 --bam_folder=BAM/BAM_multiple --ref=REF/17.fasta --output_vcf=all_variants.vcf
 	```
 
 	You will find a [VCF file](https://samtools.github.io/hts-specs/) called `all_variants.vcf` in the `BAM/BAM_multiple/` folder once done.
@@ -161,11 +161,11 @@ Simply add the parameters you want in the command line like `--min_dp 1000` for 
 ## Output
   | Type      | Description     |
   |-----------|---------------|
-  | VCF file    | ...... |
+  | VCF file    | ..... |
   | PDF files    | ...... |
 
 
-## Detailed description 
+## Detailed description
 
 ### Germline, somatic, matched Tumor-Normal pairs calling and contamination
 
@@ -186,7 +186,7 @@ In other cases (when there is no `--tn_pairs` parameter defined), genotypes are 
 	* ALL : To produce pdf regression plots for all variants. Default value when not using matched tumor/normal.
 	* NONE : To remove pdf regression plots from the output
 
-2. --do_alignments : To add the alignments plots to the regression plots. If this option is set to "true", the name of the reference genome (--ref_genome option) needs to be provided to choose the correct annotation (See *--ref_genome option* below). False is the default value.
+2. --do_alignments : To add the alignments plots to the regression plots. If this option is set to "true", the name of the reference genome (--genome_release option) needs to be provided to choose the correct annotation (See *--genome_release option* below). False is the default value.
 
 #### Bioconductor packages to install for plotting the alignments :
 
@@ -194,27 +194,14 @@ In other cases (when there is no `--tn_pairs` parameter defined), genotypes are 
 - An [Annotation package for TxDb objects](http://bioconductor.org/packages/release/BiocViews.html#___TxDb).
 - A [Genome wide annotation](https://bioconductor.org/packages/release/BiocViews.html#___OrgDb), it contains mappings between Entrez Gene identifiers and GenBank accession numbers. Examples : the Genome wide annotation package for Human : *org.Hs.eg.db* and for the mouse : *org.Mm.eg.db*.
 
-Examples :
+Example : If the hg19 release of the human genome is used, the fowolling packages should be installed : *Gviz*, *TxDb.Hsapiens.UCSC.hg19.knownGene* (hg18 and hg38 UCSC version can also be used) and *org.Hs.eg.db*
 
-If one used the UCSC version of the reference Human genome hg19, the fowolling packages should be installed :
-- *Gviz*
-- *TxDb.Hsapiens.UCSC.hg19.knownGene* (hg18 and hg38 UCSC version can also be used)
-- *org.Hs.eg.db*
+These packages exist for other organisms than Human but have not been tested. One can for example generate the alignments plot for data issued from the mouse by installing *TxDb.Mmusculus.UCSC.mm10.knownGene*(mm9 UCSC version can also be used) and *org.Mm.eg.db*. For the other organisms the packages need to have the same nomenclature as the ones listed above.
 
-These packages exist for other organisms than Human but have not been tested.
+#### --genome_release option :
 
-One can for example generate the alignments plot for data issued from the mouse by installing :
-- *TxDb.Mmusculus.UCSC.mm10.knownGene*(mm9 UCSC version can also be used)
-- *org.Mm.eg.db*
-
-For the other organisms the packages need to have the same nomenclature as the ones listed above.
-
-#### --ref_genome option :
-
-The argument corresponds to the TxDb annotation package name without its extrimities. For the UCSC version of the reference Human genome hg19, one needs to set --ref_genome to "*Hsapiens.UCSC.hg19*".
-Note that the packages chosen for the annotations are compatible with the UCSC notations since most of the Gviz fonctionalities can handle these notations.
-
-By default, when using matched tumor/normal (tn_pairs option), needlestack will produce pdf plots of regressions only for somatic variants and without the alignment plots; when not, needlestack will produce them for all variants and without the alignment plots.
+The argument corresponds to the TxDb annotation package name without its extrimities. For the hg19 release of the human genome, one needs to set --genome_release to "*Hsapiens.UCSC.hg19*".
+Note that the packages chosen for the annotations are compatible with the UCSC notations since most of the Gviz fonctionalities can handle these notations. But the reference genome used for the BAM alignments can be based on GENCODE, UCSC or ENSEMBL genome varieties.
 
 ![Example of an alignment plot](alignments.png "Example of an alignment plot")
 
@@ -227,6 +214,8 @@ By default, when using matched tumor/normal (tn_pairs option), needlestack will 
 - Genome annotation : the yellow blocks represent exons, the variant position is highlighted in red. The annotation is represented only if the variant is not in an intergenic region.
 - Zoom-out on the genome annotation : representation of the whole gene whose name is on the right side of the gene annotation. The annotation is represented only if the variant is not in an intergenic region. A red vertical line shows the position of the variant.
 - Genomic axis corresponding to the previous genome annotation. A red vertical line shows the position of the variant.
+
+By default, when using matched tumor/normal (tn_pairs option), needlestack will produce pdf plots of regressions only for somatic variants and without the alignment plots; when not, needlestack will produce them for all variants and without the alignment plots.
 
 ### Notes
 
@@ -245,7 +234,7 @@ For conventional variant callers, GATK WES/WGS [recommended values](http://gatkf
 
   | Name      | Email | Description     |
   |-----------|---------------|-----------------|
-  | Matthieu Foll*    |          FollM@iarc.fr | Developer to contact for support (link to specific gitter chatroom) |
-  | Tiffany Delhomme*    |            delhommet@students.iarc.fr | Developer |
-  |    |           | Tester |
-
+  | Matthieu Foll*    |          FollM@iarc.fr | Developer to contact for support |
+  | Tiffany Delhomme*    |            delhommet@students.iarc.fr | Developer to contact for support |
+  | Nicolas Alcala  |   AlcalaN@fellows.iarc.fr |  |
+  | Aurelie Gabriel  |   gabriela@students.iarc.fr |  |
