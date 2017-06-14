@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # needlestack: a multi-sample somatic variant caller
-# Copyright (C) 2017 Matthieu Foll, Tiffany Delhomme, Nicolas Alcala and Aurelie Gabriel.
+# Copyright (C)  2017 IARC/WHO
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
