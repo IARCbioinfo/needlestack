@@ -125,7 +125,7 @@ Other popular schedulers such as LSF, SLURM, PBS, TORQUE etc. are also compatibl
 
 ### Parameters
 
-Type `--help` to get the full list of options. `--bam_folder` and `--fasta_ref` are compulsary. The optional parameters with default values are:
+Type `--help` to get the full list of options. `--bam_folder`, `--fasta_ref` and `output_vcf` are compulsary. The optional parameters with default values are:
 
 | Parameter | Default value | Description |
 |-----------|--------------:|-------------|
@@ -148,7 +148,6 @@ Type `--help` to get the full list of options. `--bam_folder` and `--fasta_ref` 
 | no_indels |   | Put this argument to do not perform the variant calling on insertions and deletions |
 | no_contours |   | Put this argument to do not plot qvalues contours (for qvalue threshold={10,30,50,70,100} by default) and do not plot minimum detectable allelic fraction in function of coverage |
 | output_folder | --bam_folder | Output folder, by default equals to the input bam folder |
-| out_vcf | all_variants.vcf | File name of final VCF |
 | bed |   | BED file containing a list of regions (or positions) where needlestack should be run |
 | region |   | A region in format CHR:START-END where calling should be done |
 | tn_pairs | | A tab-delimited file containing two columns (normal and tumor sample names) for each sample in line. This enables matched tumor/normal pair calling features (see below) |

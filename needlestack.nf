@@ -21,7 +21,6 @@
 
 params.help = null
 params.input_vcf = null
-params.out_vcf = null
 params.region = null
 params.bed = null
 params.out_annotated_vcf = null
@@ -251,6 +250,7 @@ if(params.input_vcf) {
   params.output_folder = params.bam_folder // if not provided, outputs will be held on the input bam folder
   assert (params.ref != true) && (params.ref != null) : "please specify --ref option (--ref reference.fasta(.gz))"
   assert (params.bam_folder != true) && (params.bam_folder != null) : "please specify --bam_folder option (--bam_folder bamfolder)"
+  assert (params.output_vcf != true) && (params.output_vcf != null) : "please specify --output_vcf option (--output_vcf vcf_name.vcf)"
 
   fasta_ref = file( params.ref )
   fasta_ref_fai = file( params.ref+'.fai' )
@@ -309,7 +309,7 @@ if(params.input_vcf) {
   assert (params.base_qual >= 0) : "minimum base quality (samtools) must be higher than or equal to 0"
 
   sample_names = params.use_file_name ? "FILE" : "BAM"
-  out_vcf = params.out_vcf ? params.out_vcf : "all_variants.vcf"
+  output_vcf = params.output_vcf
 
   /* manage input positions to call (bed or region or whole-genome) */
   if (params.region) {
@@ -458,12 +458,12 @@ if(params.input_vcf) {
       publishDir params.output_folder, mode: 'move'
 
       input:
-      val out_vcf
+      val output_vcf
       file all_vcf from vcf.toList()
       file fasta_ref_fai
 
       output:
-      file "$out_vcf" into big_vcf
+      file "$output_vcf" into big_vcf
 
       when:
       !all_vcf.empty
@@ -500,7 +500,7 @@ if(params.input_vcf) {
       fi
       # Add all VCF contents and sort
       grep --no-filename -v '^#' VCF/*.vcf | LC_ALL=C sort -t '	' $sort_ops -k2,2n >> header.txt
-      mv header.txt !{out_vcf}
+      mv header.txt !{output_vcf}
       '''
   }
 }

@@ -190,6 +190,9 @@ while [ "$1" != "" ]; do
         --output_folder)
             output_folder=$VALUE
             ;;
+        --output_vcf)
+            output_vcf=$VALUE
+            ;;
         --region)
             region=$VALUE
             ;;
@@ -263,7 +266,11 @@ if [ $use_file_name = true ];then
 else
 	sample_names="BAM"
 fi
-if [ -z $out_vcf ]; then out_vcf="all_variants.vcf"; fi
+if [ -z $output_vcf ]
+then
+  echo "\n ERROR : please specify --output_vcf option (--output_vcf vcf_name.vcf), exit."
+  exit
+fi
 
 
 if [ ! -z $region ]
@@ -451,20 +458,20 @@ fi
 #mpileup2vcf
 samtools mpileup --fasta-ref $fasta_ref --region $region --ignore-RG --min-BQ $base_qual --min-MQ $map_qual --max-idepth 1000000 --max-depth $max_dp $bam_folder*.bam | sed 's/		/	*	*/g' \
 | mpileup2readcounts 0 -5 $indel_par 0 \
-| needlestack.r --pairs_file=$pairs_file --out_file=$out_vcf --fasta_ref=$fasta_ref --bam_folder=$bam_folder --ref_genome=$ref_genome \
+| needlestack.r --pairs_file=$pairs_file --out_file=$output_vcf --fasta_ref=$fasta_ref --bam_folder=$bam_folder --ref_genome=$ref_genome \
 --GQ_threshold=$min_qval --min_coverage=$min_dp --min_reads=$min_ao --SB_type=$sb_type --SB_threshold_SNV=$sb_snv --SB_threshold_indel=$sb_indel --output_all_SNVs=$all_SNVs \
 --do_plots=$do_plots --do_alignments=$do_alignments --plot_labels=$labels --add_contours=$contours --extra_rob=$extra_robust_gl --afmin_power=$power_min_af --sigma=$sigma_normal
 
 # Extract the header from the VCF
-sed '/^#CHROM/q' $out_vcf > header.txt
+sed '/^#CHROM/q' $output_vcf > header.txt
 # Add contigs in the VCF header
 cat  $fasta_ref_fai | cut -f1,2 | sed -e 's/^/##contig=<ID=/' -e 's/[	 ][	 ]*/,length=/' -e 's/$/>/' > contigs.txt
 sed -i '/##reference=.*/ r contigs.txt' header.txt
 echo '##samtools='$(samtools --version | tr '\n' ' ') >> versions.txt
 echo '##Rscript='$(Rscript --version 2>&1) >> versions.txt
 sed -i '/##source=.*/ r versions.txt' header.txt
-grep --no-filename -v '^#' $out_vcf >> header.txt
-mv header.txt $out_vcf
+grep --no-filename -v '^#' $output_vcf >> header.txt
+mv header.txt $output_vcf
 
 #move pdf plots
 if [ $do_plots != "NONE" ]; then
@@ -472,7 +479,7 @@ if [ $do_plots != "NONE" ]; then
 	mv *.pdf $output_folder/PDF
 fi
 
-mv $out_vcf $output_folder
+mv $output_vcf $output_folder
 
 
 #remove intermediate files
