@@ -13,6 +13,8 @@ test:
       docker build -t iarcbioinfo/needlestack .
     - | #use bed TP53_all.bed
       cd ~/NGS_data_test/1000G_CEU_TP53/ && nextflow run ~/needlestack/needlestack.nf -with-docker iarcbioinfo/needlestack --bed TP53_all.bed --nsplit 4 --ref 17.fasta.gz --bam_folder BAM/ --output_vcf all_variants.vcf && cp BAM/all_variants.vcf results/$CIRCLE_BRANCH/test1.vcf && mkdir -p results/$CIRCLE_BRANCH/PDF/test1 && cp BAM/PDF/*.pdf results/$CIRCLE_BRANCH/PDF/test1/ && sudo rm -rf work/ .nextflow.* trace.txt* timeline.html* BAM/all_variants.vcf BAM/PDF/
+    - | #use bed TP53_all.bed
+      cd ~/NGS_data_test/1000G_CEU_TP53/ && nextflow run ~/needlestack/needlestack.nf -with-docker iarcbioinfo/needlestack --bed TP53_all.bed --nsplit 4 --ref 17.fasta.gz --bam_folder BAM/ --output_vcf all_variants.vcf --do_alignments --ref_genome Hsapiens.UCSC.hg19 && cp BAM/all_variants.vcf results/$CIRCLE_BRANCH/test7.vcf && mkdir -p results/$CIRCLE_BRANCH/PDF/test7 && cp BAM/PDF/*.pdf results/$CIRCLE_BRANCH/PDF/test1/ && sudo rm -rf work/ .nextflow.* trace.txt* timeline.html* BAM/all_variants.vcf BAM/PDF/
     - | #use bed TP53_exon2_11.bed
       cd ~/NGS_data_test/1000G_CEU_TP53/ && nextflow run ~/needlestack/needlestack.nf -with-docker iarcbioinfo/needlestack --bed TP53_exon2_11.bed --nsplit 4 --ref 17.fasta.gz --bam_folder BAM/ --output_vcf all_variants.vcf  && cp BAM/all_variants.vcf results/$CIRCLE_BRANCH/test2.vcf && mkdir -p results/$CIRCLE_BRANCH/PDF/test2 && cp BAM/PDF/*.pdf results/$CIRCLE_BRANCH/PDF/test2/ && sudo rm -rf work/ .nextflow.* trace.txt* timeline.html* BAM/all_variants.vcf BAM/PDF/
     - | #test option --nsplit 1
@@ -22,7 +24,9 @@ test:
     - | #test --no_plots --use_file_name --no_indels on TP53 exon 6
       cd ~/NGS_data_test/1000G_CEU_TP53/ && nextflow run ~/needlestack/needlestack.nf -with-docker iarcbioinfo/needlestack --region 17:7578176-7578288 --nsplit 4 --ref 17.fasta.gz --bam_folder BAM/ --output_vcf all_variants.vcf --no_plots --use_file_name --no_indels && cp BAM/all_variants.vcf results/$CIRCLE_BRANCH/test5.vcf && mkdir -p results/$CIRCLE_BRANCH/PDF/test5 && sudo rm -rf work/ .nextflow.* trace.txt* timeline.html* BAM/all_variants.vcf
     - | #test on a null coverage region
-      cd ~/NGS_data_test/1000G_CEU_TP53/ && nextflow run ~/needlestack/needlestack.nf -with-docker iarcbioinfo/needlestack --region 17:7580000-7580004--nsplit 4 --ref 17.fasta.gz --bam_folder BAM/ --output_vcf all_variants.vcf && cp BAM/all_variants.vcf results/$CIRCLE_BRANCH/test6.vcf && mkdir -p results/$CIRCLE_BRANCH/PDF/test6 && sudo rm -rf work/ .nextflow.* trace.txt* timeline.html* BAM/all_variants.vcf 
+      cd ~/NGS_data_test/1000G_CEU_TP53/ && nextflow run ~/needlestack/needlestack.nf -with-docker iarcbioinfo/needlestack --region 17:7580000-7580004--nsplit 4 --ref 17.fasta.gz --bam_folder BAM/ --output_vcf all_variants.vcf && cp BAM/all_variants.vcf results/$CIRCLE_BRANCH/test6.vcf && mkdir -p results/$CIRCLE_BRANCH/PDF/test6 && sudo rm -rf work/ .nextflow.* trace.txt* timeline.html* BAM/all_variants.vcf
+    - | #use do_alignments option
+      cd ~/NGS_data_test/1000G_CEU_TP53/ && nextflow run ~/needlestack/needlestack.nf -with-docker iarcbioinfo/needlestack --bed TP53_all.bed --nsplit 4 --ref 17.fasta.gz --bam_folder BAM/ --output_vcf all_variants.vcf --do_alignments --ref_genome Hsapiens.UCSC.hg19 && cp BAM/all_variants.vcf results/$CIRCLE_BRANCH/test7.vcf && mkdir -p results/$CIRCLE_BRANCH/PDF/test7 && cp BAM/PDF/*.pdf results/$CIRCLE_BRANCH/PDF/test1/ && sudo rm -rf work/ .nextflow.* trace.txt* timeline.html* BAM/all_variants.vcf BAM/PDF/
 deployment:
   git:
     branch: [master, dev]
