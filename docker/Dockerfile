@@ -1,5 +1,5 @@
 # Set the base image to Debian
-FROM debian:latest
+FROM debian:jessie
 
 # File Author / Maintainer
 MAINTAINER Matthieu Foll <follm@iarc.fr>
