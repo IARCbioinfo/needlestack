@@ -106,7 +106,7 @@ if (params.help) {
     log.info '    --region         CHR:START-END            A region for calling.'
     log.info '    --pairs_file     TEXT FILE                A tab-delimited file containing two columns (normal and tumor sample name) for each sample in line.'
     log.info ''
-    exit 1
+    exit 0
 }
 
 
