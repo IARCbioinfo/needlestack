@@ -75,8 +75,8 @@ Type `--help` to get the full list of options.
 | sb_type | SOR | Strand bias measure, either SOR, RVSB or FS |
 | sb_snv | 100 or 1000 | Strand bias threshold for SNVs (100 (1000 if FS) = no filter) |
 | sb_indel | 100 or 1000 | Strand bias threshold for indels (100 (1000 if FS) = no filter)|
-| map_qual | 20 | Min mapping quality (passed to samtools) |
-| base_qual | 20 | Min base quality (passed to samtools) |
+| map_qual | 0 | Min mapping quality (passed to samtools) |
+| base_qual | 13 | Min base quality (passed to samtools) |
 | max_dp | 30000 | Downsample coverage per sample (passed to samtools) |
 | plots | SOMATIC if tn_pairs provided, ALL if not | To create pdf plots of regressions in the output. To remove pdf plots set --do_plot to NONE (See *Plot options* paragraph).|
 | genome_release |  - | Reference genome for the annotions on the alignments plots. Examples : *Hsapiens.UCSC.hg19*, *Hsapiens.UCSC.hg18*, *Hsapiens.UCSC.hg38*, *Mmusculus.UCSC.mm10*. The right terminology is described below (*Plot options* paragraph). WARNING : this option is mandatory if the --do_alignments flag is used|
