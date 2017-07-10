@@ -56,6 +56,7 @@ while(dim(vcf_chunk)[1] != 0) {
     AD_matrix[var_line,] = lapply(AD_matrix[var_line,], function(x) {if(length(x)==0) { x=as.vector(rep(0, ifelse(max(lengths(AD_matrix[var_line,]),na.rm = T) >0, max(lengths(AD_matrix[var_line,]),na.rm = T), 2) )) } else {x=x} } )
     lapply(2:max(lengths(AD_matrix[var_line,])), function(AD_index) { #for each alternative
       DP=DP_matrix[var_line,]
+      DP[which(is.na(DP))] = 0
       AO=unlist(lapply(AD_matrix[var_line,],"[[",AD_index)) #AD_matrix[var_line,] is a list of AD for each sample, here return list of ADs(i) for alt i
       if( sum( (AO/DP) > 0.8 , na.rm = T) > 0.5*length(AO) ){ #test reference switching
         AO = DP - unlist(lapply(1:length(DP), function(i) sum(unlist(AD_matrix[var_line,i])[2:length(unlist(AD_matrix[var_line,i]))]))) #compute AO(ref)
