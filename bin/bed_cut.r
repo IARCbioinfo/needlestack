@@ -20,6 +20,7 @@ options("scipen"=100)
 
 nb_pieces=as.numeric(commandArgs(TRUE)[1])
 bed=read.table(pipe('cat /dev/stdin'),stringsAsFactors = F)
+bed[,3] = bed[,3] - 1
 bed_cum_size=cumsum(bed[,3]-bed[,2]+1)
 if(nb_pieces>bed_cum_size[length(bed_cum_size)]) nb_pieces=bed_cum_size[length(bed_cum_size)]
 if(nb_pieces==1) { cat(paste(bed[,1],":",bed[,2],"-",bed[,3], sep=""), sep="\n", file=paste(bed[1,1],"_",bed[1,2],"-",bed[dim(bed)[1],1],"_",bed[dim(bed)[1],3],"_regions",sep="")) } else {

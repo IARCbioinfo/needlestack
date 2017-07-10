@@ -369,7 +369,7 @@ if(params.input_vcf) {
       shell:
       if (input_region == 'region')
       '''
-      echo !{params.region} | sed -e 's/[:|-]/	/g' > temp.bed
+      echo !{params.region} | sed -e 's/[:|-]/	/g' | awk '{print $1"	"$2"	"$3+1}' > temp.bed
       '''
 
       else if (input_region == 'bed')
