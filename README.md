@@ -14,6 +14,16 @@ Contact: follm@iarc.fr
 
 ![Workflow representation](needlestack.png)
 
+## WARNING 
+Since the last release, the following option names changed:
+- fasta_ref became ref 
+- max_DP became max_dp 
+- out_folder became output_folder
+- out_vcf became output_vcf and is now a mandatory argument
+- out_annotated_vcf became output_annotated_vcf
+- pairs_file became tn_pairs 
+- no_plots became plots (see the Detailed description section)
+
 ## Description
 
 Needlestack is an ultra-sensitive multi-sample variant caller for Next Generation Sequencing (NGS) data. It is based on the idea that analysing several samples together can help estimate the distribution of sequencing errors to accurately identify variants. It has been initially developed for somatic variant calling using very deep NGS data from circulating free DNA, but is also applicable to lower coverage data like Whole Exome Sequencing (WES) or even Whole Genome Sequencing (WGS). It is a highly scalable and reproducible pipeline thanks to the use of [nextflow](http://www.nextflow.io/) and [docker](https://www.docker.com) technologies.
@@ -180,7 +190,7 @@ In other cases (when there is no `--tn_pairs` parameter defined), genotypes are 
 
 #### Two options to consider :
 
-1. --do_plots :
+1. --plots :
 
 	* SOMATIC : To produce pdf regression plots only for somatic variants. Default value when using matched tumor/normal.
 	* ALL : To produce pdf regression plots for all variants. Default value when not using matched tumor/normal.
