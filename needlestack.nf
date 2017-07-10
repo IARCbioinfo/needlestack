@@ -23,7 +23,7 @@ params.help = null
 params.input_vcf = null
 params.region = null
 params.bed = null
-params.out_annotated_vcf = null
+params.output_annotated_vcf = null
 params.genome_release = null
 params.min_dp = 30 // minimum median coverage to consider a site
 params.min_ao = 3 // minimum number of non-ref reads in at least one sample to consider a site
@@ -133,8 +133,8 @@ if(params.input_vcf) {
   params.output_folder = "annotated_vcf"
   params.chunk_size = 10000
   input_vcf = file(params.input_vcf)
-  params.out_annotated_vcf = null
-  out_annotated_vcf = params.out_annotated_vcf ? params.out_annotated_vcf : "annotated.vcf"
+  params.output_annotated_vcf = null
+  output_annotated_vcf = params.output_annotated_vcf ? params.output_annotated_vcf : "annotated.vcf"
   assert params.extra_robust_gl in [true,false] : "do not assign a value to --extra_robust_gl"
 
   log.info 'Mandatory arguments:'
@@ -146,7 +146,7 @@ if(params.input_vcf) {
   log.info "     minimum of alternative reads (--min_ao)                    : ${params.min_ao}"
   log.info "Phred-scale qvalue threshold (--min_qval)                       : ${params.min_qval}"
   log.info "Size of read chunks by VariantAnnotation (--chunk_size)         : ${params.chunk_size}"
-  log.info "Output annotated file (--out_annotated_vcf)                     : ${out_annotated_vcf}"
+  log.info "Output annotated file (--output_annotated_vcf)                  : ${output_annotated_vcf}"
   log.info(params.extra_robust_gl == true ? "Perform an extra-robust regression (--extra_robust_gl)          : yes" : "Perform an extra-robust regression (--extra_robust_gl)          : no" )
   log.info "output folder (--output_folder)                                    : ${params.output_folder}"
   log.info 'Flags:'
@@ -210,16 +210,16 @@ if(params.input_vcf) {
     publishDir params.output_folder, mode: 'move'
 
     input:
-    val out_annotated_vcf
+    val output_annotated_vcf
     file all_vcf from annotated.collect()
 
     output:
-    file "$out_annotated_vcf" into merged_vcf
+    file "$output_annotated_vcf" into merged_vcf
 
     shell:
     '''
     # Extract the header from the first VCF
-    grep '^#' !{all_vcf[0]} > !{out_annotated_vcf}
+    grep '^#' !{all_vcf[0]} > !{output_annotated_vcf}
 
     # Add version numbers in the VCF header just after fileformat line
     echo '##NeedlestackCommand=!{workflow.commandLine}' > versions.txt
@@ -229,14 +229,14 @@ if(params.input_vcf) {
     echo '##NeedlestackContainer=!{workflow.container}' >> versions.txt
     echo '##nextflow=v!{workflow.nextflow.version}' >> versions.txt
     echo '##Rscript='$(Rscript --version 2>&1) >> versions.txt
-    sed -i '/##fileformat=.*/ r versions.txt' !{out_annotated_vcf}
+    sed -i '/##fileformat=.*/ r versions.txt' !{output_annotated_vcf}
 
     # this is only for the split_vcf process when using the split linux command that ensures files are in the right order
-    grep -h -v '^#' split_*.vcf >> !{out_annotated_vcf}
+    grep -h -v '^#' split_*.vcf >> !{output_annotated_vcf}
     # this is for the slow version of the split_vcf process
     #for i in `seq 1 !{params.nsplit}`;
     #    do
-    #        grep -v '^#' split${i}_annotated_needlestack.vcf >> !{out_annotated_vcf}
+    #        grep -v '^#' split${i}_annotated_needlestack.vcf >> !{output_annotated_vcf}
     #    done
     '''
   }
