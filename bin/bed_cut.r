@@ -16,6 +16,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+options("scipen"=100)
+
 nb_pieces=as.numeric(commandArgs(TRUE)[1])
 bed=read.table(pipe('cat /dev/stdin'),stringsAsFactors = F)
 bed_cum_size=cumsum(bed[,3]-bed[,2]+1)
