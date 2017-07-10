@@ -320,7 +320,7 @@ if(params.input_vcf) {
   log.info 'Mandatory arguments:'
   log.info "Input BAM folder (--bam_folder)                                 : ${params.bam_folder}"
   log.info "Reference in fasta format (--ref)                               : ${params.ref}"
-  log.info "VCF output file (--output_vcf)                                  : ${params.output_vcf}"
+  log.info "VCF output file (--output_vcf)                                  : ${output_vcf}"
   log.info 'Options:'
   log.info "Number of regions to split (--nsplit)                           : ${params.nsplit}"
   log.info "To consider a site for calling:"
