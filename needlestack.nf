@@ -112,7 +112,7 @@ if (params.help) {
     log.info '    --no_indels                               Do not call indels.'
     log.info '    --no_contours                             Do not add contours to plots and do not plot min(AF)~DP.'
     log.info ''
-    exit 1
+    exit 0
 }
 
 
