@@ -29,35 +29,37 @@ usage ()
     echo "--------------------------------------------------------"
     echo ""
     echo "Usage: "
-    echo "    ./needlestack.sh --region=chrX:pos1-pos2 --bam_folder=BAM/ --ref=reference.fasta [other options]"
+    echo "    needlestack.sh --region=chrX:pos1-pos2 --bam_folder=BAM/ --ref=reference.fasta --output_vcf=all_variants.vcf [other options]"
     echo ""
     echo "Mandatory arguments:"
-    echo "    --bam_folder     BAM_DIR                  BAM files directory."
-    echo "    --ref            REF_IN_FASTA             Reference genome in fasta format."
+    echo "    --bam_folder       BAM_DIR                  BAM files directory."
+    echo "    --ref              REF_IN_FASTA             Reference genome in fasta format."
+    echo "    --output_vcf       OUTPUT VCF               Name of the vcf output."
     echo "Options:"
-    echo "    --min_dp         INTEGER                  Minimum median coverage (in addition, min_dp in at least 10 samples)."
-    echo "    --min_ao         INTEGER                  Minimum number of non-ref reads in at least one sample to consider a site."
-    echo "    --min_qval       VALUE                    Qvalue in Phred scale to consider a variant."
-    echo "    --sb_type        SOR or RVSB              Strand bias measure."
-    echo "    --sb_snv         VALUE                    Strand bias threshold for SNVs."
-    echo "    --sb_indel       VALUE                    Strand bias threshold for indels."
-    echo "    --power_min_af   VALUE                    Minimum allelic fraction for power computations."
-    echo "    --sigma_normal   VALUE                    Sigma parameter for negative binomial modeling germline mutations."
-    echo "    --map_qual       VALUE                    Samtools minimum mapping quality."
-    echo "    --base_qual      VALUE                    Samtools minimum base quality."
-    echo "    --max_dp         INTEGER                  Samtools maximum coverage before downsampling."
-    echo "    --use_file_name                           Sample names are taken from file names, otherwise extracted from the bam file SM tag."
-    echo "    --all_SNVs                                Output all SNVs, even when no variant found."
-    echo "    --extra_robust_gl                         Perform an extra robust regression, basically for germline variants"
-    echo "    --plots                                   Output PDF regression plots."
-    echo "    --do_alignments                           Add alignment plots."
-    echo "    --no_labels                               Do not add labels to outliers in regression plots."
-    echo "    --no_indels                               Do not call indels."
-    echo "    --no_contours                             Do not add contours to plots and do not plot min(AF)~DP."
-    echo "    --output_folder  OUTPUT FOLDER            Output directory, by default input bam folder."
-    echo "    --region         CHR:START-END            A region for calling."
-    echo "    --tn_pairs       TEXT FILE                A tab-delimited file containing two columns (normal and tumor sample name) for each sample in line."
-    echo "    --genome_release                          Reference genome for alignments plot"
+    echo "    --min_dp           INTEGER                  Minimum median coverage (in addition, min_dp in at least 10 samples)."
+    echo "    --min_ao           INTEGER                  Minimum number of non-ref reads in at least one sample to consider a site."
+    echo "    --min_qval         VALUE                    Qvalue in Phred scale to consider a variant."
+    echo "    --sb_type          SOR or RVSB              Strand bias measure."
+    echo "    --sb_snv           VALUE                    Strand bias threshold for SNVs."
+    echo "    --sb_indel         VALUE                    Strand bias threshold for indels."
+    echo "    --power_min_af     VALUE                    Minimum allelic fraction for power computations."
+    echo "    --sigma_normal     VALUE                    Sigma parameter for negative binomial modeling germline mutations."
+    echo "    --map_qual         VALUE                    Samtools minimum mapping quality."
+    echo "    --base_qual        VALUE                    Samtools minimum base quality."
+    echo "    --max_dp           INTEGER                  Samtools maximum coverage before downsampling."
+    echo "    --plots            ALL, SOMATIC or NONE    Output PDF regression plots."
+    echo "    --output_folder    OUTPUT FOLDER            Output directory, by default input bam folder."
+    echo "    --region           CHR:START-END            A region for calling."
+    echo "    --tn_pairs         TEXT FILE                A tab-delimited file containing two columns (normal and tumor sample name) for each sample in line."
+    echo "    --genome_release   VALUE                    Reference genome for alignments plot"
+    echo "Flags:"
+    echo "    --do_alignments                             Add alignment plots."
+    echo "    --no_labels                                 Do not add labels to outliers in regression plots."
+    echo "    --no_indels                                 Do not call indels."
+    echo "    --no_contours                               Do not add contours to plots and do not plot min(AF)~DP."
+    echo "    --use_file_name                             Sample names are taken from file names, otherwise extracted from the bam file SM tag."
+    echo "    --all_SNVs                                  Output all SNVs, even when no variant found."
+    echo "    --extra_robust_gl                           Perform an extra robust regression, basically for germline variants"
     echo ""
 
 }
@@ -118,7 +120,7 @@ while [ "$1" != "" ]; do
             max_dp=$VALUE
             ;;
         --no_indels)
-            no_indels=$VALUE
+            no_indels=true
             ;;
         --min_ao)
             min_ao=$VALUE
@@ -141,9 +143,6 @@ while [ "$1" != "" ]; do
             ;;
         --genome_release)
             ref_genome=$VALUE
-            ;;
-        --input_vcf)
-            input_vcf=$VALUE
             ;;
         --min_dp)
             min_dp=$VALUE
@@ -170,22 +169,22 @@ while [ "$1" != "" ]; do
             sigma_normal=$VALUE
             ;;
         --use_file_name)
-            use_file_name=$VALUE
+            use_file_name=true
             ;;
         --all_SNVs)
-            all_SNVs=$VALUE
+            all_SNVs=true
             ;;
         --extra_robust_gl)
-            extra_robust_gl=$VALUE
+            extra_robust_gl=true
             ;;
         --do_alignments)
-            do_alignments=$VALUE
+            do_alignments=true
             ;;
         --no_labels)
-            no_labels=$VALUE
+            no_labels=true
             ;;
         --no_contours)
-            no_contours=$VALUE
+            no_contours=true
             ;;
         --output_folder)
             output_folder=$VALUE
@@ -215,9 +214,11 @@ echo 'This program comes with ABSOLUTELY NO WARRANTY; for details see LICENSE.tx
 echo 'This is free software, and you are welcome to redistribute it'
 echo 'under certain conditions; see LICENSE.txt for details.'
 echo '--------------------------------------------------------'
-
+echo "Mandatory arguments:"
 echo "Reference in fasta format (--ref)                               : $fasta_ref"
 echo "Input BAM folder (--bam_folder)                                 : $bam_folder"
+echo "output vcf (--output_vcf)                                       : $output_vcf"
+echo "Options:"
 echo "output folder (--output_folder)                                 : $output_folder"
 echo "Intervals for calling (--region)                                : $region"
 
@@ -231,6 +232,21 @@ echo "To consider a site for calling:"
 echo "     minimum median coverage (--min_dp)                         : $min_dp"
 echo "     minimum of alternative reads (--min_ao)                    : $min_ao"
 echo "Phred-scale qvalue threshold (--min_qval)                       : $min_qval"
+echo "Strand bias measure (--sb_type)                                 : $sb_type"
+echo "Strand bias threshold for SNVs (--sb_snv)                       : $sb_snv"
+echo "Strand bias threshold for indels (--sb_indel)                   : $sb_indel"
+echo "Minimum allelic fraction for power computations (--power_min_af): $power_min_af"
+echo "Sigma parameter for germline (--sigma)                          : $sigma_normal"
+echo "Samtools minimum mapping quality (--map_qual)                   : $map_qual"
+echo "Samtools minimum base quality (--base_qual)                     : $base_qual"
+echo "Samtools maximum coverage before downsampling (--max_dp)        : $max_dp"
+if [ $use_file_name = true ];then
+	sample_names="FILE"
+else
+	sample_names="BAM"
+fi
+echo "Sample names definition (--use_file_name)                       : $sample_names"
+
 
 if [ -z $output_folder ];then output_folder=$bam_folder ;fi
 
@@ -248,7 +264,7 @@ case $do_plots in
 		echo "option not reconized for --plots (SOMATIC,ALL or NONE)"
 		;;
 esac
-
+echo "Flags:"
 if [ $do_alignments = true ]; then
 	echo "Alignment plots (--do_alignments)                               : yes"
 else
@@ -258,24 +274,13 @@ fi
 if [ $no_labels = true ]; then
 	echo "Labeling outliers in regression plots (--no_labels)             : no"
 else
-	echo "Labeling outliers ibooleann regression plots (--no_labels)      : yes"
+	echo "Labeling outliers in regression plots (--no_labels)             : yes"
 fi
 
 if [ $no_contours = true ]; then
 	echo "Add contours in plots and plot min(AF)~DP (--no_contours)       : no"
 else
 	echo "Add contours in plots and plot min(AF)~DP (--no_contours)       : yes"
-fi
-
-if [ $use_file_name = true ];then
-	sample_names="FILE"
-else
-	sample_names="BAM"
-fi
-if [ -z $output_vcf ]
-then
-  echo "\n ERROR : please specify --output_vcf option (--output_vcf vcf_name.vcf), exit."
-  exit
 fi
 
 
@@ -286,15 +291,6 @@ else
 	input_region='whole_genome'
 fi
 
-echo "Strand bias measure (--sb_type)                                 : $sb_type"
-echo "Strand bias threshold for SNVs (--sb_snv)                       : $sb_snv"
-echo "Strand bias threshold for indels (--sb_indel)                   : $sb_indel"
-echo "Minimum allelic fraction for power computations (--power_min_af): $power_min_af"
-echo "Sigma parameter for germline (--sigma)                          : $sigma_normal"
-echo "Samtools minimum mapping quality (--map_qual)                   : $map_qual"
-echo "Samtools minimum base quality (--base_qual)                     : $base_qual"
-echo "Samtools maximum coverage before downsampling (--max_dp)        : $max_dp"
-echo "Sample names definition (--use_file_name)                       : $sample_names"
 if [ $all_SNVs = true ]; then
 	echo "Output all SNVs (--all_SNVs)                                    : yes"
 else
@@ -313,6 +309,11 @@ fi
 echo "\n"
 
 #check parameters values
+if [ -z $output_vcf ]
+then
+  echo "\n ERROR : please specify --output_vcf option (--output_vcf vcf_name.vcf), exit."
+  exit
+fi
 if [ $sb_type != "SOR" ] && [ $sb_type != "RVSB" ] && [ $sb_type != "FS" ]
 then
 	echo "WARNING : --sb_type must be SOR, RVSB or FS "
@@ -352,12 +353,12 @@ fi
 
 if [ $do_alignments = true ] && [ -z $ref_genome ]
 then
-	echo "\n ERROR : --do_alignments is true, --ref_genome can not be null, exit."
+	echo "\n ERROR : --do_alignments is true, --genome_release can not be null, exit."
 	exit
 fi
 if [ $do_alignments = false ] && [ ! -z $ref_genome ]
 then
-	echo "\n WARNING : value assign to --ref_genome although do_alignments is false."
+	echo "\n WARNING : value assign to --genome_release although do_alignments is false."
 fi
 
 if [ ! -e "$fasta_ref" ]; then
