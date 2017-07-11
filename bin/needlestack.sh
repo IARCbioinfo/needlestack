@@ -22,7 +22,7 @@ usage ()
     echo "--------------------------------------------------------"
     echo "NEEDLESTACK v1.0b: A MULTI-SAMPLE SOMATIC VARIANT CALLER"
     echo "--------------------------------------------------------"
-    echo "Copyright (C) 2017 Matthieu Foll, Tiffany Delhomme, Nicolas Alcala and Aurelie Gabriel"
+    echo "Copyright (C) 2017 IARC/WHO"
     echo "This program comes with ABSOLUTELY NO WARRANTY; for details see LICENSE.txt"
     echo "This is free software, and you are welcome to redistribute it"
     echo "under certain conditions; see LICENSE.txt for details."
@@ -33,7 +33,7 @@ usage ()
     echo ""
     echo "Mandatory arguments:"
     echo "    --bam_folder     BAM_DIR                  BAM files directory."
-    echo "    --ref      REF_IN_FASTA             Reference genome in fasta format."
+    echo "    --ref            REF_IN_FASTA             Reference genome in fasta format."
     echo "Options:"
     echo "    --min_dp         INTEGER                  Minimum median coverage (in addition, min_dp in at least 10 samples)."
     echo "    --min_ao         INTEGER                  Minimum number of non-ref reads in at least one sample to consider a site."
@@ -49,15 +49,15 @@ usage ()
     echo "    --use_file_name                           Sample names are taken from file names, otherwise extracted from the bam file SM tag."
     echo "    --all_SNVs                                Output all SNVs, even when no variant found."
     echo "    --extra_robust_gl                         Perform an extra robust regression, basically for germline variants"
-    echo "    --plots                                Output PDF regression plots."
+    echo "    --plots                                   Output PDF regression plots."
     echo "    --do_alignments                           Add alignment plots."
     echo "    --no_labels                               Do not add labels to outliers in regression plots."
     echo "    --no_indels                               Do not call indels."
     echo "    --no_contours                             Do not add contours to plots and do not plot min(AF)~DP."
-    echo "    --output_folder     OUTPUT FOLDER            Output directory, by default input bam folder."
+    echo "    --output_folder  OUTPUT FOLDER            Output directory, by default input bam folder."
     echo "    --region         CHR:START-END            A region for calling."
-    echo "    --tn_pairs     TEXT FILE                A tab-delimited file containing two columns (normal and tumor sample name) for each sample in line."
-    echo "    --ref_genome                     Reference genome for alignments plot"
+    echo "    --tn_pairs       TEXT FILE                A tab-delimited file containing two columns (normal and tumor sample name) for each sample in line."
+    echo "    --genome_release                          Reference genome for alignments plot"
     echo ""
 
 }
@@ -139,7 +139,7 @@ while [ "$1" != "" ]; do
         --bam_folder)
             bam_folder=$VALUE
             ;;
-        --ref_genome)
+        --genome_release)
             ref_genome=$VALUE
             ;;
         --input_vcf)
@@ -210,15 +210,21 @@ echo ''
 echo '--------------------------------------------------------'
 echo 'NEEDLESTACK v1.0b: A MULTI-SAMPLE SOMATIC VARIANT CALLER'
 echo '--------------------------------------------------------'
-echo 'Copyright (C) 2017 Matthieu Foll, Tiffany Delhomme, Nicolas Alcala and Aurelie Gabriel'
+echo 'Copyright (C) 2017 IARC/WHO'
 echo 'This program comes with ABSOLUTELY NO WARRANTY; for details see LICENSE.txt'
 echo 'This is free software, and you are welcome to redistribute it'
 echo 'under certain conditions; see LICENSE.txt for details.'
 echo '--------------------------------------------------------'
+
+echo "Reference in fasta format (--ref)                               : $fasta_ref"
+echo "Input BAM folder (--bam_folder)                                 : $bam_folder"
+echo "output folder (--output_folder)                                 : $output_folder"
+echo "Intervals for calling (--region)                                : $region"
+
 if [ $pairs_file = "FALSE" ]; then
-	echo "Perform a tumor-normal somatic variant calling (--tn_pairs)   : no"
+	echo "Perform a tumor-normal somatic variant calling (--tn_pairs)     : no"
 else
-	echo "Perform a tumor-normal somatic variant calling (--tn_pairs)   : yes (file $pairs_file)"
+	echo "Perform a tumor-normal somatic variant calling (--tn_pairs)     : yes (file $pairs_file)"
 fi
 
 echo "To consider a site for calling:"
@@ -230,13 +236,13 @@ if [ -z $output_folder ];then output_folder=$bam_folder ;fi
 
 case $do_plots in
 	ALL)
-		echo "PDF regression plots (--plots)                               : ALL"
+		echo "PDF regression plots (--plots)                                  : ALL"
 		;;
 	SOMATIC)
-		echo "PDF regression plots (--plots)                               : SOMATIC"
+		echo "PDF regression plots (--plots)                                  : SOMATIC"
 		;;
 	NONE)
-		echo "PDF regression plots (--plots)                               : NONE"
+		echo "PDF regression plots (--plots)                                  : NONE"
 		;;
 	*)
 		echo "option not reconized for --plots (SOMATIC,ALL or NONE)"
@@ -280,10 +286,6 @@ else
 	input_region='whole_genome'
 fi
 
-echo "Input BAM folder (--bam_folder)                                 : $bam_folder"
-echo "output folder (--output_folder)                                    : $output_folder"
-echo "Reference in fasta format (--ref)                         : $fasta_ref"
-echo "Intervals for calling (--bed)                                   : $input_region"
 echo "Strand bias measure (--sb_type)                                 : $sb_type"
 echo "Strand bias threshold for SNVs (--sb_snv)                       : $sb_snv"
 echo "Strand bias threshold for indels (--sb_indel)                   : $sb_indel"

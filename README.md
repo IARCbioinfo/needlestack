@@ -14,14 +14,14 @@ Contact: follm@iarc.fr
 
 ![Workflow representation](needlestack.png)
 
-## WARNING 
+## WARNING
 Since the last release, the following option names changed:
-- fasta_ref became ref 
-- max_DP became max_dp 
+- fasta_ref became ref
+- max_DP became max_dp
 - out_folder became output_folder
 - out_vcf became output_vcf and is now a mandatory argument
 - out_annotated_vcf became output_annotated_vcf
-- pairs_file became tn_pairs 
+- pairs_file became tn_pairs
 - no_plots became plots (see the Detailed description section)
 
 ## Description
@@ -161,7 +161,7 @@ Simply add the parameters you want in the command line like `--min_dp 1000` for 
 	Here on the example dataset downloaded above:
 	```bash
 	cd data_test/
-	needlestack.sh --region=17:7572814-7573814 --bam_folder=BAM/BAM_multiple --ref=REF/17.fasta --output_vcf=all_variants.vcf
+	needlestack.sh --region=17:7572814-7573814 --bam_folder=BAM/BAM_multiple --ref=REF/17.fasta --output_vcf=all_variants.vcf --do_alignments=true --genome_release=Hsapiens.UCSC.hg19
 	```
 
 	You will find a [VCF file](https://samtools.github.io/hts-specs/) called `all_variants.vcf` in the `BAM/BAM_multiple/` folder once done.
@@ -196,7 +196,7 @@ In other cases (when there is no `--tn_pairs` parameter defined), genotypes are 
 	* ALL : To produce pdf regression plots for all variants. Default value when not using matched tumor/normal.
 	* NONE : To remove pdf regression plots from the output
 
-2. --do_alignments : To add the alignments plots to the regression plots. If this flag is used, the name of the reference genome (--genome_release option) needs to be provided to choose the correct annotation (See *--genome_release option* below). 
+2. --do_alignments : To add the alignments plots to the regression plots. If this flag is used, the name of the reference genome (--genome_release option) needs to be provided to choose the correct annotation (See *--genome_release option* below).
 
 #### Bioconductor packages to install for plotting the alignments :
 
