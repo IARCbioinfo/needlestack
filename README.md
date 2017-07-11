@@ -172,7 +172,7 @@ Simply add the parameters you want in the command line like `--min_dp 1000` for 
   | Type      | Description     |
   |-----------|---------------|
   | VCF file    | File containing all the variants detected. It contains a header of meta-information and data lines containing information about each variant position |
-  | PDF files    | For each variant detected a pdf is generated, this pdf file contains the regression plots and the alignments plots if the --do_alignments flag is used |
+  | PDF files    | For each variant detected a pdf is generated, this pdf file contains the regression plots and alignments plots if the --do_alignments flag is used |
 
 
 ## Detailed description
