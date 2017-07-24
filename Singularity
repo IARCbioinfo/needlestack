@@ -1,0 +1,2 @@
+Bootstrap:docker
+From:iarcbioinfo/needlestack:gabriela_cpp

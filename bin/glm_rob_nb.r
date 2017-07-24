@@ -1,4 +1,4 @@
-# Copyright (C) 2017 Matthieu Foll and Tiffany Delhomme
+# Copyright (C) 2015 IARC/WHO
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@ glmrob.nb <- function(y,x,bounding.func='T/T',c.tukey.beta=5,c.tukey.sig=3,c.by.
 
   if(extra_rob_out) min_reads=0
 
-  if (median(x, na.rm=T)<min_coverage | sum(x>min_coverage, na.rm=T)<size_min | max(y, na.rm = T)<min_reads | sum(y>0)==0 ) {
+  if (median(x, na.rm=T)<min_coverage | sum(x>min_coverage, na.rm=T)<size_min | max(y, na.rm = T)<min_reads | (sum(y>0)==0 & extra_rob_out==FALSE) ) {
     if(extra_rob_out) { #before return NA re-add removed samples
       coverage = ma_count = rep(0,length(y)+length(pos_not_in_reg))
       ma_count[setdiff(1:(length(y)+length(pos_not_in_reg)),pos_not_in_reg)]=y

@@ -1,6 +1,6 @@
 #! /usr/bin/env Rscript
 
-# Copyright (C) 2015 Matthieu Foll and Tiffany Delhomme
+# Copyright (C) 2015 IARC/WHO
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -48,7 +48,7 @@ while(dim(vcf_chunk)[1] != 0) {
   DP_matrix = geno(vcf_chunk,"DP")
   # AO counts (matrix of lists of integers)
   AD_matrix = geno(vcf_chunk,"AD")
-  
+
   #compute regressions and qvals,err,sig
   reg_list = lapply(1:dim(vcf_chunk)[1], function(var_line) { #for each line of the chunk return a list of reg for each AD
     # replace NAs and integer(0) by correct number of 0 ADs
@@ -56,6 +56,7 @@ while(dim(vcf_chunk)[1] != 0) {
     AD_matrix[var_line,] = lapply(AD_matrix[var_line,], function(x) {if(length(x)==0) { x=as.vector(rep(0, ifelse(max(lengths(AD_matrix[var_line,]),na.rm = T) >0, max(lengths(AD_matrix[var_line,]),na.rm = T), 2) )) } else {x=x} } )
     lapply(2:max(lengths(AD_matrix[var_line,])), function(AD_index) { #for each alternative
       DP=DP_matrix[var_line,]
+      DP[which(is.na(DP))] = 0
       AO=unlist(lapply(AD_matrix[var_line,],"[[",AD_index)) #AD_matrix[var_line,] is a list of AD for each sample, here return list of ADs(i) for alt i
       if( sum( (AO/DP) > 0.8 , na.rm = T) > 0.5*length(AO) ){ #test reference switching
         AO = DP - unlist(lapply(1:length(DP), function(i) sum(unlist(AD_matrix[var_line,i])[2:length(unlist(AD_matrix[var_line,i]))]))) #compute AO(ref)
@@ -94,31 +95,31 @@ while(dim(vcf_chunk)[1] != 0) {
   inv_refs = lapply(reg_list, function(regs) {
     lapply(regs, function(reg) unlist(reg$inv_ref)) #if at least on regression at the position is inv_ref
   })
-  
+
   #annotate the header of the chunk
   info(header(vcf_chunk))["ERR",]=list("A","Float","Error rate estimated by needlestack")
   info(header(vcf_chunk))["SIG",]=list("A","Float","Dispertion parameter estimated by needlestack")
   info(header(vcf_chunk))["WARN",]=list("A","Character","Warning message when position is processed specifically by needlestack")
   geno(header(vcf_chunk))["QVAL",]=list("A","Float","Phred q-values computed by needlestack")
   geno(header(vcf_chunk))["QVAL_INV",]=list("A","Float","Phred q-values computed by needlestack at a position where ")
-  
+
   #annotate the chunk with computed values
   #add WARN INFO field if extra-robust or inverted-reference
   info(vcf_chunk)$WARN = rep(NA, dim(vcf_chunk)[1])
   extra_rob_pos = which(unlist(lapply(extra_robust_gl, function(l) Reduce("|",l))==TRUE))
   info(vcf_chunk)$WARN[extra_rob_pos]=unlist(lapply(extra_rob_pos, function(i) {
-    ex=unlist(extra_robust_gl[i]) 
-    ex[which(ex==TRUE)]="EXTRA_ROBUST_GL"; ex[which(ex==FALSE)]="." 
+    ex=unlist(extra_robust_gl[i])
+    ex[which(ex==TRUE)]="EXTRA_ROBUST_GL"; ex[which(ex==FALSE)]="."
     paste(ex, collapse = ",") } ))
   inv_refs_pos = which(unlist(lapply(inv_refs, function(l) Reduce("|",l))==TRUE))
   info(vcf_chunk)$WARN[inv_refs_pos]=unlist(lapply(inv_refs_pos, function(i) {
-    ex=unlist(inv_refs[i]) 
-    ex[which(ex==TRUE)]="INV_REF"; ex[which(ex==FALSE)]="." 
+    ex=unlist(inv_refs[i])
+    ex[which(ex==TRUE)]="INV_REF"; ex[which(ex==FALSE)]="."
     paste(ex, collapse = ",") } ))
   inv_refs_extra_rob_pos = which(unlist(lapply(inv_refs, function(l) Reduce("|",l))==TRUE) & unlist(lapply(inv_refs, function(l) Reduce("&",l))==TRUE))
   info(vcf_chunk)$WARN[inv_refs_extra_rob_pos]=unlist(lapply(inv_refs_extra_rob_pos, function(i) {
     ex=unlist(inv_refs[i]) #we know that if inv_ref == TRUE then extra_robust = TRUE
-    ex[which(ex==TRUE)]="EXTRA_ROBUST_GL/INV_REF"; ex[which(ex==FALSE)]="." 
+    ex[which(ex==TRUE)]="EXTRA_ROBUST_GL/INV_REF"; ex[which(ex==FALSE)]="."
     paste(ex, collapse = ",") } ))
   #compute other fields
   info(vcf_chunk)$ERR = NumericList(err)
@@ -133,7 +134,7 @@ while(dim(vcf_chunk)[1] != 0) {
     if(i %in% inv_refs_pos) q=lapply(1:length(q), function(j) { x=q[[j]] ; if(inv_refs[[i]][[j]] == FALSE) x[]=NA ; x }) #replace QVAL_INV by "." if not INV_REF
     as.list(data.frame(t(mapply(c,q))))
   }),recursive = FALSE), nrow = dim(vcf_chunk)[1], byrow = TRUE)
-  
+
   #write out the annotated VCF
   con = file(out_vcf, open = "a")
   writeVcf(vcf_chunk, con)
