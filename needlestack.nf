@@ -48,7 +48,7 @@ params.extra_robust_gl = false //  perform an extra robust regression basically 
 
 params.tn_pairs = "FALSE" // by default R will get a false boolean value for tn_pairs option
 assert (params.tn_pairs != true) : "please enter a file name when using --tn_pairs option"
-if (params.tn_pairs != "FALSE") { try { assert file(params.tn_pairs).exists() : "\n ERROR : input tumor-normal pairs file not located in execution directory, exit" } catch (AssertionError e) { println e.getMessage() ; System.exit(0)} }
+if (params.tn_pairs != "FALSE") { try { assert file(params.tn_pairs).exists() : "\n ERROR : input tumor-normal pairs file not located in execution directory, exit" } catch (AssertionError e) { println e.getMessage() ; System.exit(1)} }
 pairs_file = file(params.tn_pairs)
 
 if (params.tn_pairs != "FALSE") {
@@ -262,13 +262,13 @@ if(params.input_vcf) {
   assert params.no_indels in [true,false] : "do not assign a value to --no_indels"
   assert params.use_file_name in [true,false] : "do not assign a value to --use_file_name"
   if ( (params.plots == "SOMATIC") && (params.tn_pairs == "FALSE") ) {
-      println "\n ERROR : --plots can not be set to SOMATIC since no tn_pairs was provided (--tn_pairs option), exit."; System.exit(0)
+      println "\n ERROR : --plots can not be set to SOMATIC since no tn_pairs was provided (--tn_pairs option), exit."; System.exit(1)
   }
   if ( (params.plots == "NONE") && (params.do_alignments == true) ) {
-      println "\n ERROR : --do_alignments can not be true since --plots is set to NONE, exit."; System.exit(0)
+      println "\n ERROR : --do_alignments can not be true since --plots is set to NONE, exit."; System.exit(1)
   }
   if ( (params.do_alignments == true) && (params.genome_release == null) ) {
-      println "\n ERROR : --do_alignments is true, --genome_release can not be null, exit."; System.exit(0)
+      println "\n ERROR : --do_alignments is true, --genome_release can not be null, exit."; System.exit(1)
   }
   if ( (params.do_alignments == false) && (params.genome_release != null) ) {
     println "\n WARNING : value assign to --genome_release although do_alignments is false."
@@ -280,7 +280,7 @@ if(params.input_vcf) {
   try { assert file(params.bam_folder).exists() : "\n WARNING : input BAM folder not located in execution directory" } catch (AssertionError e) { println e.getMessage() }
   assert file(params.bam_folder).listFiles().findAll { it.name ==~ /.*bam/ }.size() > 0 : "BAM folder contains no BAM"
   if (file(params.bam_folder).exists()) {
-      if (file(params.bam_folder).listFiles().findAll { it.name ==~ /.*bam/ }.size() < 10) { println "\n ERROR : BAM folder contains less than 10 BAM, exit."; System.exit(0) }
+      if (file(params.bam_folder).listFiles().findAll { it.name ==~ /.*bam/ }.size() < 10) { println "\n ERROR : BAM folder contains less than 10 BAM, exit."; System.exit(1) }
       else if (file(params.bam_folder).listFiles().findAll { it.name ==~ /.*bam/ }.size() < 20) { println "\n WARNING : BAM folder contains less than 20 BAM, method accuracy not warranted." }
       bamID = file(params.bam_folder).listFiles().findAll { it.name ==~ /.*bam/ }.collect { it.getName() }.collect { it.replace('.bam','') }
       baiID = file(params.bam_folder).listFiles().findAll { it.name ==~ /.*bam.bai/ }.collect { it.getName() }.collect { it.replace('.bam.bai','') }
