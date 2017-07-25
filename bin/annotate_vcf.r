@@ -33,6 +33,9 @@ if(is.null(args$min_reads))            {min_reads = 5} else {min_reads = as.nume
 if(is.null(args$GQ_threshold))         {GQ_threshold=50} else {GQ_threshold = as.numeric(args$GQ_threshold)}
 if(is.null(args$SB_threshold))         {SB_threshold=100} else {SB_threshold = as.numeric(args$SB_threshold)}
 if(is.null(args$extra_rob))            {extra_rob=FALSE} else {extra_rob=as.logical(args$extra_rob)}
+if(is.null(args$min_af_extra_rob))     {min_af_extra_rob=0.2} else {min_af_extra_rob=as.numeric(args$min_af_extra_rob)}
+if(is.null(args$min_prop_extra_rob))   {min_prop_extra_rob=0.1} else {min_prop_extra_rob=as.numeric(args$min_prop_extra_rob)}
+if(is.null(args$max_prop_extra_rob))   {max_prop_extra_rob=0.5} else {max_prop_extra_rob=as.numeric(args$max_prop_extra_rob)}
 
 source(paste(args$source_path,"glm_rob_nb.r",sep=""))
 source(paste(args$source_path,"plot_rob_nb.r",sep=""))
@@ -62,7 +65,7 @@ while(dim(vcf_chunk)[1] != 0) {
         AO = DP - unlist(lapply(1:length(DP), function(i) sum(unlist(AD_matrix[var_line,i])[2:length(unlist(AD_matrix[var_line,i]))]))) #compute AO(ref)
         inv_ref = T
       } else { inv_ref = F }
-      reg_res=glmrob.nb(x=DP,y=AO,min_coverage=min_coverage,min_reads=min_reads,extra_rob=extra_rob)
+      reg_res=glmrob.nb(x=DP,y=AO,min_coverage=min_coverage,min_reads=min_reads,extra_rob=extra_rob,min_af_extra_rob=min_af_extra_rob,min_prop_extra_rob=min_prop_extra_rob,max_prop_extra_rob=max_prop_extra_rob)
       reg_res$inv_ref = inv_ref
       if (do_plots) {
         chr=as.character(seqnames(rowRanges(vcf_chunk,"seqnames"))[var_line])
