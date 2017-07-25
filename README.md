@@ -12,6 +12,8 @@ Please wait upcoming publication before using it in production.
 
 Contact: follm@iarc.fr
 
+Needlestack development is support by the US National Cancer Institute (grant number R21CA175979) and the French Institut national du cancer.
+
 ![Workflow representation](needlestack.png)
 
 ## WARNING
