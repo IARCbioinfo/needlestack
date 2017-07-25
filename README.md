@@ -102,7 +102,7 @@ Type `--help` to get the full list of options. All parameters are prefixed with 
 | `sigma_normal` | `0.1` | Sigma parameter for negative binomial modeling of expected germline allelic fraction. We strongly recommend not to change this parameter unless you really know what it means |
 | `min_af_extra_rob` | `0.2` | Minimum allelic fraction to exclude a sample at a position for extra-robust regression |
 | `min_prop_extra_rob` | `0.1` | Minimum proportion of samples having an allelic fraction to be excluded from extra-robust regression |
-| `max_prop_extra_rob` | `0.1` | Maximum proportion of samples having an allelic fraction to be excluded from extra-robust regression |
+| `max_prop_extra_rob` | `0.5` | Maximum proportion of samples having an allelic fraction to be excluded from extra-robust regression |
 
 
 By default, if neither `--bed` nor `--region` are provided, needlestack runs on the whole reference genome provided, building a bed file from fasta index.
