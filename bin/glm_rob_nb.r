@@ -13,9 +13,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+#C.Voegele - 25/07/2017 - Modif min_af_extra_rob, min_prop_extra_rob, max_prop_extra_rob: variables instead of fixed values 0.2/0.1/0.5
 glmrob.nb <- function(y,x,bounding.func='T/T',c.tukey.beta=5,c.tukey.sig=3,c.by.beta=4,weights.on.x='none',
                       minsig=1e-3,maxsig=10,minmu=1e-10,maxmu=1e5,maxit=30,maxit.sig=50,sig.prec=1e-8,tol=1e-6,
-                      n_ai.sig.tukey=100,n_xout=10^4,min_coverage=1,min_reads=1,size_min=10,extra_rob=TRUE,min_af_extra_rob=0.2,min_prop_extra_rob=0.1,max_prop_extra_rob=0.5,...){
+                      n_ai.sig.tukey=100,n_xout=10^4,min_coverage=1,min_reads=1,size_min=10,extra_rob=TRUE,min_af_extra_rob=my_min_af_extra_rob,min_prop_extra_rob=my_min_prop_extra_rob,max_prop_extra_rob=my_max_prop_extra_rob,...){
 
   maxmu = max(x)
 
