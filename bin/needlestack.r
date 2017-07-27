@@ -47,6 +47,9 @@ if("--help" %in% args | is.null(args$out_file) | is.null(args$fasta_ref) ) {
       --do_alignments=boolean        - output alignment plots, default=FALSE
       --ref_genome=string            - reference genome for alignments plot, examples : Hsapiens.UCSC.hg19, Hsapiens.UCSC.hg18, Hsapiens.1000genomes.hs37d5, Mmusculus.UCSC.mm10...
       --extra_rob=boolean            - perform an extra-robust regression, default=FALSE
+      --min_af_extra_rob=value       - minimum allelic fraction to exclude a sample at a position for extra-robust regression, default=0.2
+      --min_prop_extra_rob=value     - minimum proportion of samples having an allelic fraction to be excluded from extra-robust regression, default=0.1
+      --max_prop_extra_rob=value     - maximum proportion of samples having an allelic fraction to be excluded from extra-robust regression, default=0.1
       --pairs_file=file_name         - name of file containing the list of matched Tumor/Normal pairs for somatic variant calling
       --afmin_power=value            - minimum allelic fraction in mean for somatic mutations, default=0.01
       --sigma=value                  - sigma parameter for negative binomial modeling germline mutations, default=0.1
@@ -79,6 +82,9 @@ if(is.null(args$do_alignments)) {args$do_alignments=FALSE} else {args$do_alignme
 if(is.null(args$plot_labels)) {args$plot_labels=FALSE} else {args$plot_labels=as.logical(args$plot_labels)}
 if(is.null(args$add_contours)) {args$add_contours=FALSE} else {args$add_contours=as.logical(args$add_contours)}
 if(is.null(args$extra_rob)) {args$extra_rob=FALSE} else {args$extra_rob=as.logical(args$extra_rob)}
+if(is.null(args$min_af_extra_rob)) {args$min_af_extra_rob=0.2} else {args$min_af_extra_rob=as.numeric(args$min_af_extra_rob)}
+if(is.null(args$min_prop_extra_rob)) {args$min_prop_extra_rob=0.1} else {args$min_prop_extra_rob=as.numeric(args$min_prop_extra_rob)}
+if(is.null(args$max_prop_extra_rob)) {args$max_prop_extra_rob=0.5} else {args$max_prop_extra_rob=as.numeric(args$max_prop_extra_rob)}
 if(is.null(args$afmin_power)) {args$afmin_power=-1} else {args$afmin_power=as.numeric(args$afmin_power)}
 if(is.null(args$sigma)) {args$sigma=0.1} else {args$sigma=as.numeric(args$sigma)}
 
@@ -103,6 +109,9 @@ ref_genome=args$ref_genome
 plot_labels=args$plot_labels
 add_contours=args$add_contours
 extra_rob=args$extra_rob
+min_af_extra_rob=args$min_af_extra_rob
+min_prop_extra_rob=args$min_prop_extra_rob
+max_prop_extra_rob=args$max_prop_extra_rob
 pairs_file=args$pairs_file
 sigma=args$sigma
 afmin_power=args$afmin_power
@@ -319,8 +328,8 @@ while(length(line <- readLines(f,n=1, warn = FALSE)) > 0) {
           Vm_inv=as.numeric(linepos[eval(as.name(paste(tolower(alt_inv),"_cols",sep="")))])
           ma_count_inv=Vp_inv+Vm_inv
           ref_inv=TRUE
-          reg_res=glmrob.nb(x=DP,y=ma_count_inv,min_coverage=min_coverage,min_reads=min_reads,extra_rob=extra_rob)
-        } else {ref_inv=FALSE; reg_res=glmrob.nb(x=DP,y=ma_count,min_coverage=min_coverage,min_reads=min_reads,extra_rob=extra_rob) }
+          reg_res=glmrob.nb(x=DP,y=ma_count_inv,min_coverage=min_coverage,min_reads=min_reads,extra_rob=extra_rob,min_af_extra_rob=min_af_extra_rob,min_prop_extra_rob=min_prop_extra_rob,max_prop_extra_rob=max_prop_extra_rob)
+        } else {ref_inv=FALSE; reg_res=glmrob.nb(x=DP,y=ma_count,min_coverage=min_coverage,min_reads=min_reads,extra_rob=extra_rob,min_af_extra_rob=min_af_extra_rob,min_prop_extra_rob=min_prop_extra_rob,max_prop_extra_rob=max_prop_extra_rob) }
 
         # compute Qval for minAF
         qval_minAF= rep(0,nindiv)
@@ -471,8 +480,8 @@ while(length(line <- readLines(f,n=1, warn = FALSE)) > 0) {
             Vm_inv=as.numeric(linepos[eval(as.name(paste(tolower(cur_del_inv),"_cols",sep="")))])
             ma_count_inv=Vp_inv+Vm_inv
             ref_inv=TRUE
-            reg_res=glmrob.nb(x=DP,y=ma_count_inv,min_coverage=min_coverage,min_reads=min_reads,extra_rob=extra_rob)
-          } else { ref_inv=FALSE; reg_res=glmrob.nb(x=DP,y=ma_count,min_coverage=min_coverage,min_reads=min_reads,extra_rob=extra_rob) }
+            reg_res=glmrob.nb(x=DP,y=ma_count_inv,min_coverage=min_coverage,min_reads=min_reads,extra_rob=extra_rob,min_af_extra_rob=min_af_extra_rob,min_prop_extra_rob=min_prop_extra_rob,max_prop_extra_rob=max_prop_extra_rob)
+          } else { ref_inv=FALSE; reg_res=glmrob.nb(x=DP,y=ma_count,min_coverage=min_coverage,min_reads=min_reads,extra_rob=extra_rob,min_af_extra_rob=min_af_extra_rob,min_prop_extra_rob=min_prop_extra_rob,max_prop_extra_rob=max_prop_extra_rob) }
           # compute Qval20pc
           qval_minAF = rep(0,nindiv)
           somatic_status = rep(".",nindiv)
@@ -634,8 +643,8 @@ while(length(line <- readLines(f,n=1, warn = FALSE)) > 0) {
             Vm_inv=as.numeric(linepos[eval(as.name(paste(tolower(cur_ins_inv),"_cols",sep="")))])
             ma_count_inv=Vp_inv+Vm_inv
             ref_inv=TRUE
-            reg_res=glmrob.nb(x=DP,y=ma_count_inv,min_coverage=min_coverage,min_reads=min_reads,extra_rob=extra_rob)
-          } else { ref_inv=FALSE; reg_res=glmrob.nb(x=DP,y=ma_count,min_coverage=min_coverage,min_reads=min_reads,extra_rob=extra_rob) }
+            reg_res=glmrob.nb(x=DP,y=ma_count_inv,min_coverage=min_coverage,min_reads=min_reads,extra_rob=extra_rob,min_af_extra_rob=min_af_extra_rob,min_prop_extra_rob=min_prop_extra_rob,max_prop_extra_rob=max_prop_extra_rob)
+          } else { ref_inv=FALSE; reg_res=glmrob.nb(x=DP,y=ma_count,min_coverage=min_coverage,min_reads=min_reads,extra_rob=extra_rob,min_af_extra_rob=min_af_extra_rob,min_prop_extra_rob=min_prop_extra_rob,max_prop_extra_rob=max_prop_extra_rob) }
           # compute Qval20pc
           qval_minAF = rep(0,nindiv)
           somatic_status = rep(".",nindiv)

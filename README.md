@@ -12,6 +12,8 @@ Please wait upcoming publication before using it in production.
 
 Contact: follm@iarc.fr
 
+Needlestack development is support by the US National Cancer Institute (grant number R21CA175979) and the French Institut national du cancer.
+
 ![Workflow representation](needlestack.png)
 
 ## WARNING
@@ -98,6 +100,10 @@ Type `--help` to get the full list of options. All parameters are prefixed with 
 | `region` |  - | A region in format CHR:START-END where calling should be done |
 | `tn_pairs` | - | A tab-delimited file containing two columns (normal and tumor sample names) for each sample in line. This enables matched tumor/normal pair calling features (see below) |
 | `sigma_normal` | `0.1` | Sigma parameter for negative binomial modeling of expected germline allelic fraction. We strongly recommend not to change this parameter unless you really know what it means |
+| `min_af_extra_rob` | `0.2` | Minimum allelic fraction to exclude a sample at a position for extra-robust regression |
+| `min_prop_extra_rob` | `0.1` | Minimum proportion of samples having an allelic fraction to be excluded from extra-robust regression |
+| `max_prop_extra_rob` | `0.5` | Maximum proportion of samples having an allelic fraction to be excluded from extra-robust regression |
+
 
 By default, if neither `--bed` nor `--region` are provided, needlestack runs on the whole reference genome provided, building a bed file from fasta index.
 If `--bed` and `--region` are both provided, it runs on the region only.

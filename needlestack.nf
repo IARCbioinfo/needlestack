@@ -44,7 +44,10 @@ params.base_qual = 13 // min base quality (passed to samtools)
 params.max_dp = 50000 // downsample coverage per sample (passed to samtools)
 params.use_file_name = false //put these argument to use the bam file names as sample names and do not to use the sample name filed from the bam files (SM tag)
 params.all_SNVs = false //  output all sites, even when no variant is detected
-params.extra_robust_gl = false //  perform an extra robust regression basically for germline variants
+params.extra_robust_gl = false // perform an extra robust regression basically for germline variants
+params.min_af_extra_rob = 0.2 // minimum allelic fraction to exclude a sample at a position for extra-robust regression
+params.min_prop_extra_rob = 0.1 // minimum proportion of samples having an allelic fraction to be excluded from extra-robust regression
+params.max_prop_extra_rob = 0.5 // maximum proportion of samples having an allelic fraction to be excluded from extra-robust regression
 
 params.tn_pairs = "FALSE" // by default R will get a false boolean value for tn_pairs option
 assert (params.tn_pairs != true) : "please enter a file name when using --tn_pairs option"
@@ -79,38 +82,41 @@ if (params.help) {
     log.info '    nextflow run iarcbioinfo/needlestack [-with-docker] --bed bedfile.bed --bam_folder BAM/ --ref reference.fasta --output_vcf VCF_name.vcf [other options]'
     log.info ''
     log.info 'Mandatory arguments:'
-    log.info '    --bam_folder     BAM_DIR                  BAM files directory.'
-    log.info '    --ref            REF_IN_FASTA             Reference genome in fasta format.'
-    log.info '    --output_vcf     VCF FILE NAME            Name of the VCF file (output file).'
+    log.info '    --bam_folder     	BAM_DIR                  BAM files directory.'
+    log.info '    --ref            	REF_IN_FASTA             Reference genome in fasta format.'
+    log.info '    --output_vcf     	VCF FILE NAME            Name of the VCF file (output file).'
     log.info '    OR '
-    log.info '    --input_vcf      VCF FILE                 VCF file (basically from GATK pipeline) to annotate.'
+    log.info '    --input_vcf      	VCF FILE                 VCF file (basically from GATK pipeline) to annotate.'
     log.info 'Options:'
-    log.info '    --nsplit         INTEGER                  Split the region for calling in nsplit pieces and run in parallel.'
-    log.info '    --min_dp         INTEGER                  Minimum median coverage (in addition, min_dp in at least 10 samples).'
-    log.info '    --min_ao         INTEGER                  Minimum number of non-ref reads in at least one sample to consider a site.'
-    log.info '    --min_qval       VALUE                    Qvalue in Phred scale to consider a variant.'
-    log.info '    --sb_type        SOR or RVSB              Strand bias measure.'
-    log.info '    --sb_snv         VALUE                    Strand bias threshold for SNVs.'
-    log.info '    --sb_indel       VALUE                    Strand bias threshold for indels.'
-    log.info '    --power_min_af   VALUE                    Minimum allelic fraction for power computations.'
-    log.info '    --sigma_normal   VALUE                    Sigma parameter for negative binomial modeling germline mutations.'
-    log.info '    --map_qual       VALUE                    Samtools minimum mapping quality.'
-    log.info '    --base_qual      VALUE                    Samtools minimum base quality.'
-    log.info '    --max_dp         INTEGER                  Samtools maximum coverage before downsampling.'
-    log.info '    --output_folder  OUTPUT FOLDER            Output directory, by default input bam folder.'
-    log.info '    --bed            BED FILE                 A BED file for calling.'
-    log.info '    --region         CHR:START-END            A region for calling.'
-    log.info '    --tn_pairs       TEXT FILE                A tab-delimited file containing two columns (normal and tumor sample name) for each sample in line.'
-    log.info '    --genome_release VALUE                    Reference genome for alignments plot'
-    log.info '    --plots          VALUE                    Output PDF regression plots.'
+    log.info '    --nsplit         	INTEGER                  Split the region for calling in nsplit pieces and run in parallel.'
+    log.info '    --min_dp         	INTEGER                  Minimum median coverage (in addition, min_dp in at least 10 samples).'
+    log.info '    --min_ao         	INTEGER                  Minimum number of non-ref reads in at least one sample to consider a site.'
+    log.info '    --min_qval       	VALUE                    Qvalue in Phred scale to consider a variant.'
+    log.info '    --sb_type        	SOR or RVSB              Strand bias measure.'
+    log.info '    --sb_snv         	VALUE                    Strand bias threshold for SNVs.'
+    log.info '    --sb_indel       	VALUE                    Strand bias threshold for indels.'
+    log.info '    --power_min_af   	VALUE                    Minimum allelic fraction for power computations.'
+    log.info '    --sigma_normal   	VALUE                    Sigma parameter for negative binomial modeling germline mutations.'
+    log.info '    --map_qual       	VALUE                    Samtools minimum mapping quality.'
+    log.info '    --base_qual      	VALUE                    Samtools minimum base quality.'
+    log.info '    --max_dp         	INTEGER                  Samtools maximum coverage before downsampling.'
+    log.info '    --output_folder  	OUTPUT FOLDER            Output directory, by default input bam folder.'
+    log.info '    --bed            	BED FILE                 A BED file for calling.'
+    log.info '    --region         	CHR:START-END            A region for calling.'
+    log.info '    --tn_pairs       	TEXT FILE                A tab-delimited file containing two columns (normal and tumor sample name) for each sample in line.'
+    log.info '    --genome_release 	VALUE                    Reference genome for alignments plot'
+    log.info '    --plots          	VALUE                    Output PDF regression plots.'
+    log.info '    --min_af_extra_rob	VALUE                    Minimum allelic fraction to exclude a sample at a position for extra-robust regression.'	
+    log.info '    --min_prop_extra_rob	VALUE                    Minimum proportion of samples having an allelic fraction to be excluded from extra-robust regression.'	
+    log.info '    --mAX_prop_extra_rob	VALUE                    Maximum proportion of samples having an allelic fraction to be excluded from extra-robust regression.'	
     log.info 'Flags:'
-    log.info '    --use_file_name                           Sample names are taken from file names, otherwise extracted from the bam file SM tag.'
-    log.info '    --all_SNVs                                Output all SNVs, even when no variant found.'
-    log.info '    --extra_robust_gl                         Perform an extra robust regression, basically for germline variants'
-    log.info '    --do_alignments                           Add alignment plots.'
-    log.info '    --no_labels                               Do not add labels to outliers in regression plots.'
-    log.info '    --no_indels                               Do not call indels.'
-    log.info '    --no_contours                             Do not add contours to plots and do not plot min(AF)~DP.'
+    log.info '    --use_file_name                           	Sample names are taken from file names, otherwise extracted from the bam file SM tag.'
+    log.info '    --all_SNVs                               	Output all SNVs, even when no variant found.'
+    log.info '    --extra_robust_gl                         	Perform an extra robust regression, basically for germline variants'
+    log.info '    --do_alignments                           	Add alignment plots.'
+    log.info '    --no_labels                               	Do not add labels to outliers in regression plots.'
+    log.info '    --no_indels                               	Do not call indels.'
+    log.info '    --no_contours                             	Do not add contours to plots and do not plot min(AF)~DP.'
     log.info ''
     exit 0
 }
@@ -201,7 +207,7 @@ if(params.input_vcf) {
     shell:
     '''
     tabix -p vcf !{svcf}
-    Rscript !{baseDir}/bin/annotate_vcf.r --source_path=!{baseDir}/bin/ --input_vcf=!{svcf} --chunk_size=!{params.chunk_size} --do_plots=!{params.plots} --plot_labels=!{!params.no_labels} --add_contours=!{!params.no_contours} --min_coverage=!{params.min_dp} --min_reads=!{params.min_ao} --GQ_threshold=!{params.min_qval} --extra_rob=!{params.extra_robust_gl}
+    Rscript !{baseDir}/bin/annotate_vcf.r --source_path=!{baseDir}/bin/ --input_vcf=!{svcf} --chunk_size=!{params.chunk_size} --do_plots=!{params.plots} --plot_labels=!{!params.no_labels} --add_contours=!{!params.no_contours} --min_coverage=!{params.min_dp} --min_reads=!{params.min_ao} --GQ_threshold=!{params.min_qval} --extra_rob=!{params.extra_robust_gl} --min_af_extra_rob=!{params.min_af_extra_rob} --min_prop_extra_rob=!{params.min_prop_extra_rob} --max_prop_extra_rob=!{params.max_prop_extra_rob}
     '''
   }
 
@@ -465,7 +471,7 @@ if(params.input_vcf) {
           samtools mpileup --fasta-ref !{fasta_ref} --region $bed_line --ignore-RG --min-BQ !{params.base_qual} --min-MQ !{params.map_qual} --max-idepth 1000000 --max-depth !{params.max_dp} BAM/*.bam | sed 's/		/	*	*/g'
           i=$((i+1))
       done < !{split_bed}
-      } | mpileup2readcounts 0 -5 !{indel_par} !{params.min_ao} | Rscript !{baseDir}/bin/needlestack.r --pairs_file=${abs_pairs_file} --source_path=!{baseDir}/bin/ --out_file=!{region_tag}.vcf --fasta_ref=!{fasta_ref} --bam_folder=BAM/ --ref_genome=!{params.genome_release} --GQ_threshold=!{params.min_qval} --min_coverage=!{params.min_dp} --min_reads=!{params.min_ao} --SB_type=!{params.sb_type} --SB_threshold_SNV=!{params.sb_snv} --SB_threshold_indel=!{params.sb_indel} --output_all_SNVs=!{params.all_SNVs} --do_plots=!{params.plots} --do_alignments=!{params.do_alignments} --plot_labels=!{!params.no_labels} --add_contours=!{!params.no_contours} --extra_rob=!{params.extra_robust_gl} --afmin_power=!{params.power_min_af} --sigma=!{params.sigma_normal}
+      } | mpileup2readcounts 0 -5 !{indel_par} !{params.min_ao} | Rscript !{baseDir}/bin/needlestack.r --pairs_file=${abs_pairs_file} --source_path=!{baseDir}/bin/ --out_file=!{region_tag}.vcf --fasta_ref=!{fasta_ref} --bam_folder=BAM/ --ref_genome=!{params.genome_release} --GQ_threshold=!{params.min_qval} --min_coverage=!{params.min_dp} --min_reads=!{params.min_ao} --SB_type=!{params.sb_type} --SB_threshold_SNV=!{params.sb_snv} --SB_threshold_indel=!{params.sb_indel} --output_all_SNVs=!{params.all_SNVs} --do_plots=!{params.plots} --do_alignments=!{params.do_alignments} --plot_labels=!{!params.no_labels} --add_contours=!{!params.no_contours} --extra_rob=!{params.extra_robust_gl} --min_af_extra_rob=!{params.min_af_extra_rob} --min_prop_extra_rob=!{params.min_prop_extra_rob} --max_prop_extra_rob=!{params.max_prop_extra_rob} --afmin_power=!{params.power_min_af} --sigma=!{params.sigma_normal}
       '''
   }
 
