@@ -45,7 +45,7 @@ if("--help" %in% args | is.null(args$out_file) | is.null(args$fasta_ref) ) {
       --output_all_SNVs=boolean      - output all SNVs, even when no variant is detected, default=FALSE
       --do_plots=boolean             - output regression plots, default=TRUE
       --do_alignments=boolean        - output alignment plots, default=FALSE
-      --ref_genome=string            - reference genome for alignments plot, examples : Hsapiens.UCSC.hg19, Hsapiens.UCSC.hg18, Hsapiens.1000genomes.hs37d5, Mmusculus.UCSC.mm10...
+      --ref_genome=string            - reference genome for alignments plot, examples : Hsapiens.UCSC.hg19, Hsapiens.UCSC.hg18, Mmusculus.UCSC.mm10...
       --extra_rob=boolean            - perform an extra-robust regression, default=FALSE
       --min_af_extra_rob=value       - minimum allelic fraction to exclude a sample at a position for extra-robust regression, default=0.2
       --min_prop_extra_rob=value     - minimum proportion of samples having an allelic fraction to be excluded from extra-robust regression, default=0.1

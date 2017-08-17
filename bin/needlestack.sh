@@ -32,26 +32,29 @@ usage ()
     echo "    needlestack.sh --region=chrX:pos1-pos2 --bam_folder=BAM/ --ref=reference.fasta --output_vcf=all_variants.vcf [other options]"
     echo ""
     echo "Mandatory arguments:"
-    echo "    --bam_folder       BAM_DIR                  BAM files directory."
-    echo "    --ref              REF_IN_FASTA             Reference genome in fasta format."
-    echo "    --output_vcf       OUTPUT VCF               Name of the vcf output."
+    echo "    --bam_folder          BAM_DIR                  BAM files directory."
+    echo "    --ref                 REF_IN_FASTA             Reference genome in fasta format."
+    echo "    --output_vcf          OUTPUT VCF               Name of the vcf output."
     echo "Options:"
-    echo "    --min_dp           INTEGER                  Minimum median coverage (in addition, min_dp in at least 10 samples)."
-    echo "    --min_ao           INTEGER                  Minimum number of non-ref reads in at least one sample to consider a site."
-    echo "    --min_qval         VALUE                    Qvalue in Phred scale to consider a variant."
-    echo "    --sb_type          SOR or RVSB              Strand bias measure."
-    echo "    --sb_snv           VALUE                    Strand bias threshold for SNVs."
-    echo "    --sb_indel         VALUE                    Strand bias threshold for indels."
-    echo "    --power_min_af     VALUE                    Minimum allelic fraction for power computations."
-    echo "    --sigma_normal     VALUE                    Sigma parameter for negative binomial modeling germline mutations."
-    echo "    --map_qual         VALUE                    Samtools minimum mapping quality."
-    echo "    --base_qual        VALUE                    Samtools minimum base quality."
-    echo "    --max_dp           INTEGER                  Samtools maximum coverage before downsampling."
-    echo "    --plots            ALL, SOMATIC or NONE    Output PDF regression plots."
-    echo "    --output_folder    OUTPUT FOLDER            Output directory, by default input bam folder."
-    echo "    --region           CHR:START-END            A region for calling."
-    echo "    --tn_pairs         TEXT FILE                A tab-delimited file containing two columns (normal and tumor sample name) for each sample in line."
-    echo "    --genome_release   VALUE                    Reference genome for alignments plot"
+    echo "    --min_dp              INTEGER                  Minimum median coverage (in addition, min_dp in at least 10 samples)."
+    echo "    --min_ao              INTEGER                  Minimum number of non-ref reads in at least one sample to consider a site."
+    echo "    --min_qval            VALUE                    Qvalue in Phred scale to consider a variant."
+    echo "    --sb_type             SOR or RVSB              Strand bias measure."
+    echo "    --sb_snv              VALUE                    Strand bias threshold for SNVs."
+    echo "    --sb_indel            VALUE                    Strand bias threshold for indels."
+    echo "    --power_min_af        VALUE                    Minimum allelic fraction for power computations."
+    echo "    --sigma_normal        VALUE                    Sigma parameter for negative binomial modeling germline mutations."
+    echo "    --map_qual            VALUE                    Samtools minimum mapping quality."
+    echo "    --base_qual           VALUE                    Samtools minimum base quality."
+    echo "    --max_dp              INTEGER                  Samtools maximum coverage before downsampling."
+    echo "    --plots               ALL, SOMATIC or NONE    Output PDF regression plots."
+    echo "    --output_folder       OUTPUT FOLDER            Output directory, by default input bam folder."
+    echo "    --region              CHR:START-END            A region for calling."
+    echo "    --tn_pairs            TEXT FILE                A tab-delimited file containing two columns (normal and tumor sample name) for each sample in line."
+    echo "    --genome_release      VALUE                    Reference genome for alignments plot"
+    echo "    --min_af_extra_rob	  VALUE                    Minimum allelic fraction to exclude a sample at a position for extra-robust regression."
+    echo "    --min_prop_extra_rob  VALUE                    Minimum proportion of samples having an allelic fraction to be excluded from extra-robust regression."
+    echo "    --max_prop_extra_rob  VALUE                    Maximum proportion of samples having an allelic fraction to be excluded from extra-robust regression."
     echo "Flags:"
     echo "    --do_alignments                             Add alignment plots."
     echo "    --no_labels                                 Do not add labels to outliers in regression plots."
@@ -87,6 +90,9 @@ max_dp=50000 : downsample coverage per sample, passed to samtools
 use_file_name=false : put these argument to use the bam file names as sample names and do not to use the sample name filed from the bam files \(SM tag\)
 all_SNVs=false :  output all sites, even when no variant is detected
 extra_robust_gl=false :  perform an extra robust regression basically for germline variants
+min_af_extra_rob=0.2 : minimum allelic fraction to exclude a sample at a position for extra-robust regression
+min_prop_extra_rob=0.1 : minimum proportion of samples having an allelic fraction to be excluded from extra-robust regression
+max_prop_extra_rob=0.5 : maximum proportion of samples having an allelic fraction to be excluded from extra-robust regression
 
 pairs_file="FALSE" : by default R will get a false boolean value for pairs_file option
 
@@ -176,6 +182,15 @@ while [ "$1" != "" ]; do
             ;;
         --extra_robust_gl)
             extra_robust_gl=true
+            ;;
+        --min_af_extra_rob)
+            min_af_extra_rob=$VALUE
+            ;;
+        --min_prop_extra_rob)
+            min_prop_extra_rob=$VALUE
+            ;;
+        --max_prop_extra_rob)
+            max_prop_extra_rob=$VALUE
             ;;
         --do_alignments)
             do_alignments=true
@@ -463,7 +478,7 @@ samtools mpileup --fasta-ref $fasta_ref --region $region --ignore-RG --min-BQ $b
 | mpileup2readcounts 0 -5 $indel_par 0 \
 | needlestack.r --pairs_file=$pairs_file --out_file=$output_vcf --fasta_ref=$fasta_ref --bam_folder=$bam_folder --ref_genome=$ref_genome \
 --GQ_threshold=$min_qval --min_coverage=$min_dp --min_reads=$min_ao --SB_type=$sb_type --SB_threshold_SNV=$sb_snv --SB_threshold_indel=$sb_indel --output_all_SNVs=$all_SNVs \
---do_plots=$do_plots --do_alignments=$do_alignments --plot_labels=$labels --add_contours=$contours --extra_rob=$extra_robust_gl --afmin_power=$power_min_af --sigma=$sigma_normal
+--do_plots=$do_plots --do_alignments=$do_alignments --plot_labels=$labels --add_contours=$contours --extra_rob=$extra_robust_gl --min_af_extra_rob=$min_af_extra_rob --min_prop_extra_rob=$min_prop_extra_rob --max_prop_extra_rob=$max_prop_extra_rob --afmin_power=$power_min_af --sigma=$sigma_normal
 
 # Extract the header from the VCF
 sed '/^#CHROM/q' $output_vcf > header.txt
