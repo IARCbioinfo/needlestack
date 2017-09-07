@@ -182,8 +182,8 @@ In other cases (when there is no `--tn_pairs` parameter defined), genotypes are 
 
 1. `--plots`:
 	* `SOMATIC`: produce pdf regression plots (like in the description above) only for somatic variants (option not available in the annotation mode). Default value when using matched tumor/normal.
-	* `ALL`: produce pdf regression plots for all variants. Default value when not using matched tumor/normal.
-	* `NONE`: remove pdf regression plots from the output. Default value when using annotation mode.
+	* `ALL`: produce pdf regression plots for all variants. Default value when not using matched tumor/normal or when using annotation mode.
+	* `NONE`: remove pdf regression plots from the output.
 
 2. `--do_alignments`: To add the alignments plots after the regression plots. If this flag is used, the name of the reference genome (`--genome_release` option) needs to be provided to choose the correct annotation (See *`--genome_release` option* below).
 
