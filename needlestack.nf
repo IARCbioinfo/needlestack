@@ -196,7 +196,7 @@ if(params.input_vcf) {
 
   process annotate_vcf {
 
-    if(!params.no_plots) {
+    if(params.plots) {
           publishDir params.output_folder+'/PDF/', mode: 'move', pattern: '*.pdf'
     }
 
