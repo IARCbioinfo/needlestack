@@ -138,8 +138,8 @@ if(params.input_vcf) {
 
   params.output_folder = "annotated_vcf"
   params.chunk_size = 10000
-  if (params.plots == "ALL") { params.plots = true } else {
-    if (params.plots == "NONE") { params.plots = false } else {println "ERROR: --plots should be defined either as ALL or NONE"; System.exit(0)}
+  if (params.plots == "ALL") { plots = true } else {
+    if (params.plots == "NONE") { plots = false } else {println "ERROR: --plots should be defined either as ALL or NONE"; System.exit(0)}
     }
   input_vcf = file(params.input_vcf)
   params.output_annotated_vcf = null
@@ -196,7 +196,7 @@ if(params.input_vcf) {
 
   process annotate_vcf {
 
-    if(params.plots) {
+    if(plots) {
           publishDir params.output_folder+'/PDF/', mode: 'move', pattern: '*.pdf'
     }
 
@@ -210,7 +210,7 @@ if(params.input_vcf) {
     shell:
     '''
     tabix -p vcf !{svcf}
-    Rscript !{baseDir}/bin/annotate_vcf.r --source_path=!{baseDir}/bin/ --input_vcf=!{svcf} --chunk_size=!{params.chunk_size} --do_plots=!{params.plots} --plot_labels=!{!params.no_labels} --add_contours=!{!params.no_contours} --min_coverage=!{params.min_dp} --min_reads=!{params.min_ao} --GQ_threshold=!{params.min_qval} --extra_rob=!{params.extra_robust_gl} --min_af_extra_rob=!{params.min_af_extra_rob} --min_prop_extra_rob=!{params.min_prop_extra_rob} --max_prop_extra_rob=!{params.max_prop_extra_rob}
+    Rscript !{baseDir}/bin/annotate_vcf.r --source_path=!{baseDir}/bin/ --input_vcf=!{svcf} --chunk_size=!{params.chunk_size} --do_plots=!{plots} --plot_labels=!{!params.no_labels} --add_contours=!{!params.no_contours} --min_coverage=!{params.min_dp} --min_reads=!{params.min_ao} --GQ_threshold=!{params.min_qval} --extra_rob=!{params.extra_robust_gl} --min_af_extra_rob=!{params.min_af_extra_rob} --min_prop_extra_rob=!{params.min_prop_extra_rob} --max_prop_extra_rob=!{params.max_prop_extra_rob}
     '''
   }
 
