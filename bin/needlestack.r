@@ -45,7 +45,7 @@ if("--help" %in% args | is.null(args$out_file) | is.null(args$fasta_ref) ) {
       --output_all_SNVs=boolean      - output all SNVs, even when no variant is detected, default=FALSE
       --do_plots=boolean             - output regression plots, default=TRUE
       --do_alignments=boolean        - output alignment plots, default=FALSE
-      --ref_genome=string            - reference genome for alignments plot, examples : Hsapiens.UCSC.hg19, Hsapiens.UCSC.hg18, Hsapiens.1000genomes.hs37d5, Mmusculus.UCSC.mm10...
+      --ref_genome=string            - reference genome for alignments plot, examples : Hsapiens.UCSC.hg19, Hsapiens.UCSC.hg18, Mmusculus.UCSC.mm10...
       --extra_rob=boolean            - perform an extra-robust regression, default=FALSE
       --min_af_extra_rob=value       - minimum allelic fraction to exclude a sample at a position for extra-robust regression, default=0.2
       --min_prop_extra_rob=value     - minimum proportion of samples having an allelic fraction to be excluded from extra-robust regression, default=0.1
@@ -409,7 +409,7 @@ while(length(line <- readLines(f,n=1, warn = FALSE)) > 0) {
 
             if (do_plots=="ALL") { #output all variants
               if(do_alignments==TRUE){ #add alignment plots
-                if(isTNpairs){
+                if(isTNpairs){ 
                   pdf(paste(linepos[1],"_",linepos[2],"_",linepos[2],"_",ref,"_",alt,ifelse(ref_inv,"_inv_ref",""),ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),11,12)
                   par(mar=c(12,7,12,7))
                 }else{
@@ -420,7 +420,7 @@ while(length(line <- readLines(f,n=1, warn = FALSE)) > 0) {
                 plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(linepos[1]),":",.(linepos[2])," (",.(ref) %->% .(alt),")",.(ifelse(ref_inv," INV REF","")),.(ifelse(reg_res$extra_rob," EXTRA ROBUST","")),sep="")), sbs=sbs, SB_threshold=SB_threshold_SNV,plot_labels=plot_labels,add_contours=add_contours,names=indiv_run[,2])
                 par(mar=c(1,1,1,1))
                 #add alignment plots to the pdf output
-                plotGviz(isTNpairs,sTrack,ref_genome,txdb,annotation,UCSC,indiv_run,linepos,genotype,somatic_status,do_plots,Tindex,Nindex,onlyTindex,onlyNindex,bam_folder)
+                plotGviz(isTNpairs,sTrack,ref_genome,txdb,annotation,indiv_run,linepos,genotype,somatic_status,do_plots,Tindex,Nindex,onlyTindex,onlyNindex,bam_folder)
                 dev.off()
               }else{
                 #output only regression plots
@@ -437,7 +437,7 @@ while(length(line <- readLines(f,n=1, warn = FALSE)) > 0) {
                   plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(linepos[1]),":",.(linepos[2])," (",.(ref) %->% .(alt),")",.(ifelse(ref_inv," INV REF","")),.(ifelse(reg_res$extra_rob," EXTRA ROBUST","")),sep="")), sbs=sbs, SB_threshold=SB_threshold_SNV,plot_labels=plot_labels,add_contours=add_contours,names=indiv_run[,2])
                   par(mar=c(1,1,1,1))
                   #add alignment plots to the pdf output
-                  plotGviz(isTNpairs,sTrack,ref_genome,txdb,annotation,UCSC,indiv_run,linepos,genotype,somatic_status,do_plots,Tindex,Nindex,onlyTindex,onlyNindex,bam_folder)
+                  plotGviz(isTNpairs,sTrack,ref_genome,txdb,annotation,indiv_run,linepos,genotype,somatic_status,do_plots,Tindex,Nindex,onlyTindex,onlyNindex,bam_folder)
                   dev.off()
                 }else{
                   #output only regression plots
@@ -580,7 +580,7 @@ while(length(line <- readLines(f,n=1, warn = FALSE)) > 0) {
                   plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(linepos[1]),":",.(as.numeric(linepos[2]))," (",.(paste(prev_bp,cur_del,sep="")) %->% .(prev_bp),")",.(ifelse(ref_inv," INV REF","")),.(ifelse(reg_res$extra_rob," EXTRA ROBUST","")),sep="")),sbs=sbs, SB_threshold=SB_threshold_indel,plot_labels=plot_labels,add_contours=add_contours,names=indiv_run[,2])
                   par(mar=c(1,1,1,1))
                   #add alignment plots to the pdf output
-                  plotGviz(isTNpairs,sTrack,ref_genome,txdb,annotation,UCSC,indiv_run,linepos,genotype,somatic_status,do_plots,Tindex,Nindex,onlyTindex,onlyNindex,bam_folder)
+                  plotGviz(isTNpairs,sTrack,ref_genome,txdb,annotation,indiv_run,linepos,genotype,somatic_status,do_plots,Tindex,Nindex,onlyTindex,onlyNindex,bam_folder)
                   dev.off()
                 }else{
                   #output only regression plots
@@ -597,7 +597,7 @@ while(length(line <- readLines(f,n=1, warn = FALSE)) > 0) {
                     plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(linepos[1]),":",.(as.numeric(linepos[2]))," (",.(paste(prev_bp,cur_del,sep="")) %->% .(prev_bp),")",.(ifelse(ref_inv," INV REF","")),.(ifelse(reg_res$extra_rob," EXTRA ROBUST","")),sep="")),sbs=sbs, SB_threshold=SB_threshold_indel,plot_labels=plot_labels,add_contours=add_contours,names=indiv_run[,2])
                     par(mar=c(1,1,1,1))
                     #add alignment plots to the pdf output
-                    plotGviz(isTNpairs,sTrack,ref_genome,txdb,annotation,UCSC,indiv_run,linepos,genotype,somatic_status,do_plots,Tindex,Nindex,onlyTindex,onlyNindex,bam_folder)
+                    plotGviz(isTNpairs,sTrack,ref_genome,txdb,annotation,indiv_run,linepos,genotype,somatic_status,do_plots,Tindex,Nindex,onlyTindex,onlyNindex,bam_folder)
                     dev.off()
                   }else{
                     #output only regression plots
@@ -742,7 +742,7 @@ while(length(line <- readLines(f,n=1, warn = FALSE)) > 0) {
                   plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(linepos[1]),":",.(linepos[2])," (",.(prev_bp) %->% .(paste(prev_bp,cur_ins,sep="")),")",.(ifelse(ref_inv," INV REF","")),.(ifelse(reg_res$extra_rob," EXTRA ROBUST","")),sep="")),sbs=sbs, SB_threshold=SB_threshold_indel,plot_labels=plot_labels,add_contours=add_contours,names=indiv_run[,2])
                   par(mar=c(1,1,1,1))
                   #add alignment plots to the pdf output
-                  plotGviz(isTNpairs,sTrack,ref_genome,txdb,annotation,UCSC,indiv_run,linepos,genotype,somatic_status,do_plots,Tindex,Nindex,onlyTindex,onlyNindex,bam_folder)
+                  plotGviz(isTNpairs,sTrack,ref_genome,txdb,annotation,indiv_run,linepos,genotype,somatic_status,do_plots,Tindex,Nindex,onlyTindex,onlyNindex,bam_folder)
                   dev.off()
                 }else{
                   #output only regression plots
@@ -759,7 +759,7 @@ while(length(line <- readLines(f,n=1, warn = FALSE)) > 0) {
                     plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(linepos[1]),":",.(linepos[2])," (",.(prev_bp) %->% .(paste(prev_bp,cur_ins,sep="")),")",.(ifelse(ref_inv," INV REF","")),.(ifelse(reg_res$extra_rob," EXTRA ROBUST","")),sep="")),sbs=sbs, SB_threshold=SB_threshold_indel,plot_labels=plot_labels,add_contours=add_contours,names=indiv_run[,2])
                     par(mar=c(1,1,1,1))
                     #add alignment plots to the pdf output
-                    plotGviz(isTNpairs,sTrack,ref_genome,txdb,annotation,UCSC,indiv_run,linepos,genotype,somatic_status,do_plots,Tindex,Nindex,onlyTindex,onlyNindex,bam_folder)
+                    plotGviz(isTNpairs,sTrack,ref_genome,txdb,annotation,indiv_run,linepos,genotype,somatic_status,do_plots,Tindex,Nindex,onlyTindex,onlyNindex,bam_folder)
                     dev.off()
                   }else{
                     #output only regression plots

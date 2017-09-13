@@ -55,7 +55,7 @@ if (params.tn_pairs != "FALSE") { try { assert file(params.tn_pairs).exists() : 
 pairs_file = file(params.tn_pairs)
 
 if (params.tn_pairs != "FALSE") {
-  params.plots = "SOMATIC"  // produce pdf plots of regressions for somatic variants
+  if(!params.input_vcf) { params.plots = "SOMATIC" }  // produce pdf plots of regressions for somatic variants, except if annotation mode
 }else {
   params.plots = "ALL" // produce pdf plots of regressions for all variants
 }
@@ -106,9 +106,9 @@ if (params.help) {
     log.info '    --tn_pairs       	TEXT FILE                A tab-delimited file containing two columns (normal and tumor sample name) for each sample in line.'
     log.info '    --genome_release 	VALUE                    Reference genome for alignments plot'
     log.info '    --plots          	VALUE                    Output PDF regression plots.'
-    log.info '    --min_af_extra_rob	VALUE                    Minimum allelic fraction to exclude a sample at a position for extra-robust regression.'	
-    log.info '    --min_prop_extra_rob	VALUE                    Minimum proportion of samples having an allelic fraction to be excluded from extra-robust regression.'	
-    log.info '    --mAX_prop_extra_rob	VALUE                    Maximum proportion of samples having an allelic fraction to be excluded from extra-robust regression.'	
+    log.info '    --min_af_extra_rob	VALUE                    Minimum allelic fraction to exclude a sample at a position for extra-robust regression.'
+    log.info '    --min_prop_extra_rob	VALUE                    Minimum proportion of samples having an allelic fraction to be excluded from extra-robust regression.'
+    log.info '    --mAX_prop_extra_rob	VALUE                    Maximum proportion of samples having an allelic fraction to be excluded from extra-robust regression.'
     log.info 'Flags:'
     log.info '    --use_file_name                           	Sample names are taken from file names, otherwise extracted from the bam file SM tag.'
     log.info '    --all_SNVs                               	Output all SNVs, even when no variant found.'
@@ -138,6 +138,9 @@ if(params.input_vcf) {
 
   params.output_folder = "annotated_vcf"
   params.chunk_size = 10000
+  if (params.plots == "ALL") { plots = true } else {
+    if (params.plots == "NONE") { plots = false } else {println "ERROR: --plots should be defined either as ALL or NONE"; System.exit(0)}
+    }
   input_vcf = file(params.input_vcf)
   params.output_annotated_vcf = null
   output_annotated_vcf = params.output_annotated_vcf ? params.output_annotated_vcf : "annotated.vcf"
@@ -193,7 +196,7 @@ if(params.input_vcf) {
 
   process annotate_vcf {
 
-    if(!params.no_plots) {
+    if(plots) {
           publishDir params.output_folder+'/PDF/', mode: 'move', pattern: '*.pdf'
     }
 
@@ -207,7 +210,7 @@ if(params.input_vcf) {
     shell:
     '''
     tabix -p vcf !{svcf}
-    Rscript !{baseDir}/bin/annotate_vcf.r --source_path=!{baseDir}/bin/ --input_vcf=!{svcf} --chunk_size=!{params.chunk_size} --do_plots=!{params.plots} --plot_labels=!{!params.no_labels} --add_contours=!{!params.no_contours} --min_coverage=!{params.min_dp} --min_reads=!{params.min_ao} --GQ_threshold=!{params.min_qval} --extra_rob=!{params.extra_robust_gl} --min_af_extra_rob=!{params.min_af_extra_rob} --min_prop_extra_rob=!{params.min_prop_extra_rob} --max_prop_extra_rob=!{params.max_prop_extra_rob}
+    Rscript !{baseDir}/bin/annotate_vcf.r --source_path=!{baseDir}/bin/ --input_vcf=!{svcf} --chunk_size=!{params.chunk_size} --do_plots=!{plots} --plot_labels=!{!params.no_labels} --add_contours=!{!params.no_contours} --min_coverage=!{params.min_dp} --min_reads=!{params.min_ao} --GQ_threshold=!{params.min_qval} --extra_rob=!{params.extra_robust_gl} --min_af_extra_rob=!{params.min_af_extra_rob} --min_prop_extra_rob=!{params.min_prop_extra_rob} --max_prop_extra_rob=!{params.max_prop_extra_rob}
     '''
   }
 

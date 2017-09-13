@@ -31,14 +31,14 @@ if(do_alignments==TRUE){
   options(ucscChromosomeNames=FALSE) #in case some chromosome names are not recognized as UCSC chromosome names
 
 
-  #read ref genome
+  #read fasta
   library(Biostrings)
   ref=readDNAStringSet(fasta_ref)
   sTrack<-SequenceTrack(ref,cex=0.6)
 }
 
-#get UCSC chromosome correspondances
-get_UCSC_correpondance<- function(chr,ref_genome){
+#get UCSC chromosome associations
+get_UCSC_associations<- function(chr,ref_genome){
   convert_table=read.table(paste(source_path,paste0(unlist(strsplit(ref_genome,"[.]"))[3],"_chromosomeNames2UCSC.txt"),sep=""),head=FALSE,fill = TRUE)
   if(length(which(convert_table$V1==chr))==0){
     return("")
@@ -48,7 +48,7 @@ get_UCSC_correpondance<- function(chr,ref_genome){
 }
 
 #create alignments tracks
-get_htTrack <- function(isTNpairs,i,Tindex,Nindex,onlyTindex,onlyNindex,indiv_run,bam_folder,plot_grtracks,UCSC,sTrack,grtrack,chr,pos,paired=FALSE){
+get_htTrack <- function(isTNpairs,i,Tindex,Nindex,onlyTindex,onlyNindex,indiv_run,bam_folder,plot_grtracks,sTrack,grtrack,chr,pos,paired=FALSE){
   no_plot=NULL
   tryCatch(
     {
@@ -139,13 +139,13 @@ check_pair_repetition <- function(s,Tindex,Nindex){
 }
 
 #plot alignments
-plotGviz <- function(isTNpairs,sTrack,ref_genome,txdb,annotation,UCSC,indiv_run,linepos,genotype,somatic_status,do_plots,Tindex,Nindex,onlyTindex,onlyNindex,bam_folder,w=50,w_zoomout=1000,paired=FALSE,nb_toplot=5){
+plotGviz <- function(isTNpairs,sTrack,ref_genome,txdb,annotation,indiv_run,linepos,genotype,somatic_status,do_plots,Tindex,Nindex,onlyTindex,onlyNindex,bam_folder,w=50,w_zoomout=1000,paired=FALSE,nb_toplot=5){
   chr=linepos[1]
   pos=as.numeric(linepos[2])
   #select samples with the variant
-  if(do_plots=="SOMATIC"){ #select only the sample with a somatic variant
+  if(do_plots=="SOMATIC"){ #select only the samples with a somatic variant
     samples_with_var=which(somatic_status=="SOMATIC")
-    samples_with_var = check_pair_repetition(samples_with_var,Tindex,Nindex) #remove repetitions
+    samples_with_var = check_pair_repetition(samples_with_var,Tindex,Nindex) #remove repetitions 
     samples_without_var=vector()
   }else{
     samples_with_var=which((genotype=="0/1")|(genotype=="1/1"))
@@ -154,7 +154,7 @@ plotGviz <- function(isTNpairs,sTrack,ref_genome,txdb,annotation,UCSC,indiv_run,
     if(isTNpairs){samples_without_var = check_pair_repetition(samples_without_var,Tindex,Nindex)} #remove repetitions
   }
 
-  chr_annotation=get_UCSC_correpondance(chr,ref_genome)
+  chr_annotation=get_UCSC_associations(chr,ref_genome)
   if(chr_annotation==""){
     only_alignment=TRUE
   }else{
@@ -199,7 +199,7 @@ plotGviz <- function(isTNpairs,sTrack,ref_genome,txdb,annotation,UCSC,indiv_run,
             symbol(grtrack_zoomout) <- symbols[gene(grtrack_zoomout)]
           }
           plot_grtracks=TRUE
-        }else{ #genome annotation can not be added if non UCSC genome
+        }else{ 
           plot_grtracks=FALSE
         }
         if(length(unique(gene(grtrack_zoomout)))>=6){
@@ -226,7 +226,7 @@ plotGviz <- function(isTNpairs,sTrack,ref_genome,txdb,annotation,UCSC,indiv_run,
     for(i in samples_with_var){
 
       if(only_alignment=="FALSE"){
-        res=get_htTrack(isTNpairs,i,Tindex,Nindex,onlyTindex,onlyNindex,indiv_run,bam_folder,plot_grtracks,UCSC,sTrack,grtrack,chr,pos,paired) #create alignments tracks
+        res=get_htTrack(isTNpairs,i,Tindex,Nindex,onlyTindex,onlyNindex,indiv_run,bam_folder,plot_grtracks,sTrack,grtrack,chr,pos,paired) #create alignments tracks
         if(res[3]==FALSE){
           if(plot_grtracks){
             tryCatch(
@@ -251,7 +251,7 @@ plotGviz <- function(isTNpairs,sTrack,ref_genome,txdb,annotation,UCSC,indiv_run,
           }
         }
       }else {
-        res=get_htTrack(isTNpairs,i,Tindex,Nindex,onlyTindex,onlyNindex,indiv_run,bam_folder,plot_grtracks,UCSC,sTrack,grtrack,chr,pos,paired) #create alignments tracks
+        res=get_htTrack(isTNpairs,i,Tindex,Nindex,onlyTindex,onlyNindex,indiv_run,bam_folder,plot_grtracks,sTrack,grtrack,chr,pos,paired) #create alignments tracks
         if(res[3]==FALSE){
           tryCatch(
             {
@@ -274,7 +274,7 @@ plotGviz <- function(isTNpairs,sTrack,ref_genome,txdb,annotation,UCSC,indiv_run,
 
       for(i in samples_without_var_toplot){
         if(plot_grtracks){
-          res=get_htTrack(isTNpairs,i,Tindex,Nindex,onlyTindex,onlyNindex,indiv_run,bam_folder,plot_grtracks,UCSC,sTrack,grtrack,chr,pos,paired) #create alignments tracks
+          res=get_htTrack(isTNpairs,i,Tindex,Nindex,onlyTindex,onlyNindex,indiv_run,bam_folder,plot_grtracks,sTrack,grtrack,chr,pos,paired) #create alignments tracks
           if(res[3]==FALSE){
             if(plot_grtracks){
               tryCatch(
@@ -289,7 +289,7 @@ plotGviz <- function(isTNpairs,sTrack,ref_genome,txdb,annotation,UCSC,indiv_run,
                 },
                 error=function(e) print(paste0("Warning: error for this AlignmentsPlot : chr -> ",chr," pos -> ",pos," sample* -> ",indiv_run[i,2]))
               )
-            }else{
+            }else{ #plot without annotations
               tryCatch(
                 {
                   plotTracks(c(ideoTrack,gtrack,res[1]),sizes=unlist(res[2]),from = pos-w, to = pos+w,add53=TRUE,min.height=4, main=paste0(indiv_run[i,2],"*"),title.width=0.7,littleTicks = TRUE,cex.main=1.5)
@@ -298,8 +298,8 @@ plotGviz <- function(isTNpairs,sTrack,ref_genome,txdb,annotation,UCSC,indiv_run,
               )
             }
           }
-        }else if(only_alignment){
-          res=get_htTrack(isTNpairs,i,Tindex,Nindex,onlyTindex,onlyNindex,indiv_run,bam_folder,plot_grtracks,UCSC,sTrack,grtrack,chr,pos,paired) #create alignments tracks
+        }else if(only_alignment){ #plot without annotations and chromosome representation
+          res=get_htTrack(isTNpairs,i,Tindex,Nindex,onlyTindex,onlyNindex,indiv_run,bam_folder,plot_grtracks,sTrack,grtrack,chr,pos,paired) #create alignments tracks
           if(res[3]==FALSE){
             tryCatch(
               {
