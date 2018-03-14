@@ -295,8 +295,8 @@ if(params.input_vcf) {
       if (file(params.bam_folder).listFiles().findAll { it.name ==~ /.*bam/ }.size() < 10) { println "\n ERROR : BAM folder contains less than 10 BAM, exit."; System.exit(1) }
       else if (file(params.bam_folder).listFiles().findAll { it.name ==~ /.*bam/ }.size() < 20) { println "\n WARNING : BAM folder contains less than 20 BAM, method accuracy not warranted." }
       bamID = file(params.bam_folder).listFiles().findAll { it.name ==~ /.*bam/ }.collect { it.getName() }.collect { it.replace('.bam','') }
-      baiID = file(params.bam_folder).listFiles().findAll { it.name ==~ /.*bam.bai/ }.collect { it.getName() }.collect { it.replace('.bam.bai','') }
-      assert baiID.containsAll(bamID) : "check that every bam file has an index (.bam.bai)"
+      baiID = file(params.bam_folder).listFiles().findAll { it.name ==~ /.*bai/ }.collect { it.getName() }.collect { it.replace('.bai','').replace('.bam','') }
+      assert baiID.containsAll(bamID) : "check that every bam file has an index (.bai)"
   }
   assert (params.min_dp >= 0) : "minimum coverage must be higher than or equal to 0 (--min_dp)"
   assert (params.max_dp > 1) : "maximum coverage before downsampling must be higher than 1 (--max_dp)"
@@ -373,7 +373,7 @@ if(params.input_vcf) {
   log.info "\n"
 
   bam = Channel.fromPath( params.bam_folder+'/*.bam' ).collect()
-  bai = Channel.fromPath( params.bam_folder+'/*.bam.bai' ).collect()
+  bai = Channel.fromPath( params.bam_folder+'/*.bai' ).collect()
 
   /* Building the bed file where calling would be done */
   process bed {
