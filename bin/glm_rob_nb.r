@@ -24,7 +24,7 @@ glmrob.nb <- function(y,x,bounding.func='T/T',c.tukey.beta=5,c.tukey.sig=3,c.by.
     x_not_in_reg = x[which( (y/x) > min_af_extra_rob)]
     y_not_in_reg = y[which( (y/x) > min_af_extra_rob)]
     pos_not_in_reg = which( (y/x) > min_af_extra_rob)
-    if(sum(!(1:length(x) %in% pos_not_in_reg))>size_min){ #if not enought samples after removing, do not perform extra-robust regression
+    if(sum(!(1:length(x) %in% pos_not_in_reg))>size_min){ #if not enought samples after removing, do not perform extra-robust  regression
       x = x[!(1:length(x) %in% pos_not_in_reg)]
       y = y[!(1:length(y) %in% pos_not_in_reg)]
     } else {extra_rob_out = FALSE}
