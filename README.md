@@ -63,7 +63,7 @@ To use needlestack without nextflow, in addition to the previous tools, download
 ## Input
 | Type      | Description     |
 |-----------|---------------|
-| [BAM files](https://samtools.github.io/hts-specs/)  | BAM files (called `*.bam`) grouped in a single folder or described in a text file (one BAM path per line) along with their [index files](http://www.htslib.org/doc/samtools.html) (called `*.bam.bai`). A minimum of 20 BAM files is recommended. |
+| [BAM files](https://samtools.github.io/hts-specs/)  | BAM files (called `*.bam`) grouped in a single folder or described in a text file (one BAM path per line) along with their [index files](http://www.htslib.org/doc/samtools.html) (called `*.bam.bai` or `*.bai`). A minimum of 20 BAM files is recommended. |
 | [fasta file](https://en.wikipedia.org/wiki/FASTA_format)  |A reference fasta file (eventually compressed with [bgzip](http://www.htslib.org/doc/tabix.html)) along with its [faidx index](http://www.htslib.org/doc/faidx.html) (and `*.gzi` faidx index if compressed). |
 | [bed file](https://genome.ucsc.edu/FAQ/FAQformat.html#format1) | Optional input file. Otherwise the variant calling is performed on the whole reference provided.|
 
