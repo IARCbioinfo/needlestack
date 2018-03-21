@@ -18,6 +18,7 @@ Needlestack development is support by the US National Cancer Institute (grant nu
 
 ## WARNING
 Since the last release, we have harmonized our [pipelines](https://github.com/IARCbioinfo/IARC-nf) and the following option names changed:
+- `bam_folder` is now `input_bams` and accepts text file  
 - `fasta_ref` is now `ref`
 - `max_DP` is now `max_dp`
 - `out_folder` is now `output_folder`
