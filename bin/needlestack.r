@@ -574,10 +574,10 @@ while(length(line <- readLines(f,n=1, warn = FALSE)) > 0) {
                   # deletions are shifted in samtools mpileup by 1bp, so put them at the right place by adding + to pos_ref[i,"loc"] everywhere in what follows
 
                   if(isTNpairs){
-                    pdf(paste(linepos[1],"_",linepos[2]+1,"_",as.numeric(linepos[2])+nchar(cur_del)-1,"_",cur_del,"_","-",ifelse(ref_inv,"_inv_ref",""),ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),11,12)
+                    pdf(paste(linepos[1],"_",as.numeric(linepos[2])+1,"_",as.numeric(linepos[2])+nchar(cur_del)-1,"_",cur_del,"_","-",ifelse(ref_inv,"_inv_ref",""),ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),11,12)
                     par(mar=c(12,7,12,7))
                   }else{
-                    pdf(paste(linepos[1],"_",linepos[2]+1,"_",as.numeric(linepos[2])+nchar(cur_del)-1,"_",cur_del,"_","-",ifelse(ref_inv,"_inv_ref",""),ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),9,8)
+                    pdf(paste(linepos[1],"_",as.numeric(linepos[2])+1,"_",as.numeric(linepos[2])+nchar(cur_del)-1,"_",cur_del,"_","-",ifelse(ref_inv,"_inv_ref",""),ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),9,8)
                     par(mar=c(8,7,8,7))
                   }
                   #add regression plots to the pdf output
@@ -588,14 +588,14 @@ while(length(line <- readLines(f,n=1, warn = FALSE)) > 0) {
                   dev.off()
                 }else{
                   #output only regression plots
-                  pdf(paste(linepos[1],"_",linepos[2]+1,"_",as.numeric(linepos[2])+nchar(cur_del)-1,"_",cur_del,"_","-",ifelse(ref_inv,"_inv_ref",""),ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),7,6)
+                  pdf(paste(linepos[1],"_",as.numeric(linepos[2])+1,"_",as.numeric(linepos[2])+nchar(cur_del)-1,"_",cur_del,"_","-",ifelse(ref_inv,"_inv_ref",""),ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),7,6)
                   plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(linepos[1]),":",.(as.numeric(linepos[2]))," (",.(cur_del) %->% "-)",.(ifelse(ref_inv," INV REF","")),.(ifelse(reg_res$extra_rob," EXTRA ROBUST","")),sep="")),sbs=sbs, SB_threshold=SB_threshold_indel,plot_labels=plot_labels,add_contours=add_contours,names=indiv_run[,2])
                   dev.off()
                 }
               }else if(do_plots=="SOMATIC"){ #output only somatic variants
                 if("SOMATIC" %in% somatic_status){
                   if(do_alignments==TRUE){ #add alignment plots
-                    pdf(paste(linepos[1],"_",linepos[2]+1,"_",as.numeric(linepos[2])+nchar(cur_del)-1,"_",cur_del,"_","-",ifelse(ref_inv,"_inv_ref",""),ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),11,12)
+                    pdf(paste(linepos[1],"_",as.numeric(linepos[2])+1,"_",as.numeric(linepos[2])+nchar(cur_del)-1,"_",cur_del,"_","-",ifelse(ref_inv,"_inv_ref",""),ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),11,12)
                     par(mar=c(12,7,12,7))
                     #add regression plots to the pdf output
                     plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(linepos[1]),":",.(as.numeric(linepos[2]))," (",.(cur_del) %->% "-)",.(ifelse(ref_inv," INV REF","")),.(ifelse(reg_res$extra_rob," EXTRA ROBUST","")),sep="")),sbs=sbs, SB_threshold=SB_threshold_indel,plot_labels=plot_labels,add_contours=add_contours,names=indiv_run[,2])
@@ -605,7 +605,7 @@ while(length(line <- readLines(f,n=1, warn = FALSE)) > 0) {
                     dev.off()
                   }else{
                     #output only regression plots
-                    pdf(paste(linepos[1],"_",linepos[2]+1,"_",as.numeric(linepos[2])+nchar(cur_del)-1,"_",cur_del,"_","-",ifelse(ref_inv,"_inv_ref",""),ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),7,6)
+                    pdf(paste(linepos[1],"_",as.numeric(linepos[2])+1,"_",as.numeric(linepos[2])+nchar(cur_del)-1,"_",cur_del,"_","-",ifelse(ref_inv,"_inv_ref",""),ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),7,6)
                     plot_rob_nb(reg_res, 10^-(GQ_threshold/10), plot_title=bquote(paste(.(linepos[1]),":",.(as.numeric(linepos[2]))," (",.(cur_del) %->% "-)",.(ifelse(ref_inv," INV REF","")),.(ifelse(reg_res$extra_rob," EXTRA ROBUST","")),sep="")),sbs=sbs, SB_threshold=SB_threshold_indel,plot_labels=plot_labels,add_contours=add_contours,names=indiv_run[,2])
                     dev.off()
                   }
