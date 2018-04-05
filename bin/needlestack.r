@@ -565,8 +565,8 @@ while(length(line <- readLines(f,n=1, warn = FALSE)) > 0) {
 
               cat("\n",sep = "",file=out_file,append=T)
 
-              if(!ref_inv & nchar(cur_del)>50) cur_del = cur_ins = paste("INS",nchar(cur_ins),sep="") #paste(substr(cur_del,1,5+match(cur_del,uniq_del)),substr(cur_del,nchar(cur_del)-(5+match(cur_del,uniq_del)),nchar(cur_del)),sep="...")
-              if(ref_inv & nchar(ref)>50) ref = cur_ins = paste("INS",nchar(ref),sep="") #paste(substr(ref,1,5+match(ref,uniq_del)),substr(ref,nchar(ref)-(5+match(ref,uniq_del)),nchar(ref)),sep="...")
+              if(!ref_inv & nchar(cur_del)>50) cur_del = paste("DEL",nchar(cur_del),sep="") #paste(substr(cur_del,1,5+match(cur_del,uniq_del)),substr(cur_del,nchar(cur_del)-(5+match(cur_del,uniq_del)),nchar(cur_del)),sep="...")
+              if(ref_inv & nchar(ref)>50) ref = paste("DEL",nchar(ref),sep="") #paste(substr(ref,1,5+match(ref,uniq_del)),substr(ref,nchar(ref)-(5+match(ref,uniq_del)),nchar(ref)),sep="...")
 
               if (do_plots=="ALL") { #output all variants
                 if(do_alignments==TRUE){ #add alignment plots
