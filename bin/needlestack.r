@@ -565,13 +565,13 @@ while(length(line <- readLines(f,n=1, warn = FALSE)) > 0) {
 
               cat("\n",sep = "",file=out_file,append=T)
 
+              if(!ref_inv & nchar(cur_del)>50) cur_del = cur_ins = paste("INS",nchar(cur_ins),sep="") #paste(substr(cur_del,1,5+match(cur_del,uniq_del)),substr(cur_del,nchar(cur_del)-(5+match(cur_del,uniq_del)),nchar(cur_del)),sep="...")
+              if(ref_inv & nchar(ref)>50) ref = cur_ins = paste("INS",nchar(ref),sep="") #paste(substr(ref,1,5+match(ref,uniq_del)),substr(ref,nchar(ref)-(5+match(ref,uniq_del)),nchar(ref)),sep="...")
 
               if (do_plots=="ALL") { #output all variants
                 if(do_alignments==TRUE){ #add alignment plots
 
                   # deletions are shifted in samtools mpileup by 1bp, so put them at the right place by adding + to pos_ref[i,"loc"] everywhere in what follows
-                  if(!ref_inv & nchar(cur_del)>50) cur_del = paste(substr(cur_del,1,5+match(cur_del,uniq_del)),substr(cur_del,nchar(cur_del)-(5+match(cur_del,uniq_del)),nchar(cur_del)),sep="...")
-                  if(ref_inv & nchar(ref)>50) ref = paste(substr(ref,1,5+match(ref,uniq_del)),substr(ref,nchar(ref)-(5+match(ref,uniq_del)),nchar(ref)),sep="...")
 
                   if(isTNpairs){
                     pdf(paste(linepos[1],"_",linepos[2],"_",as.numeric(linepos[2])+nchar(cur_del)-1,"_",paste(prev_bp,cur_del,sep=""),"_",prev_bp,ifelse(ref_inv,"_inv_ref",""),ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),11,12)
@@ -728,12 +728,12 @@ while(length(line <- readLines(f,n=1, warn = FALSE)) > 0) {
 
               cat("\n",sep = "",file=out_file,append=T)
 
+              if(!ref_inv & nchar(cur_ins)>50) cur_ins = paste("INS",nchar(cur_ins),sep="") #paste(substr(cur_ins,1,5+match(cur_ins,uniq_ins)),substr(cur_ins,nchar(cur_ins)-(5+match(cur_ins,uniq_ins)),nchar(cur_ins)),sep="...")
+              if(ref_inv & nchar(ref)>50) ref = paste("INS",nchar(ref),sep="") #paste(substr(ref,1,5+match(ref,uniq_ins)),substr(ref,nchar(ref)-(5+match(ref,uniq_ins)),nchar(ref)),sep="...")
+
               if (do_plots=="ALL") { #output all variants
 
                 if(do_alignments==TRUE){ #add alignment plots
-
-                  if(!ref_inv & nchar(cur_ins)>50) cur_ins = paste(substr(cur_ins,1,5+match(cur_ins,uniq_ins)),substr(cur_ins,nchar(cur_ins)-(5+match(cur_ins,uniq_ins)),nchar(cur_ins)),sep="...")
-                  if(ref_inv & nchar(ref)>50) ref = paste(substr(ref,1,5+match(ref,uniq_ins)),substr(ref,nchar(ref)-(5+match(ref,uniq_ins)),nchar(ref)),sep="...")
 
                   if(isTNpairs){
                     pdf(paste(linepos[1],"_",linepos[2],"_",as.numeric(linepos[2]),"_",prev_bp,"_",paste(prev_bp,cur_ins,sep=""),ifelse(ref_inv,"_inv_ref",""),ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),11,12)
