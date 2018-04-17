@@ -86,8 +86,9 @@ Type `--help` to get the full list of options. All parameters are prefixed with 
 
 | Name      | Default value | Description     |
 |-----------|---------------|-----------------|
-| `min_dp`    |            `30` | Minimum median coverage to consider a site. In addition, at least 10 samples have to be covered by `min_dp`. |
-| `min_ao` | `3` | Minimum number of non-ref reads in at least one sample to consider a site |
+| `min_dp` \*    |            `30` | Minimum median coverage to consider a site. In addition, at least 10 samples have to be covered by `min_dp`. |
+| `min_ao` \*| `3` | Minimum number of non-ref reads in at least one sample to consider a site |
+| `min_af` \* | `0` | Minimum allelic fraction in at least one sample to consider a site |
 | `nsplit` | `1` | Split the bed file in nsplit pieces and run in parallel |
 | `min_qval` | `50` | qvalue threshold in [Phred scale](https://en.wikipedia.org/wiki/Phred_quality_score) to consider a variant |
 | `sb_type` | `SOR` | Strand bias measure, either `SOR`, `RVSB` or `FS` |
@@ -107,6 +108,7 @@ Type `--help` to get the full list of options. All parameters are prefixed with 
 | `min_prop_extra_rob` | `0.1` | Minimum proportion of samples having an allelic fraction to be excluded from extra-robust regression |
 | `max_prop_extra_rob` | `0.5` | Maximum proportion of samples having an allelic fraction to be excluded from extra-robust regression |
 
+\* min_dp, min_ao and min_af options filter out positions for which none of the samples reaches the fixed threshold. For example, at a position, if only one sample has an allelic fraction higher than min_af, the position is retained and lower allelic fractions will appear in the VCF file because of the other samples.  
 
 By default, if neither `--bed` nor `--region` are provided, needlestack runs on the whole reference genome provided, building a bed file from fasta index.
 If `--bed` and `--region` are both provided, it runs on the region only.
