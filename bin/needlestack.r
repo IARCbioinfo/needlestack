@@ -86,7 +86,7 @@ if(is.null(args$add_contours)) {args$add_contours=FALSE} else {args$add_contours
 if(is.null(args$extra_rob)) {args$extra_rob=FALSE} else {args$extra_rob=as.logical(args$extra_rob)}
 if(is.null(args$min_af_extra_rob)) {args$min_af_extra_rob=0.2} else {args$min_af_extra_rob=as.numeric(args$min_af_extra_rob)}
 if(is.null(args$min_prop_extra_rob)) {args$min_prop_extra_rob=0.1} else {args$min_prop_extra_rob=as.numeric(args$min_prop_extra_rob)}
-if(is.null(args$max_prop_extra_rob)) {args$max_prop_extra_rob=0.5} else {args$max_prop_extra_rob=as.numeric(args$max_prop_extra_rob)}
+if(is.null(args$max_prop_extra_rob)) {args$max_prop_extra_rob=0.8} else {args$max_prop_extra_rob=as.numeric(args$max_prop_extra_rob)}
 if(is.null(args$afmin_power)) {args$afmin_power=-1} else {args$afmin_power=as.numeric(args$afmin_power)}
 if(is.null(args$sigma)) {args$sigma=0.1} else {args$sigma=as.numeric(args$sigma)}
 
