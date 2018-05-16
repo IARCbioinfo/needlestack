@@ -96,7 +96,7 @@ Type `--help` to get the full list of options. All parameters are prefixed with 
 | `sb_indel` | `100` or `1000` | Strand bias threshold for indels. The default of 100 (1000 if `sb_type` is `FS`) means no filter|
 | `map_qual` | `0` | Min mapping quality (passed to `samtools`) |
 | `base_qual` | `13` | Min base quality (passed to `samtools`) |
-| `max_dp` | `30000` | Downsample coverage per sample (passed to `samtools`) |
+| `max_dp` | `50000` | Downsample coverage per sample (passed to `samtools`) |
 | `plots` | `SOMATIC` if `tn_pairs` provided, `ALL` if not | Creates pdf plots of regressions in the output. To remove plots set `--plots` to `NONE` (See *Plot options* paragraph).|
 | `genome_release` |  - | Reference genome for the annotions on the alignments plots. Examples: *`Hsapiens.UCSC.hg19`*, *`Hsapiens.UCSC.hg18`*, *`Hsapiens.UCSC.hg38`*, *`Mmusculus.UCSC.mm10`*. The right terminology is described below (*Plot options* paragraph). WARNING: this option is mandatory if the `--do_alignments` flag is used|
 | `output_folder` | --bam_folder | Output folder, by default equals to the input bam folder |
