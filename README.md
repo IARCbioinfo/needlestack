@@ -108,7 +108,7 @@ Type `--help` to get the full list of options. All parameters are prefixed with 
 | `min_prop_extra_rob` | `0.1` | Minimum proportion of samples having an allelic fraction to be excluded from extra-robust regression |
 | `max_prop_extra_rob` | `0.8` | Maximum proportion of samples having an allelic fraction to be excluded from extra-robust regression |
 
-\* min_dp, min_ao and min_af options filter out positions for which none of the samples reaches the fixed threshold. For example, at a position, if only one sample has an allelic fraction higher than min_af, the position is retained and lower allelic fractions will appear in the VCF file because of the other samples.  
+\* Caution: *min_dp*, *min_ao* and *min_af* are `position-based` filters.  
 
 By default, if neither `--bed` nor `--region` are provided, needlestack runs on the whole reference genome provided, building a bed file from fasta index.
 If `--bed` and `--region` are both provided, it runs on the region only.
