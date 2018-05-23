@@ -27,6 +27,7 @@ params.output_annotated_vcf = null
 params.genome_release = null
 params.min_dp = 30 // minimum median coverage to consider a site
 params.min_ao = 3 // minimum number of non-ref reads in at least one sample to consider a site
+params.min_af = 0 // minimum AF in at least one sample to consider a site
 params.nsplit = 1 // split the positions for calling in nsplit pieces and run in parallel
 params.min_qval = 50 // qvalue in Phred scale to consider a variant
 params.sb_type = "SOR" // strand bias measure to be used: "SOR" or "RVSB"
@@ -79,10 +80,10 @@ if (params.help) {
     log.info '--------------------------------------------------------'
     log.info ''
     log.info 'Usage: '
-    log.info '    nextflow run iarcbioinfo/needlestack [-with-docker] --bed bedfile.bed --bam_folder BAM/ --ref reference.fasta --output_vcf VCF_name.vcf [other options]'
+    log.info '    nextflow run iarcbioinfo/needlestack [-with-docker] --bed bedfile.bed --input_bams BAM/ --ref reference.fasta --output_vcf VCF_name.vcf [other options]'
     log.info ''
     log.info 'Mandatory arguments:'
-    log.info '    --bam_folder     	BAM_DIR                  BAM files directory.'
+    log.info '    --input_bams     	BAM                      BAM files directory or text file containing BAM paths in lines.'
     log.info '    --ref            	REF_IN_FASTA             Reference genome in fasta format.'
     log.info '    --output_vcf     	VCF FILE NAME            Name of the VCF file (output file).'
     log.info '    OR '
@@ -91,6 +92,7 @@ if (params.help) {
     log.info '    --nsplit         	INTEGER                  Split the region for calling in nsplit pieces and run in parallel.'
     log.info '    --min_dp         	INTEGER                  Minimum median coverage (in addition, min_dp in at least 10 samples).'
     log.info '    --min_ao         	INTEGER                  Minimum number of non-ref reads in at least one sample to consider a site.'
+    log.info '    --min_af         	INTEGER                  Minimum AF in at least one sample to consider a site.'
     log.info '    --min_qval       	VALUE                    Qvalue in Phred scale to consider a variant.'
     log.info '    --sb_type        	SOR or RVSB              Strand bias measure.'
     log.info '    --sb_snv         	VALUE                    Strand bias threshold for SNVs.'
@@ -153,6 +155,7 @@ if(params.input_vcf) {
   log.info "To consider a site for calling:"
   log.info "     minimum median coverage (--min_dp)                         : ${params.min_dp}"
   log.info "     minimum of alternative reads (--min_ao)                    : ${params.min_ao}"
+  log.info "     minimum AF (--min_af)                                      : ${params.min_af}"
   log.info "Phred-scale qvalue threshold (--min_qval)                       : ${params.min_qval}"
   log.info "Size of read chunks by VariantAnnotation (--chunk_size)         : ${params.chunk_size}"
   log.info "Output annotated file (--output_annotated_vcf)                  : ${output_annotated_vcf}"
@@ -210,7 +213,7 @@ if(params.input_vcf) {
     shell:
     '''
     tabix -p vcf !{svcf}
-    Rscript !{baseDir}/bin/annotate_vcf.r --source_path=!{baseDir}/bin/ --input_vcf=!{svcf} --chunk_size=!{params.chunk_size} --do_plots=!{plots} --plot_labels=!{!params.no_labels} --add_contours=!{!params.no_contours} --min_coverage=!{params.min_dp} --min_reads=!{params.min_ao} --GQ_threshold=!{params.min_qval} --extra_rob=!{params.extra_robust_gl} --min_af_extra_rob=!{params.min_af_extra_rob} --min_prop_extra_rob=!{params.min_prop_extra_rob} --max_prop_extra_rob=!{params.max_prop_extra_rob}
+    Rscript !{baseDir}/bin/annotate_vcf.r --source_path=!{baseDir}/bin/ --input_vcf=!{svcf} --chunk_size=!{params.chunk_size} --do_plots=!{plots} --plot_labels=!{!params.no_labels} --add_contours=!{!params.no_contours} --min_coverage=!{params.min_dp} --min_reads=!{params.min_ao} --min_af=!{params.min_af} --GQ_threshold=!{params.min_qval} --extra_rob=!{params.extra_robust_gl} --min_af_extra_rob=!{params.min_af_extra_rob} --min_prop_extra_rob=!{params.min_prop_extra_rob} --max_prop_extra_rob=!{params.max_prop_extra_rob}
     '''
   }
 
@@ -252,9 +255,9 @@ if(params.input_vcf) {
 
 } else {
 
-  params.output_folder = params.bam_folder // if not provided, outputs will be held on the input bam folder
+  params.output_folder = "." // if not provided, outputs will be held on the working directory
   assert (params.ref != true) && (params.ref != null) : "please specify --ref option (--ref reference.fasta(.gz))"
-  assert (params.bam_folder != true) && (params.bam_folder != null) : "please specify --bam_folder option (--bam_folder bamfolder)"
+  assert (params.input_bams != true) && (params.input_bams != null) : "please specify --input_bams option (--input_bams input_bams/ or bam_paths.txt)"
   assert (params.output_vcf != true) && (params.output_vcf != null) : "please specify --output_vcf option (--output_vcf vcf_name.vcf)"
 
   fasta_ref = file( params.ref )
@@ -286,18 +289,21 @@ if(params.input_vcf) {
   try { assert fasta_ref.exists() : "\n WARNING : fasta reference not located in execution directory. Make sure reference index is in the same folder as fasta reference" } catch (AssertionError e) { println e.getMessage() }
   if (fasta_ref.exists()) {assert fasta_ref_fai.exists() : "input fasta reference does not seem to have a .fai index (use samtools faidx)"}
   if (fasta_ref.exists() && params.ref.tokenize('.')[-1] == 'gz') {assert fasta_ref_gzi.exists() : "input gz fasta reference does not seem to have a .gzi index (use samtools faidx)"}
-  try { assert file(params.bam_folder).exists() : "\n WARNING : input BAM folder not located in execution directory" } catch (AssertionError e) { println e.getMessage() }
-  assert file(params.bam_folder).listFiles().findAll { it.name ==~ /.*bam/ }.size() > 0 : "BAM folder contains no BAM"
-  if (file(params.bam_folder).exists()) {
-      if (file(params.bam_folder).listFiles().findAll { it.name ==~ /.*bam/ }.size() < 10) { println "\n ERROR : BAM folder contains less than 10 BAM, exit."; System.exit(1) }
-      else if (file(params.bam_folder).listFiles().findAll { it.name ==~ /.*bam/ }.size() < 20) { println "\n WARNING : BAM folder contains less than 20 BAM, method accuracy not warranted." }
-      bamID = file(params.bam_folder).listFiles().findAll { it.name ==~ /.*bam/ }.collect { it.getName() }.collect { it.replace('.bam','') }
-      baiID = file(params.bam_folder).listFiles().findAll { it.name ==~ /.*bam.bai/ }.collect { it.getName() }.collect { it.replace('.bam.bai','') }
-      assert baiID.containsAll(bamID) : "check that every bam file has an index (.bam.bai)"
+  try { assert file(params.input_bams).exists() : "\n WARNING : input BAM folder/text file not located in execution directory" } catch (AssertionError e) { println e.getMessage() }
+  if(file(params.input_bams).isDirectory()) {
+    assert file(params.input_bams).listFiles().findAll { it.name ==~ /.*bam/ }.size() > 0 : "BAM folder contains no BAM"
+    if (file(params.input_bams).exists()) {
+      if (file(params.input_bams).listFiles().findAll { it.name ==~ /.*bam/ }.size() < 10) { println "\n ERROR : BAM folder contains less than 10 BAM, exit."; System.exit(1) }
+      else if (file(params.input_bams).listFiles().findAll { it.name ==~ /.*bam/ }.size() < 20) { println "\n WARNING : BAM folder contains less than 20 BAM, method accuracy not warranted." }
+      bamID = file(params.input_bams).listFiles().findAll { it.name ==~ /.*bam/ }.collect { it.getName() }.collect { it.replace('.bam','') }
+      baiID = file(params.input_bams).listFiles().findAll { it.name ==~ /.*bai/ }.collect { it.getName() }.collect { it.replace('.bai','').replace('.bam','') }
+      assert baiID.containsAll(bamID) : "check that every bam file has an index (.bai)"
+    }
   }
   assert (params.min_dp >= 0) : "minimum coverage must be higher than or equal to 0 (--min_dp)"
   assert (params.max_dp > 1) : "maximum coverage before downsampling must be higher than 1 (--max_dp)"
   assert (params.min_ao >= 0) : "minimum alternative reads must be higher than or equal to 0 (--min_ao)"
+  assert (params.min_af >= 0) : "minimum AF must be higher than or equal to 0 (--min_af)"
   assert (params.nsplit > 0) : "number of regions to split must be higher than 0 (--nsplit)"
   assert (params.min_qval >= 0) : "minimum Phred-scale qvalue must be higher than or equal to 0 (--min_qval)"
   assert ( (params.power_min_af > 0 && params.power_min_af <= 1) || params.power_min_af == -1 ) : "minimum allelic fraction for power computations must be in [0,1] (--power_min_af)"
@@ -327,7 +333,7 @@ if(params.input_vcf) {
   }
 
   log.info 'Mandatory arguments:'
-  log.info "Input BAM folder (--bam_folder)                                 : ${params.bam_folder}"
+  log.info "Input BAM folder (--input_bams)                                 : ${params.input_bams}"
   log.info "Reference in fasta format (--ref)                               : ${params.ref}"
   log.info "VCF output file (--output_vcf)                                  : ${output_vcf}"
   log.info 'Options:'
@@ -335,6 +341,7 @@ if(params.input_vcf) {
   log.info "To consider a site for calling:"
   log.info "     minimum median coverage (--min_dp)                         : ${params.min_dp}"
   log.info "     minimum of alternative reads (--min_ao)                    : ${params.min_ao}"
+  log.info "     minimum AF (--min_af)                                      : ${params.min_af}"
   log.info "Phred-scale qvalue threshold (--min_qval)                       : ${params.min_qval}"
   log.info "Strand bias measure (--sb_type)                                 : ${params.sb_type}"
   log.info "Strand bias threshold for SNVs (--sb_snv)                       : ${params.sb_snv}"
@@ -367,8 +374,13 @@ if(params.input_vcf) {
   log.info(params.no_contours == true ? "Add contours in plots and plot min(AF)~DP (--no_contours)       : no"  : "Add contours in plots and plot min(AF)~DP (--no_contours)       : yes" )
   log.info "\n"
 
-  bam = Channel.fromPath( params.bam_folder+'/*.bam' ).collect()
-  bai = Channel.fromPath( params.bam_folder+'/*.bam.bai' ).collect()
+  if(file(params.input_bams).isDirectory()) {
+    bam = Channel.fromPath( params.input_bams+'/*.bam' ).collect()
+    bai = Channel.fromPath( params.input_bams+'/*.bai' ).collect()
+  } else if (file(params.input_bams).isFile()){
+    bam = Channel.fromPath(params.input_bams).flatMap{ it.readLines() }.map { file(it) }.collect()
+    bai = Channel.fromPath(params.input_bams).flatMap{ it.readLines() }.map { file(it+'.bai') }.collect()
+  }
 
   /* Building the bed file where calling would be done */
   process bed {
@@ -474,7 +486,7 @@ if(params.input_vcf) {
           samtools mpileup --fasta-ref !{fasta_ref} --region $bed_line --ignore-RG --min-BQ !{params.base_qual} --min-MQ !{params.map_qual} --max-idepth 1000000 --max-depth !{params.max_dp} BAM/*.bam | sed 's/		/	*	*/g'
           i=$((i+1))
       done < !{split_bed}
-      } | mpileup2readcounts 0 -5 !{indel_par} !{params.min_ao} | Rscript !{baseDir}/bin/needlestack.r --pairs_file=${abs_pairs_file} --source_path=!{baseDir}/bin/ --out_file=!{region_tag}.vcf --fasta_ref=!{fasta_ref} --bam_folder=BAM/ --ref_genome=!{params.genome_release} --GQ_threshold=!{params.min_qval} --min_coverage=!{params.min_dp} --min_reads=!{params.min_ao} --SB_type=!{params.sb_type} --SB_threshold_SNV=!{params.sb_snv} --SB_threshold_indel=!{params.sb_indel} --output_all_SNVs=!{params.all_SNVs} --do_plots=!{params.plots} --do_alignments=!{params.do_alignments} --plot_labels=!{!params.no_labels} --add_contours=!{!params.no_contours} --extra_rob=!{params.extra_robust_gl} --min_af_extra_rob=!{params.min_af_extra_rob} --min_prop_extra_rob=!{params.min_prop_extra_rob} --max_prop_extra_rob=!{params.max_prop_extra_rob} --afmin_power=!{params.power_min_af} --sigma=!{params.sigma_normal}
+      } | mpileup2readcounts 0 -5 !{indel_par} !{params.min_ao} !{params.min_af} | Rscript !{baseDir}/bin/needlestack.r --pairs_file=${abs_pairs_file} --source_path=!{baseDir}/bin/ --out_file=!{region_tag}.vcf --fasta_ref=!{fasta_ref} --input_bams=BAM/ --ref_genome=!{params.genome_release} --GQ_threshold=!{params.min_qval} --min_coverage=!{params.min_dp} --min_reads=!{params.min_ao} --min_af=!{params.min_af} --SB_type=!{params.sb_type} --SB_threshold_SNV=!{params.sb_snv} --SB_threshold_indel=!{params.sb_indel} --output_all_SNVs=!{params.all_SNVs} --do_plots=!{params.plots} --do_alignments=!{params.do_alignments} --plot_labels=!{!params.no_labels} --add_contours=!{!params.no_contours} --extra_rob=!{params.extra_robust_gl} --min_af_extra_rob=!{params.min_af_extra_rob} --min_prop_extra_rob=!{params.min_prop_extra_rob} --max_prop_extra_rob=!{params.max_prop_extra_rob} --afmin_power=!{params.power_min_af} --sigma=!{params.sigma_normal}
       '''
   }
 

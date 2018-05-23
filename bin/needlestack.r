@@ -41,6 +41,7 @@ if("--help" %in% args | is.null(args$out_file) | is.null(args$fasta_ref) ) {
       --SB_threshold_indel=value     - strand bias threshold for indel, default=100
       --min_coverage=value           - minimum coverage in at least one sample to consider a site, default=50
       --min_reads=value              - minimum number of non-ref reads in at least one sample to consider a site, default=5
+      --min_af=value                 - minimum allelic fraction in at least one sample to consider a site, default=0
       --GQ_threshold=value           - phred scale qvalue threshold for variants, default=50
       --output_all_SNVs=boolean      - output all SNVs, even when no variant is detected, default=FALSE
       --do_plots=boolean             - output regression plots, default=TRUE
@@ -65,6 +66,7 @@ if(is.null(args$SB_threshold_SNV)) {args$SB_threshold_SNV=100} else {args$SB_thr
 if(is.null(args$SB_threshold_indel)) {args$SB_threshold_indel=100} else {args$SB_threshold_indel=as.numeric(args$SB_threshold_indel)}
 if(is.null(args$min_coverage)) {args$min_coverage=30} else {args$min_coverage=as.numeric(args$min_coverage)}
 if(is.null(args$min_reads)) {args$min_reads=3} else {args$min_reads=as.numeric(args$min_reads)}
+if(is.null(args$min_af)) {args$min_af=0} else {args$min_af=as.numeric(args$min_af)}
 if(is.null(args$GQ_threshold)) {args$GQ_threshold=50} else {args$GQ_threshold=as.numeric(args$GQ_threshold)}
 if(is.null(args$output_all_SNVs)) {args$output_all_SNVs=FALSE} else {args$output_all_SNVs=as.logical(args$output_all_SNVs)}
 if(is.null(args$pairs_file)) {args$pairs_file=FALSE}
@@ -84,7 +86,7 @@ if(is.null(args$add_contours)) {args$add_contours=FALSE} else {args$add_contours
 if(is.null(args$extra_rob)) {args$extra_rob=FALSE} else {args$extra_rob=as.logical(args$extra_rob)}
 if(is.null(args$min_af_extra_rob)) {args$min_af_extra_rob=0.2} else {args$min_af_extra_rob=as.numeric(args$min_af_extra_rob)}
 if(is.null(args$min_prop_extra_rob)) {args$min_prop_extra_rob=0.1} else {args$min_prop_extra_rob=as.numeric(args$min_prop_extra_rob)}
-if(is.null(args$max_prop_extra_rob)) {args$max_prop_extra_rob=0.5} else {args$max_prop_extra_rob=as.numeric(args$max_prop_extra_rob)}
+if(is.null(args$max_prop_extra_rob)) {args$max_prop_extra_rob=0.8} else {args$max_prop_extra_rob=as.numeric(args$max_prop_extra_rob)}
 if(is.null(args$afmin_power)) {args$afmin_power=-1} else {args$afmin_power=as.numeric(args$afmin_power)}
 if(is.null(args$sigma)) {args$sigma=0.1} else {args$sigma=as.numeric(args$sigma)}
 
@@ -95,6 +97,8 @@ bam_folder=args$bam_folder
 GQ_threshold=args$GQ_threshold
 min_coverage=args$min_coverage
 min_reads=args$min_reads
+min_af=args$min_af
+print(min_af)
 # http://gatkforums.broadinstitute.org/discussion/5533/strandoddsratio-computation filter out SOR > 4 for SNVs and > 10 for indels
 # filter out RVSB > 0.85 (maybe less stringent for SNVs)
 SB_type=args$SB_type
@@ -262,7 +266,7 @@ write_out("##fileDate=",format(Sys.Date(), "%Y%m%d"))
 write_out("##source=needlestack v1.0b")
 write_out("##reference=",fasta_ref)
 write_out("##phasing=none")
-write_out("##filter=\"QVAL > ",GQ_threshold," & ",SB_type,"_SNV < ",SB_threshold_SNV," & ",SB_type,"_INDEL < ",SB_threshold_indel," & min(AO) >= ",min_reads," & min(DP) >= ",min_coverage,"\"")
+write_out("##filter=\"QVAL > ",GQ_threshold," & ",SB_type,"_SNV < ",SB_threshold_SNV," & ",SB_type,"_INDEL < ",SB_threshold_indel," & min(AO) >= ",min_reads, " & min(AF) >= ",min_af," & min(DP) >= ",min_coverage,"\"")
 
 write_out("##INFO=<ID=TYPE,Number=1,Type=String,Description=\"The type of allele, either snp, ins or del\">")
 write_out("##INFO=<ID=NS,Number=1,Type=Integer,Description=\"Number of samples with data\">")
@@ -328,8 +332,8 @@ while(length(line <- readLines(f,n=1, warn = FALSE)) > 0) {
           Vm_inv=as.numeric(linepos[eval(as.name(paste(tolower(alt_inv),"_cols",sep="")))])
           ma_count_inv=Vp_inv+Vm_inv
           ref_inv=TRUE
-          reg_res=glmrob.nb(x=DP,y=ma_count_inv,min_coverage=min_coverage,min_reads=min_reads,extra_rob=extra_rob,min_af_extra_rob=min_af_extra_rob,min_prop_extra_rob=min_prop_extra_rob,max_prop_extra_rob=max_prop_extra_rob)
-        } else {ref_inv=FALSE; reg_res=glmrob.nb(x=DP,y=ma_count,min_coverage=min_coverage,min_reads=min_reads,extra_rob=extra_rob,min_af_extra_rob=min_af_extra_rob,min_prop_extra_rob=min_prop_extra_rob,max_prop_extra_rob=max_prop_extra_rob) }
+          reg_res=glmrob.nb(x=DP,y=ma_count_inv,min_coverage=min_coverage,min_reads=min_reads,min_af=min_af,extra_rob=extra_rob,min_af_extra_rob=min_af_extra_rob,min_prop_extra_rob=min_prop_extra_rob,max_prop_extra_rob=max_prop_extra_rob)
+        } else {ref_inv=FALSE; reg_res=glmrob.nb(x=DP,y=ma_count,min_coverage=min_coverage,min_reads=min_reads,min_af=min_af,extra_rob=extra_rob,min_af_extra_rob=min_af_extra_rob,min_prop_extra_rob=min_prop_extra_rob,max_prop_extra_rob=max_prop_extra_rob) }
 
         # compute Qval for minAF
         qval_minAF= rep(0,nindiv)
@@ -409,7 +413,7 @@ while(length(line <- readLines(f,n=1, warn = FALSE)) > 0) {
 
             if (do_plots=="ALL") { #output all variants
               if(do_alignments==TRUE){ #add alignment plots
-                if(isTNpairs){ 
+                if(isTNpairs){
                   pdf(paste(linepos[1],"_",linepos[2],"_",linepos[2],"_",ref,"_",alt,ifelse(ref_inv,"_inv_ref",""),ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),11,12)
                   par(mar=c(12,7,12,7))
                 }else{
@@ -480,8 +484,8 @@ while(length(line <- readLines(f,n=1, warn = FALSE)) > 0) {
             Vm_inv=as.numeric(linepos[eval(as.name(paste(tolower(cur_del_inv),"_cols",sep="")))])
             ma_count_inv=Vp_inv+Vm_inv
             ref_inv=TRUE
-            reg_res=glmrob.nb(x=DP,y=ma_count_inv,min_coverage=min_coverage,min_reads=min_reads,extra_rob=extra_rob,min_af_extra_rob=min_af_extra_rob,min_prop_extra_rob=min_prop_extra_rob,max_prop_extra_rob=max_prop_extra_rob)
-          } else { ref_inv=FALSE; reg_res=glmrob.nb(x=DP,y=ma_count,min_coverage=min_coverage,min_reads=min_reads,extra_rob=extra_rob,min_af_extra_rob=min_af_extra_rob,min_prop_extra_rob=min_prop_extra_rob,max_prop_extra_rob=max_prop_extra_rob) }
+            reg_res=glmrob.nb(x=DP,y=ma_count_inv,min_coverage=min_coverage,min_reads=min_reads,min_af=min_af,extra_rob=extra_rob,min_af_extra_rob=min_af_extra_rob,min_prop_extra_rob=min_prop_extra_rob,max_prop_extra_rob=max_prop_extra_rob)
+          } else { ref_inv=FALSE; reg_res=glmrob.nb(x=DP,y=ma_count,min_coverage=min_coverage,min_reads=min_reads,min_af=min_af,extra_rob=extra_rob,min_af_extra_rob=min_af_extra_rob,min_prop_extra_rob=min_prop_extra_rob,max_prop_extra_rob=max_prop_extra_rob) }
           # compute Qval20pc
           qval_minAF = rep(0,nindiv)
           somatic_status = rep(".",nindiv)
@@ -561,13 +565,13 @@ while(length(line <- readLines(f,n=1, warn = FALSE)) > 0) {
 
               cat("\n",sep = "",file=out_file,append=T)
 
+              if(!ref_inv & nchar(cur_del)>10) cur_del = paste(substr(cur_del,1,3+match(cur_del,uniq_del)),substr(cur_del,nchar(cur_del)-(3+match(cur_del,uniq_del)),nchar(cur_del)),sep="x")
+              if(ref_inv & nchar(ref)>10) ref = paste(substr(ref,1,3+match(ref,uniq_del)),substr(ref,nchar(ref)-(3+match(ref,uniq_del)),nchar(ref)),sep="x")
 
               if (do_plots=="ALL") { #output all variants
                 if(do_alignments==TRUE){ #add alignment plots
 
                   # deletions are shifted in samtools mpileup by 1bp, so put them at the right place by adding + to pos_ref[i,"loc"] everywhere in what follows
-                  if(!ref_inv & nchar(cur_del)>50) cur_del = paste(substr(cur_del,1,5+match(cur_del,uniq_del)),substr(cur_del,nchar(cur_del)-(5+match(cur_del,uniq_del)),nchar(cur_del)),sep="...")
-                  if(ref_inv & nchar(ref)>50) ref = paste(substr(ref,1,5+match(ref,uniq_del)),substr(ref,nchar(ref)-(5+match(ref,uniq_del)),nchar(ref)),sep="...")
 
                   if(isTNpairs){
                     pdf(paste(linepos[1],"_",linepos[2],"_",as.numeric(linepos[2])+nchar(cur_del)-1,"_",paste(prev_bp,cur_del,sep=""),"_",prev_bp,ifelse(ref_inv,"_inv_ref",""),ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),11,12)
@@ -643,8 +647,8 @@ while(length(line <- readLines(f,n=1, warn = FALSE)) > 0) {
             Vm_inv=as.numeric(linepos[eval(as.name(paste(tolower(cur_ins_inv),"_cols",sep="")))])
             ma_count_inv=Vp_inv+Vm_inv
             ref_inv=TRUE
-            reg_res=glmrob.nb(x=DP,y=ma_count_inv,min_coverage=min_coverage,min_reads=min_reads,extra_rob=extra_rob,min_af_extra_rob=min_af_extra_rob,min_prop_extra_rob=min_prop_extra_rob,max_prop_extra_rob=max_prop_extra_rob)
-          } else { ref_inv=FALSE; reg_res=glmrob.nb(x=DP,y=ma_count,min_coverage=min_coverage,min_reads=min_reads,extra_rob=extra_rob,min_af_extra_rob=min_af_extra_rob,min_prop_extra_rob=min_prop_extra_rob,max_prop_extra_rob=max_prop_extra_rob) }
+            reg_res=glmrob.nb(x=DP,y=ma_count_inv,min_coverage=min_coverage,min_reads=min_reads,min_af=min_af,extra_rob=extra_rob,min_af_extra_rob=min_af_extra_rob,min_prop_extra_rob=min_prop_extra_rob,max_prop_extra_rob=max_prop_extra_rob)
+          } else { ref_inv=FALSE; reg_res=glmrob.nb(x=DP,y=ma_count,min_coverage=min_coverage,min_reads=min_reads,min_af=min_af,extra_rob=extra_rob,min_af_extra_rob=min_af_extra_rob,min_prop_extra_rob=min_prop_extra_rob,max_prop_extra_rob=max_prop_extra_rob) }
           # compute Qval20pc
           qval_minAF = rep(0,nindiv)
           somatic_status = rep(".",nindiv)
@@ -724,12 +728,12 @@ while(length(line <- readLines(f,n=1, warn = FALSE)) > 0) {
 
               cat("\n",sep = "",file=out_file,append=T)
 
+              if(!ref_inv & nchar(cur_ins)>10) cur_ins = paste(substr(cur_ins,1,3+match(cur_ins,uniq_ins)),substr(cur_ins,nchar(cur_ins)-(3+match(cur_ins,uniq_ins)),nchar(cur_ins)),sep="x")
+              if(ref_inv & nchar(ref)>10) ref = paste(substr(ref,1,3+match(ref,uniq_ins)),substr(ref,nchar(ref)-(3+match(ref,uniq_ins)),nchar(ref)),sep="x")
+
               if (do_plots=="ALL") { #output all variants
 
                 if(do_alignments==TRUE){ #add alignment plots
-
-                  if(!ref_inv & nchar(cur_ins)>50) cur_ins = paste(substr(cur_ins,1,5+match(cur_ins,uniq_ins)),substr(cur_ins,nchar(cur_ins)-(5+match(cur_ins,uniq_ins)),nchar(cur_ins)),sep="...")
-                  if(ref_inv & nchar(ref)>50) ref = paste(substr(ref,1,5+match(ref,uniq_ins)),substr(ref,nchar(ref)-(5+match(ref,uniq_ins)),nchar(ref)),sep="...")
 
                   if(isTNpairs){
                     pdf(paste(linepos[1],"_",linepos[2],"_",as.numeric(linepos[2]),"_",prev_bp,"_",paste(prev_bp,cur_ins,sep=""),ifelse(ref_inv,"_inv_ref",""),ifelse(reg_res$extra_rob,"_extra_robust",""),".pdf",sep=""),11,12)
