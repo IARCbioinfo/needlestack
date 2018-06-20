@@ -425,7 +425,7 @@ if(params.input_vcf) {
   process mpileup2vcf {
 
 	  if(params.plots) {
-          publishDir params.output_folder+'/PDF/', mode: 'move', pattern: '*.pdf'
+          publishDir params.output_folder+'/PDF/', mode: 'copy', pattern: '*.pdf'
       }
 
       tag { region_tag }
