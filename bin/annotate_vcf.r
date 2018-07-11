@@ -72,7 +72,7 @@ while(dim(vcf_chunk)[1] != 0) {
         chr=as.character(seqnames(rowRanges(vcf_chunk,"seqnames"))[var_line])
         loc=start(ranges(rowRanges(vcf_chunk,"seqnames"))[var_line])
         ref=as.character(ref(vcf_chunk)[[var_line]])
-        alts=as.character(alt(vcf_chunk)[[var_line]])
+        alts=unlist(lapply(alt(vcf_chunk)[[var_line]], as.character))
         alts_long_name = alts[nchar(alts)>20] #if long alt, take only extremities with a length depending on the index of the alt
         alts[nchar(alts)>20]=paste(substr(alts_long_name,1,5+match(alts_long_name,alts)),substr(alts_long_name,nchar(alts_long_name)-(5+match(alts_long_name,alts)),nchar(alts_long_name)),sep="...")
         alt=paste(alts,collapse = ",")
