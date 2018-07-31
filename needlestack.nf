@@ -71,6 +71,13 @@ params.no_contours = false // add contours to the plots and plot min(AF)~DP
 if (params.help) {
     log.info ''
     log.info '--------------------------------------------------------'
+    log.info '                      _ _           _             _     '
+    log.info '                     | | |         | |           | |    '
+    log.info '  _ __   ___  ___  __| | | ___  ___| |_ __ _  ___| | __ '
+    log.info ' |  _ \\ / _ \\/ _ \\/ _` | |/ _ \\/ __| __/ _` |/ __| |/ / '
+    log.info ' | | | |  __/  __/ (_| | |  __/\\__ \\ || (_| | (__|   <  '
+    log.info ' |_| |_|\\___|\\___|\\__,_|_|\\___||___/\\__\\__,_|\\___|_|\\_\\ '
+    log.info '                                                        '
     log.info 'NEEDLESTACK v1.0b: A MULTI-SAMPLE SOMATIC VARIANT CALLER'
     log.info '--------------------------------------------------------'
     log.info 'Copyright (C) IARC/WHO'
