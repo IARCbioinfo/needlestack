@@ -17,7 +17,7 @@ RUN mkdir -p /var/cache/apt/archives/partial && \
 	apt-get update -y && \
 
 	# Install dependences
-	DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
+	DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y ca-certificates \
 	g++ \
 	make \
 	git \
