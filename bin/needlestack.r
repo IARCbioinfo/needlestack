@@ -18,6 +18,8 @@
 
 
 print(Sys.time())
+
+library("Gviz")
 ############################## ARGUMENTS SECTION ##############################
 args <- commandArgs(TRUE)
 parseArgs <- function(x) strsplit(sub("^--", "", x), "=")
