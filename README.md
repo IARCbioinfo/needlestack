@@ -143,8 +143,7 @@ Flags are parameters without value.
 	```bash
 	cd data_test
 	nextflow run iarcbioinfo/needlestack -with-docker  \
-	         --bed BED/TP53_all.bed --bam_folder BAM/BAM_multiple/ --ref REF/17.fasta --output_vcf all_variants.vcf \
-					 --do_alignments --genome_release Hsapiens.UCSC.hg19
+	         --bed BED/TP53_all.bed --bam_folder BAM/BAM_multiple/ --ref REF/17.fasta --output_vcf all_variants.vcf 
 	```
 
 	You will find a [VCF file](https://samtools.github.io/hts-specs/) called `all_variants.vcf` in the `BAM_multiple/` folder once done.
@@ -159,8 +158,7 @@ Flags are parameters without value.
 It is also possible to run the pipeline without nextflow (not recommended) using the `needlestack.sh`. Here on the example dataset downloaded above:
 	```bash
 	cd data_test/
-	needlestack.sh --region=17:7572814-7573814 --bam_folder=BAM/BAM_multiple --ref=REF/17.fasta --output_vcf=all_variants.vcf \
-	               --do_alignments --genome_release=Hsapiens.UCSC.hg19
+	needlestack.sh --region=17:7572814-7573814 --bam_folder=BAM/BAM_multiple --ref=REF/17.fasta --output_vcf=all_variants.vcf
 	```
 
 ## Output
