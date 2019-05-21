@@ -1,5 +1,33 @@
 # Change Log
 
+## [v1.1](https://github.com/IARCbioinfo/needlestack/tree/v1.1) (2019-05-21)
+[Full Changelog](https://github.com/IARCbioinfo/needlestack/compare/v1.0...v1.1)
+
+**Implemented enhancements:**
+
+- add needlestack logo in log.info [\#182](https://github.com/IARCbioinfo/needlestack/issues/182)
+- add INFO field containing allelic frequency [\#174](https://github.com/IARCbioinfo/needlestack/issues/174)
+- Add an option to only plot somatic mutations [\#149](https://github.com/IARCbioinfo/needlestack/issues/149)
+- Make the main 3 processes pipe-friendly to avoid intermediate outputs [\#147](https://github.com/IARCbioinfo/needlestack/issues/147)
+- Re-write pileup2baseindel.pl in C++ [\#146](https://github.com/IARCbioinfo/needlestack/issues/146)
+- Flag possible cross-sample contamination of normal DNA in tumor samples [\#138](https://github.com/IARCbioinfo/needlestack/issues/138)
+- Put ./. genotype when there is no power to identify a variant [\#137](https://github.com/IARCbioinfo/needlestack/issues/137)
+- Implement Tumor-Normal pair somatic variant calling  [\#133](https://github.com/IARCbioinfo/needlestack/issues/133)
+- Add alignment plot in the PDF [\#73](https://github.com/IARCbioinfo/needlestack/issues/73)
+- Make a script that would run needlestack without nextflow [\#72](https://github.com/IARCbioinfo/needlestack/issues/72)
+
+**Fixed bugs:**
+
+- max\_dp default value in readme is wrong [\#176](https://github.com/IARCbioinfo/needlestack/issues/176)
+- --help should exit 0 [\#161](https://github.com/IARCbioinfo/needlestack/issues/161)
+- Manage bed specification for both bed and region [\#157](https://github.com/IARCbioinfo/needlestack/issues/157)
+- Using  renamed symlinks as input BAM files doesn't work with --use\_file\_name option [\#152](https://github.com/IARCbioinfo/needlestack/issues/152)
+
+**Closed issues:**
+
+- How to identify each sample? [\#166](https://github.com/IARCbioinfo/needlestack/issues/166)
+- Github readme != Docker readme [\#159](https://github.com/IARCbioinfo/needlestack/issues/159)
+
 ## [v1.0](https://github.com/IARCbioinfo/needlestack/tree/v1.0) (2016-08-03)
 [Full Changelog](https://github.com/IARCbioinfo/needlestack/compare/v0.3...v1.0)
 
