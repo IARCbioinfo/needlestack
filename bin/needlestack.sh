@@ -20,7 +20,7 @@ usage ()
 {
     echo ""
     echo "--------------------------------------------------------"
-    echo "NEEDLESTACK v1.0b: A MULTI-SAMPLE SOMATIC VARIANT CALLER"
+    echo "NEEDLESTACK v1.1: A MULTI-SAMPLE SOMATIC VARIANT CALLER"
     echo "--------------------------------------------------------"
     echo "Copyright (C) 2017 IARC/WHO"
     echo "This program comes with ABSOLUTELY NO WARRANTY; for details see LICENSE.txt"
@@ -222,7 +222,7 @@ done
 #parameters info
 echo ''
 echo '--------------------------------------------------------'
-echo 'NEEDLESTACK v1.0b: A MULTI-SAMPLE SOMATIC VARIANT CALLER'
+echo 'NEEDLESTACK v1.1: A MULTI-SAMPLE SOMATIC VARIANT CALLER'
 echo '--------------------------------------------------------'
 echo 'Copyright (C) 2017 IARC/WHO'
 echo 'This program comes with ABSOLUTELY NO WARRANTY; for details see LICENSE.txt'
