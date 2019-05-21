@@ -1,2 +1,2 @@
 Bootstrap:docker
-From:iarcbioinfo/needlestack:gabriela_cpp
+From:iarcbioinfo/needlestack:v1.1
