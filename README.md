@@ -6,9 +6,7 @@
 
 [![Join the chat at https://gitter.im/iarcbioinfo/needlestack](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/iarcbioinfo/needlestack?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Circle CI](https://circleci.com/gh/IARCbioinfo/needlestack/tree/master.svg?style=shield&circle-token=402d456a7c50af352bb4e1a52425ce0fe645f78f)](https://circleci.com/gh/IARCbioinfo/needlestack/tree/master) [![Docker Hub](https://img.shields.io/badge/docker-ready-blue.svg)](https://hub.docker.com/r/iarcbioinfo/needlestack/)
 
-Warning: development in progress, unreliable results warranted.
-
-Please wait upcoming publication before using it in production.
+A preprint describing needlestack is available on biorxiv: https://www.biorxiv.org/content/10.1101/639377v1
 
 Contact: follm@iarc.fr
 
@@ -107,8 +105,10 @@ Type `--help` to get the full list of options. All parameters are prefixed with 
 | `min_af_extra_rob` | `0.2` | Minimum allelic fraction to exclude a sample at a position for extra-robust regression |
 | `min_prop_extra_rob` | `0.1` | Minimum proportion of samples having an allelic fraction to be excluded from extra-robust regression |
 | `max_prop_extra_rob` | `0.8` | Maximum proportion of samples having an allelic fraction to be excluded from extra-robust regression |
+| `power_min_af` | | Allelic fraction used to classify genotypes as 0/0 or ./. depending of the power to detect a variant at this fraction (see below) |
+| `input_vcf` | | A VCF file (from GATK) where calling should be done. Needlestack will extract DP and AO from this VCF (DP and AD fields) and annotate it with phred q-value score (`FORMAT/QVAL` field), error rate (`INFO/ERR`) and over-dispersion sigma parameter (`INFO/SIG`). WARNING: by default, only works with split (coreutils) version > 8.13 |
 
-\* Caution: *min_dp*, *min_ao* and *min_af* are `position-based` filters.  
+\* Caution: `min_dp`, `min_ao` and `min_af` are position-based filters, which means that needlestack might still identify a variant with an allelic fraction lower than `min_af` in a sample if at the same position, another sample has an allelic fraction larger than `min_af`.
 
 By default, if neither `--bed` nor `--region` are provided, needlestack runs on the whole reference genome provided, building a bed file from fasta index.
 If `--bed` and `--region` are both provided, it runs on the region only.
@@ -121,8 +121,6 @@ Flags are parameters without value.
 |-----------|-----------------|
 | `help`    | Display help |
 | `all_SNVs` | Output all SNVs, even when no variant is detected |
-| `input_vcf` | A VCF file (from GATK) where calling should be done. Needlestack will extract DP and AO from this VCF (DP and AD fields) and annotate it with phred q-value score (`FORMAT/QVAL` field), error rate (`INFO/ERR`) and over-dispersion sigma parameter (`INFO/SIG`). WARNING: by default, only works with split (coreutils) version > 8.13 |
-| `power_min_af` | Allelic fraction used to classify genotypes as 0/0 or ./. depending of the power to detect a variant at this fraction (see below) |
 | `extra_robust_gl` | Perform extra-robust regression (useful for common germline SNPs, see below) |
 | `no_labels` | No label for the outliers on regression plots |
 | `no_indels` | Do not perform variant calling for insertions and deletions |
@@ -143,8 +141,7 @@ Flags are parameters without value.
 	```bash
 	cd data_test
 	nextflow run iarcbioinfo/needlestack -with-docker  \
-	         --bed BED/TP53_all.bed --bam_folder BAM/BAM_multiple/ --ref REF/17.fasta --output_vcf all_variants.vcf \
-					 --do_alignments --genome_release Hsapiens.UCSC.hg19
+	         --bed BED/TP53_all.bed --input_bams BAM/BAM_multiple/ --ref REF/17.fasta --output_vcf all_variants.vcf 
 	```
 
 	You will find a [VCF file](https://samtools.github.io/hts-specs/) called `all_variants.vcf` in the `BAM_multiple/` folder once done.
@@ -152,15 +149,14 @@ Flags are parameters without value.
 	The first time it will take more time as the pipeline will be downloaded from github and the docker container from [dockerhub](https://hub.docker.com/r/iarcbioinfo/needlestack/).
 
 	Official releases can be found [here](https://github.com/iarcbioinfo/needlestack/releases/). There is a corresponding official [docker container](https://hub.docker.com/r/iarcbioinfo/needlestack/) for each release and one can run a particular version using (for example for v0.3):
-		```bash
-		nextflow run iarcbioinfo/needlestack -r v0.3 -with-docker \
+	```bash
+	nextflow run iarcbioinfo/needlestack -r v0.3 -with-docker \
 		        --bed BED/TP53_all.bed --bam_folder BAM/BAM_multiple/ --fasta_ref REF/17.fasta --out_vcf all_variants.vcf
-		```
+	```
 It is also possible to run the pipeline without nextflow (not recommended) using the `needlestack.sh`. Here on the example dataset downloaded above:
 	```bash
 	cd data_test/
-	needlestack.sh --region=17:7572814-7573814 --bam_folder=BAM/BAM_multiple --ref=REF/17.fasta --output_vcf=all_variants.vcf \
-	               --do_alignments --genome_release=Hsapiens.UCSC.hg19
+	needlestack.sh --region=17:7572814-7573814 --bam_folder=BAM/BAM_multiple --ref=REF/17.fasta --output_vcf=all_variants.vcf
 	```
 
 ## Output
@@ -238,6 +234,12 @@ For conventional variant callers, GATK WES/WGS [recommended values](http://gatkf
 
 ## References
 
-A full methodological paper describing needlestack is in preparation. We have already used an early version in the two following publications that you can cite in the meantime:
+- Needlestack: an ultra-sensitive variant caller for multi-sample next generation sequencing data
+Tiffany M. Delhomme, Patrice H. Avogbe, Aurelie A.G. Gabriel, Nicolas Alcala, Noemie Leblay, Catherine Voegele, Maxime Vallee, Priscilia Chopard, Amelie Chabrier, Behnoush Abedi-Ardekani, Valerie Gaborieau, Ivana Holcatova, Vladimir Janout, Lenka Foretova, Sasa Milosavljevic, David Zaridze, Anush Mukeriya, Elisabeth Brambilla, Paul Brennan, Ghislaine Scelo, Lynnette Fernandez-Cuesta, Graham Byrnes, Florence Le Calvez-Kelm, James D D. McKay, Matthieu Foll
+bioRxiv 639377; doi: https://doi.org/10.1101/639377. https://www.biorxiv.org/content/10.1101/639377v1
+
+Needlestack has been used in these papers:
+- Urinary TERT promoter mutations as non-invasive biomarkers for the comprehensive detection of urothelial cancer
+Avogbe et al. 2019 [EBioMedicine](https://www.ebiomedicine.com/article/S2352-3964(19)30305-6/fulltext).
 - Fernandez-Cuesta L, Perdomo S, Avogbe PH, Leblay N, Delhomme TM, Gaborieau V, Abedi-Ardekani B, Chanudet E, Olivier M, Zaridze D, Mukeria A, Vilensky M, Holcatova I, Polesel J, Simonato L, Canova C, Lagiou P, Brambilla C, Brambilla E, Byrnes G, Scelo G, Le Calvez-Kelm F, Foll M, McKay JD, Brennan P. Identification of Circulating Tumor DNA for the Early Detection of Small-cell Lung Cancer. [EBioMedicine](http://www.sciencedirect.com/science/article/pii/S2352396416302894). 2016 Aug;10:117-23. doi: [10.1016/j.ebiom.2016.06.032](http://dx.doi.org/10.1016/j.ebiom.2016.06.032). Epub 2016 Jun 25. PubMed PMID: [27377626](https://www.ncbi.nlm.nih.gov/pubmed/27377626); PubMed Central PMCID: [PMC5036515](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5036515/).
 - Le Calvez-Kelm F, Foll M, Wozniak MB, Delhomme TM, Durand G, Chopard P, Pertesi M, Fabianova E, Adamcakova Z, Holcatova I, Foretova L, Janout V, Vallee MP, Rinaldi S, Brennan P, McKay JD, Byrnes GB, Scelo G. KRAS mutations in blood circulating cell-free DNA: a pancreatic cancer case-control. [Oncotarget](http://www.impactjournals.com/oncotarget/index.php?journal=oncotarget&page=article&op=view&path%5b%5d=12386). 2016 Nov 29;7(48):78827-78840. doi: [10.18632/oncotarget.12386](https://doi.org/10.18632/oncotarget.12386). PubMed PMID: [27705932](https://www.ncbi.nlm.nih.gov/pubmed/27705932); PubMed Central PMCID: [PMC5346680](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5346680/).
