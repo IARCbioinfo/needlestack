@@ -1,7 +1,5 @@
 #! /usr/bin/env nextflow
 
-//vim: syntax=groovy -*- mode: groovy;-*-
-
 // needlestack: a multi-sample somatic variant caller
 // Copyright (C) 2017 IARC/WHO
 
