@@ -142,8 +142,11 @@ Flags are parameters without value.
 
 	```bash
 	cd data_test
-	nextflow run iarcbioinfo/needlestack -with-docker  \
-	         --bed BED/TP53_all.bed --input_bams BAM/BAM_multiple/ --ref REF/17.fasta --output_vcf all_variants.vcf 
+	nextflow run iarcbioinfo/needlestack -with-docker \
+                     --bed BED/TP53_all.bed \
+                     --input_bams BAM/BAM_multiple/ \
+                     --ref REF/17.fasta \
+                     --output_vcf all_variants.vcf 
 	```
 
 	You will find a [VCF file](https://samtools.github.io/hts-specs/) called `all_variants.vcf` in the `BAM_multiple/` folder once done.
