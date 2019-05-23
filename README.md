@@ -54,7 +54,7 @@ Needlestack works under most Linux distributions and Apple OS X.
  - Add the previous tools to your path (executables are assumed to be respectively called `samtools`, `Rscript` and `mpileup2readcounts`)
  - Optionally, the bioconductor packages required for the alignments plots (see the Detailed description section)
 
-You can avoid installing all the external software by using [Docker](https://www.docker.com) or [Singularity](http://singularity.lbl.gov). See the [IARC-nf](https://github.com/IARCbioinfo/IARC-nf) repository for more information.
+You can avoid installing all the external software by using [Docker](https://www.docker.com) or [Singularity](http://singularity.lbl.gov). See the [IARC-nf](https://github.com/IARCbioinfo/IARC-nf) repository for more information. Warning: the docker/singularity containers don't include the bioconductor packages needed to plot alignments.
 
 To use needlestack without nextflow, in addition to the previous tools, download the files in this [bin](https://github.com/IARCbioinfo/needlestack/tree/gabriela_cpp/bin) directory and add them to your path. See the Usage section to run needlestack without nextflow.
 
@@ -201,6 +201,8 @@ These packages exist for other organisms than Human but have not been tested. On
 The `--genome_release` option needs to be provided and corresponds to the TxDb annotation package name without its prefix and suffix. For the hg19 release of the human genome, one needs to set `--genome_release` to *`Hsapiens.UCSC.hg19`*.
 Note that the packages chosen for the annotations are compatible with the UCSC notations since most of the Gviz fonctionalities can handle these notations. The reference genome used for the BAM alignments can be based on GENCODE, UCSC or ENSEMBL genome varieties.
 
+Warning: the docker/singularity containers don't include the bioconductor packages needed to plot alignments.
+
 ![Example of an alignment plot](alignments.png "Example of an alignment plot")
 
 The alignment plot represents from top to bottom:
@@ -219,9 +221,6 @@ Needlestack is designed to identify rare variants (i.e. only a few samples in yo
 ### Strand bias
 
 For conventional variant callers, GATK WES/WGS [recommended values](http://gatkforums.broadinstitute.org/discussion/5533/strandoddsratio-computation) for SOR strand bias are SOR < 4 for SNVs and < 10 for indels. We haven't found this particularly useful, but a more detailed evaluation is necessary. For amplicon based targeted sequencing, RVSB>0.85 seems to reduce some errors. There is no hard filter by default as this is easy to do afterward using [bcftools filter](http://samtools.github.io/bcftools/bcftools.html#filter) command.
-
-## Directed Acyclic Graph
-<img align="center" src="https://cloud.githubusercontent.com/assets/3366818/15250619/eb6afcea-1925-11e6-9f91-e1d6ceecbe19.jpg" width="600">
 
 ## Contributions
 
