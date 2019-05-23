@@ -4,11 +4,13 @@
 
 <img align="center" src="https://cloud.githubusercontent.com/assets/3366818/10489240/7da79144-729c-11e5-8cb3-0225106d9b06.jpg" width="500">
 
-[![Join the chat at https://gitter.im/iarcbioinfo/needlestack](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/iarcbioinfo/needlestack?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Circle CI](https://circleci.com/gh/IARCbioinfo/needlestack/tree/master.svg?style=shield&circle-token=402d456a7c50af352bb4e1a52425ce0fe645f78f)](https://circleci.com/gh/IARCbioinfo/needlestack/tree/master) [![Docker Hub](https://img.shields.io/badge/docker-ready-blue.svg)](https://hub.docker.com/r/iarcbioinfo/needlestack/)
+[![Join the chat at https://gitter.im/iarcbioinfo/needlestack](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/iarcbioinfo/needlestack?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![CircleCI](https://circleci.com/gh/IARCbioinfo/needlestack.svg?style=svg)](https://circleci.com/gh/IARCbioinfo/needlestack) [![Docker Hub](https://img.shields.io/badge/docker-ready-blue.svg)](https://hub.docker.com/r/iarcbioinfo/needlestack/)
 
 A preprint describing needlestack is available on biorxiv: https://www.biorxiv.org/content/10.1101/639377v1
 
 Contact: follm@iarc.fr
+
+Jump over [here](https://github.com/IARCbioinfo/needlestack#usage) for a quick start!
 
 Needlestack development is support by the US National Cancer Institute (grant number R21CA175979) and the French Institut national du cancer.
 
@@ -54,7 +56,7 @@ Needlestack works under most Linux distributions and Apple OS X.
  - Add the previous tools to your path (executables are assumed to be respectively called `samtools`, `Rscript` and `mpileup2readcounts`)
  - Optionally, the bioconductor packages required for the alignments plots (see the Detailed description section)
 
-You can avoid installing all the external software by using [Docker](https://www.docker.com) or [Singularity](http://singularity.lbl.gov). See the [IARC-nf](https://github.com/IARCbioinfo/IARC-nf) repository for more information.
+You can avoid installing all the external software by using [Docker](https://www.docker.com) or [Singularity](http://singularity.lbl.gov). See the [IARC-nf](https://github.com/IARCbioinfo/IARC-nf) repository for more information. Warning: the docker/singularity containers don't include the bioconductor packages needed to plot alignments.
 
 To use needlestack without nextflow, in addition to the previous tools, download the files in this [bin](https://github.com/IARCbioinfo/needlestack/tree/gabriela_cpp/bin) directory and add them to your path. See the Usage section to run needlestack without nextflow.
 
@@ -140,8 +142,11 @@ Flags are parameters without value.
 
 	```bash
 	cd data_test
-	nextflow run iarcbioinfo/needlestack -with-docker  \
-	         --bed BED/TP53_all.bed --input_bams BAM/BAM_multiple/ --ref REF/17.fasta --output_vcf all_variants.vcf 
+	nextflow run iarcbioinfo/needlestack -with-docker \
+                     --bed BED/TP53_all.bed \
+                     --input_bams BAM/BAM_multiple/ \
+                     --ref REF/17.fasta \
+                     --output_vcf all_variants.vcf 
 	```
 
 	You will find a [VCF file](https://samtools.github.io/hts-specs/) called `all_variants.vcf` in the `BAM_multiple/` folder once done.
@@ -201,6 +206,8 @@ These packages exist for other organisms than Human but have not been tested. On
 The `--genome_release` option needs to be provided and corresponds to the TxDb annotation package name without its prefix and suffix. For the hg19 release of the human genome, one needs to set `--genome_release` to *`Hsapiens.UCSC.hg19`*.
 Note that the packages chosen for the annotations are compatible with the UCSC notations since most of the Gviz fonctionalities can handle these notations. The reference genome used for the BAM alignments can be based on GENCODE, UCSC or ENSEMBL genome varieties.
 
+Warning: the docker/singularity containers don't include the bioconductor packages needed to plot alignments.
+
 ![Example of an alignment plot](alignments.png "Example of an alignment plot")
 
 The alignment plot represents from top to bottom:
@@ -219,9 +226,6 @@ Needlestack is designed to identify rare variants (i.e. only a few samples in yo
 ### Strand bias
 
 For conventional variant callers, GATK WES/WGS [recommended values](http://gatkforums.broadinstitute.org/discussion/5533/strandoddsratio-computation) for SOR strand bias are SOR < 4 for SNVs and < 10 for indels. We haven't found this particularly useful, but a more detailed evaluation is necessary. For amplicon based targeted sequencing, RVSB>0.85 seems to reduce some errors. There is no hard filter by default as this is easy to do afterward using [bcftools filter](http://samtools.github.io/bcftools/bcftools.html#filter) command.
-
-## Directed Acyclic Graph
-<img align="center" src="https://cloud.githubusercontent.com/assets/3366818/15250619/eb6afcea-1925-11e6-9f91-e1d6ceecbe19.jpg" width="600">
 
 ## Contributions
 
