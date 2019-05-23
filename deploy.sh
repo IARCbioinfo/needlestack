@@ -1,5 +1,6 @@
 #!/bin/bash
 cd ~/project/NGS_data_test
+rm -rf 1000G_CEU_TP53/.nextflow
 git config --global user.email "follm@iarc.fr"
 git config --global user.name "Circle CI_$CIRCLE_PROJECT_REPONAME_$CIRCLE_BRANCH"
 git add .
